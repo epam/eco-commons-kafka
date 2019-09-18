@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.advanced.AdvancedConsumer" />
+        <Method name="shutdown" />
+        <Bug pattern="RV_RETURN_VALUE_IGNORED" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumerThread" />
+        <Or>
+            <Method name="waitForBootstrap" />
+            <Method name="shutdown" />
+        </Or>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.AdminClientUtils" />
+        <Method name="completeAndGet" />
+        <Or>
+            <Bug pattern="LEST_LOST_EXCEPTION_STACK_TRACE" />
+            <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.TopicOffsetFetcher" />
+        <Or>
+            <Method name="fetchForPartitions" />
+            <Method name="fetchForTopics" />
+        </Or>
+        <Bug pattern="NP_NULL_PARAM_DEREF" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.TopicRecordFetcher" />
+        <Method name="fetch" />
+        <Bug pattern="NP_NULL_PARAM_DEREF" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.producer.tx.TerminatingSendFailListener" />
+        <Method name="onFail" />
+        <Bug pattern="DM_EXIT" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.cache.AbstractCache" />
+        <Method name="start" />
+        <Bug pattern="ACEM_ABSTRACT_CLASS_EMPTY_METHODS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.ZkCaller" />
+        <Method name="call" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.cache.CacheProducer" />
+        <Method name="initProducer" />
+        <Bug pattern="CE_CLASS_ENVY" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonDeserializer" />
+        <Method name="deserialize" />
+        <Bug pattern="CE_CLASS_ENVY" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.config.BrokerConfigDef" />
+        <Method name="readDef" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.config.TopicConfigDef" />
+        <Method name="readDef" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.cache.MapCacheConsumer" />
+        <Method name="destroyExecutor" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.cache.ListCacheConsumer" />
+        <Method name="destroyExecutor" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.advanced.AdvancedConsumer" />
+        <Method name="getOffsetsFromHandlerTask" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.serde.JsonDeserializer" />
+        <Method name="initTypeConfig" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.serde.JsonStringDeserializer" />
+        <Method name="deserialize" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+
+</FindBugsFilter>

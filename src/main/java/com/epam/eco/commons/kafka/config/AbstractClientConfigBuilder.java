@@ -1,0 +1,139 @@
+/*
+ * Copyright 2019 EPAM Systems
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.  You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.epam.eco.commons.kafka.config;
+
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
+
+/**
+ * @author Andrei_Tytsik
+ */
+public abstract class AbstractClientConfigBuilder<T extends AbstractSecurityConfigBuilder<T>> extends AbstractSecurityConfigBuilder<T> {
+
+    public AbstractClientConfigBuilder(Map<String, Object> properties) {
+        super(properties);
+    }
+
+    public T bootstrapServers(String bootstrapServers) {
+        return property(
+                CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
+                bootstrapServers);
+    }
+
+    public T metadataMaxAge(long metadataMaxAge) {
+        return property(
+                CommonClientConfigs.METADATA_MAX_AGE_CONFIG,
+                metadataMaxAge);
+    }
+
+    public T sendBufferOsDefault() {
+        return sendBuffer(-1);
+    }
+
+    public T sendBuffer(int sendBuffer) {
+        return property(
+                CommonClientConfigs.SEND_BUFFER_CONFIG,
+                sendBuffer);
+    }
+
+    public T receiveBufferOsDefault() {
+        return receiveBuffer(-1);
+    }
+
+    public T receiveBuffer(int receiveBuffer) {
+        return property(
+                CommonClientConfigs.RECEIVE_BUFFER_CONFIG,
+                receiveBuffer);
+    }
+
+    public T clientIdRandom() {
+        return clientId(UUID.randomUUID().toString());
+    }
+
+    public T clientIdRandomIfAbsent() {
+        return propertyIfAbsent(
+                CommonClientConfigs.CLIENT_ID_CONFIG,
+                () -> UUID.randomUUID().toString());
+    }
+
+    public T clientId(String clientId) {
+        return property(
+                CommonClientConfigs.CLIENT_ID_CONFIG,
+                clientId);
+    }
+
+    public T reconnectBackoffMs(long reconnectBackoffMs) {
+        return property(
+                CommonClientConfigs.RECONNECT_BACKOFF_MS_CONFIG,
+                reconnectBackoffMs);
+    }
+
+    public T reconnectBackoffMaxMs(long reconnectBackoffMaxMs) {
+        return property(
+                CommonClientConfigs.RECONNECT_BACKOFF_MAX_MS_CONFIG,
+                reconnectBackoffMaxMs);
+    }
+
+    public T retryBackoffMs(long retryBackoffMs) {
+        return property(
+                CommonClientConfigs.RETRY_BACKOFF_MS_CONFIG,
+                retryBackoffMs);
+    }
+
+    public T securityProtocolDefault() {
+        return securityProtocol(CommonClientConfigs.DEFAULT_SECURITY_PROTOCOL);
+    }
+
+    public T securityProtocolPlaintext() {
+        return securityProtocol(SecurityProtocol.PLAINTEXT);
+    }
+
+    public T securityProtocolSsl() {
+        return securityProtocol(SecurityProtocol.SSL);
+    }
+
+    public T securityProtocolSaslSsl() {
+        return securityProtocol(SecurityProtocol.SASL_SSL);
+    }
+
+    public T securityProtocolSaslPlaintext() {
+        return securityProtocol(SecurityProtocol.SASL_PLAINTEXT);
+    }
+
+    public T securityProtocol(SecurityProtocol securityProtocol) {
+        return property(
+                CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
+                securityProtocol.name);
+    }
+
+    public T securityProtocol(String securityProtocol) {
+        return property(
+                CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
+                securityProtocol);
+    }
+
+    public T connectionMaxIdleMs(long connectionMaxIdleMs) {
+        return property(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, connectionMaxIdleMs);
+    }
+
+    public T requestTimeoutMs(int timeoutMs) {
+        return property(CommonClientConfigs.REQUEST_TIMEOUT_MS_CONFIG, timeoutMs);
+    }
+
+}
