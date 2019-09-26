@@ -76,7 +76,7 @@ public class KafkaCache<K, V> extends AbstractCache<K, V> {
                 offsetInitializer,
                 keyValueDecoder,
                 consumerParallelism,
-                update -> applyUpdateFromUnderlying(update));
+                this::applyUpdateFromUnderlying);
 
         producer =
                 !readOnly ?
@@ -86,9 +86,15 @@ public class KafkaCache<K, V> extends AbstractCache<K, V> {
         LOGGER.info("Initialized");
     }
 
+    private boolean isReadOnly() {
+        return producer == null;
+    }
+
     @Override
     public void start() throws Exception {
-        topic.createIfNotExists();
+        if (!isReadOnly()) {
+            topic.createIfNotExists();
+        }
         consumer.start();
 
         LOGGER.info("Started");

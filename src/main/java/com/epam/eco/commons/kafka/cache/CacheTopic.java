@@ -18,6 +18,7 @@ package com.epam.eco.commons.kafka.cache;
 import java.util.Map;
 
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,16 +58,12 @@ class CacheTopic {
     }
 
     public void createIfNotExists() {
-        AdminClientUtils.callUnchecked(clientConfig, client -> {
-            if (AdminClientUtils.topicExists(client, name)) {
-                LOGGER.info("Cache topic [{}] exists", name);
-            } else {
-                LOGGER.info("Cache topic [{}] doesn't exist, creating it", name);
-
-                AdminClientUtils.createTopic(client, newTopic());
-            }
-            return null;
-        });
+        try {
+            AdminClientUtils.createTopic(clientConfig, newTopic());
+            LOGGER.info("Cache topic [{}] didn't exist, have created it", name);
+        } catch (TopicExistsException ex) {
+            LOGGER.info("Cache topic [{}] exists", name);
+        }
     }
 
     private NewTopic newTopic() {
