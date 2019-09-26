@@ -15,6 +15,9 @@
  */
 package com.epam.eco.commons.kafka.producer.tx;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
@@ -24,9 +27,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.InterruptException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.Collections.singletonMap;
 
@@ -76,7 +76,7 @@ final class TxProducerMsgSender<K, V> {
             return false;
         } catch (Exception e) {
             log.warn("error while sending msg {}", e.getMessage());
-            doQuietly(producer::abortTransaction);
+            producer.abortTransaction();
             return false;
         }
     }
