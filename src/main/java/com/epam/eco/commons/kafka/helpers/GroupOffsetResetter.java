@@ -15,8 +15,12 @@
  */
 package com.epam.eco.commons.kafka.helpers;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -124,7 +128,7 @@ public class GroupOffsetResetter {
     }
 
     private void validateOffsets(Map<TopicPartition, Long> offsets) {
-        Validate.notNull(offsets, "Collection of partition offsets is null or empty");
+        Validate.notEmpty(offsets, "Collection of partition offsets is null or empty");
         Validate.noNullElements(offsets.keySet(),
                 "Collection of partition offset keys contains null elements");
         Validate.noNullElements(offsets.values(),
