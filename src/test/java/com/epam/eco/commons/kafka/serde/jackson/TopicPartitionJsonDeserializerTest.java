@@ -50,8 +50,8 @@ public class TopicPartitionJsonDeserializerTest {
         TopicPartition expected = new TopicPartition("topic", 2);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(TopicPartitionFields.TOPIC, "topic");
-        objectNode.put(TopicPartitionFields.PARTITION, 2);
+        objectNode.put(TopicPartitionFields.TOPIC, expected.topic());
+        objectNode.put(TopicPartitionFields.PARTITION, expected.partition());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);

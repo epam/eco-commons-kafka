@@ -85,10 +85,10 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
         long checksum = (long) ConsumerRecord.NULL_CHECKSUM;
         int serializedKeySize = ConsumerRecord.NULL_SIZE;
         int serializedValueSize = ConsumerRecord.NULL_SIZE;
-        Class<?> keyClass = Object.class;
+        JavaType keyClass = JAVA_OBJECT_TYPE;
         JsonNode keyNode = null;
         Object key = null;
-        Class<?> valueClass = Object.class;
+        JavaType valueClass = JAVA_OBJECT_TYPE;
         JsonNode valueNode = null;
         Object value = null;
         Headers headers = null;
@@ -130,7 +130,7 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
                 case ConsumerRecordFields.KEY_CLASS:
                     jsonParser.nextToken();
                     if (jsonParser.getCurrentToken() != JsonToken.VALUE_NULL) {
-                        keyClass = jsonParser.readValueAs(Class.class);
+                        keyClass = jsonParser.readValueAs(JavaType.class);
                     }
                     break;
                 case ConsumerRecordFields.KEY:
@@ -140,7 +140,7 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
                 case ConsumerRecordFields.VALUE_CLASS:
                     jsonParser.nextToken();
                     if (jsonParser.getCurrentToken() != JsonToken.VALUE_NULL) {
-                        valueClass = jsonParser.readValueAs(Class.class);
+                        valueClass = jsonParser.readValueAs(JavaType.class);
                     }
                     break;
                 case ConsumerRecordFields.VALUE:

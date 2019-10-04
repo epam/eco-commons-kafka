@@ -15,9 +15,11 @@
  */
 package com.epam.eco.commons.kafka.serde.jackson;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
@@ -56,12 +58,28 @@ public class ConsumerRecordJsonDeserializerTest {
                         .addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer()));
     }
 
+    private static boolean consumerRecordEquals(ConsumerRecord a, ConsumerRecord b) {
+        return
+                StringUtils.equals(a.topic(), b.topic()) &&
+                        Objects.equals(a.partition(), b.partition()) &&
+                        Objects.equals(a.offset(), b.offset()) &&
+                        Objects.equals(a.timestamp(), b.timestamp()) &&
+                        Objects.equals(a.timestampType(), b.timestampType()) &&
+                        Objects.equals(a.checksum(), b.checksum()) &&
+                        Objects.equals(a.serializedKeySize(), b.serializedKeySize()) &&
+                        Objects.equals(a.serializedValueSize(), b.serializedValueSize()) &&
+                        Objects.equals(a.key(), b.key()) &&
+                        Objects.equals(a.value(), b.value()) &&
+                        Objects.equals(a.headers(), b.headers());
+
+    }
+
     @SuppressWarnings("deprecation")
     @Test
     public void testDeserialization1() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
-                Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
+                Collections.singletonList(new RecordHeader("1", "1".getBytes())));
         ConsumerRecord<String, String> expected = new ConsumerRecord<>(
                 "topic",
                 1,
@@ -76,25 +94,23 @@ public class ConsumerRecordJsonDeserializerTest {
                 headers);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(ConsumerRecordFields.TOPIC, "topic");
-        objectNode.put(ConsumerRecordFields.PARTITION, 1);
-        objectNode.put(ConsumerRecordFields.OFFSET, 1);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP, now);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, TimestampType.NO_TIMESTAMP_TYPE.name());
-        objectNode.put(ConsumerRecordFields.CHECKSUM, 1L);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, 1);
+        objectNode.put(ConsumerRecordFields.TOPIC, expected.topic());
+        objectNode.put(ConsumerRecordFields.PARTITION, expected.partition());
+        objectNode.put(ConsumerRecordFields.OFFSET, expected.offset());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP, expected.timestamp());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, expected.timestampType().name());
+        objectNode.put(ConsumerRecordFields.CHECKSUM, expected.checksum());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, expected.serializedKeySize());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, expected.serializedValueSize());
         objectNode.put(ConsumerRecordFields.KEY_CLASS, String.class.getName());
-        objectNode.put(ConsumerRecordFields.KEY, "1");
+        objectNode.put(ConsumerRecordFields.KEY, expected.key());
         objectNode.put(ConsumerRecordFields.VALUE_CLASS, String.class.getName());
-        objectNode.put(ConsumerRecordFields.VALUE, "2");
+        objectNode.put(ConsumerRecordFields.VALUE, expected.value());
         ArrayNode headerArray = objectNode.putArray(ConsumerRecordFields.HEADERS);
+        Header header = headers.iterator().next();
         headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "1")
-                .put(RecordHeaderFields.VALUE, "1".getBytes());
-        headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "2")
-                .put(RecordHeaderFields.VALUE, "2".getBytes());
+                .put(RecordHeaderFields.KEY, header.key())
+                .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);
@@ -103,17 +119,7 @@ public class ConsumerRecordJsonDeserializerTest {
                 json,
                 new TypeReference<ConsumerRecord<String, String>>() {});
         Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.topic(), actual.topic());
-        Assert.assertEquals(expected.partition(), actual.partition());
-        Assert.assertEquals(expected.timestampType(), actual.timestampType());
-        Assert.assertEquals(expected.timestamp(), actual.timestamp());
-        Assert.assertEquals(expected.serializedKeySize(), actual.serializedKeySize());
-        Assert.assertEquals(expected.serializedValueSize(), actual.serializedValueSize());
-        Assert.assertEquals(expected.offset(), actual.offset());
-        Assert.assertEquals(expected.headers(), actual.headers());
-        Assert.assertEquals(expected.checksum(), actual.checksum());
-        Assert.assertEquals(expected.key(), actual.key());
-        Assert.assertEquals(expected.value(), actual.value());
+        Assert.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @SuppressWarnings("deprecation")
@@ -121,7 +127,7 @@ public class ConsumerRecordJsonDeserializerTest {
     public void testDeserialization2() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
-                Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
+                Collections.singletonList(new RecordHeader("1", "1".getBytes())));
         ConsumerRecord<String, String> expected = new ConsumerRecord<>(
                 "topic",
                 1,
@@ -135,26 +141,22 @@ public class ConsumerRecordJsonDeserializerTest {
                 "2",
                 headers);
 
-
-
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(ConsumerRecordFields.TOPIC, "topic");
-        objectNode.put(ConsumerRecordFields.PARTITION, 1);
-        objectNode.put(ConsumerRecordFields.OFFSET, 1);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP, now);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, TimestampType.NO_TIMESTAMP_TYPE.name());
-        objectNode.put(ConsumerRecordFields.CHECKSUM, 1L);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.KEY, "1");
-        objectNode.put(ConsumerRecordFields.VALUE, "2");
+        objectNode.put(ConsumerRecordFields.TOPIC, expected.topic());
+        objectNode.put(ConsumerRecordFields.PARTITION, expected.partition());
+        objectNode.put(ConsumerRecordFields.OFFSET, expected.offset());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP, expected.timestamp());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, expected.timestampType().name());
+        objectNode.put(ConsumerRecordFields.CHECKSUM, expected.checksum());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, expected.serializedKeySize());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, expected.serializedValueSize());
+        objectNode.put(ConsumerRecordFields.KEY, expected.key());
+        objectNode.put(ConsumerRecordFields.VALUE, expected.value());
         ArrayNode headerArray = objectNode.putArray(ConsumerRecordFields.HEADERS);
+        Header header = headers.iterator().next();
         headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "1")
-                .put(RecordHeaderFields.VALUE, "1".getBytes());
-        headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "2")
-                .put(RecordHeaderFields.VALUE, "2".getBytes());
+                .put(RecordHeaderFields.KEY, header.key())
+                .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);
@@ -163,17 +165,7 @@ public class ConsumerRecordJsonDeserializerTest {
                 json,
                 new TypeReference<ConsumerRecord<String, String>>() {});
         Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.topic(), actual.topic());
-        Assert.assertEquals(expected.partition(), actual.partition());
-        Assert.assertEquals(expected.timestampType(), actual.timestampType());
-        Assert.assertEquals(expected.timestamp(), actual.timestamp());
-        Assert.assertEquals(expected.serializedKeySize(), actual.serializedKeySize());
-        Assert.assertEquals(expected.serializedValueSize(), actual.serializedValueSize());
-        Assert.assertEquals(expected.offset(), actual.offset());
-        Assert.assertEquals(expected.headers(), actual.headers());
-        Assert.assertEquals(expected.checksum(), actual.checksum());
-        Assert.assertEquals(expected.key(), actual.key());
-        Assert.assertEquals(expected.value(), actual.value());
+        Assert.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @SuppressWarnings("deprecation")
@@ -181,7 +173,7 @@ public class ConsumerRecordJsonDeserializerTest {
     public void testDeserialization3() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
-                Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
+                Collections.singletonList(new RecordHeader("1", "1".getBytes())));
         ConsumerRecord<String, String> expected = new ConsumerRecord<>(
                 "topic",
                 1,
@@ -196,23 +188,21 @@ public class ConsumerRecordJsonDeserializerTest {
                 headers);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(ConsumerRecordFields.TOPIC, "topic");
-        objectNode.put(ConsumerRecordFields.PARTITION, 1);
-        objectNode.put(ConsumerRecordFields.OFFSET, 1);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP, now);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, TimestampType.NO_TIMESTAMP_TYPE.name());
-        objectNode.put(ConsumerRecordFields.CHECKSUM, 1L);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.KEY, "1");
-        objectNode.put(ConsumerRecordFields.VALUE, "2");
+        objectNode.put(ConsumerRecordFields.TOPIC, expected.topic());
+        objectNode.put(ConsumerRecordFields.PARTITION, expected.partition());
+        objectNode.put(ConsumerRecordFields.OFFSET, expected.offset());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP, expected.timestamp());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, expected.timestampType().name());
+        objectNode.put(ConsumerRecordFields.CHECKSUM, expected.checksum());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, expected.serializedKeySize());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, expected.serializedValueSize());
+        objectNode.put(ConsumerRecordFields.KEY, expected.key());
+        objectNode.put(ConsumerRecordFields.VALUE, expected.value());
         ArrayNode headerArray = objectNode.putArray(ConsumerRecordFields.HEADERS);
+        Header header = headers.iterator().next();
         headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "1")
-                .put(RecordHeaderFields.VALUE, "1".getBytes());
-        headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "2")
-                .put(RecordHeaderFields.VALUE, "2".getBytes());
+                .put(RecordHeaderFields.KEY, header.key())
+                .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);
@@ -220,18 +210,7 @@ public class ConsumerRecordJsonDeserializerTest {
         ConsumerRecord actual = objectMapper.readValue(
                 json,
                 ConsumerRecord.class);
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.topic(), actual.topic());
-        Assert.assertEquals(expected.partition(), actual.partition());
-        Assert.assertEquals(expected.timestampType(), actual.timestampType());
-        Assert.assertEquals(expected.timestamp(), actual.timestamp());
-        Assert.assertEquals(expected.serializedKeySize(), actual.serializedKeySize());
-        Assert.assertEquals(expected.serializedValueSize(), actual.serializedValueSize());
-        Assert.assertEquals(expected.offset(), actual.offset());
-        Assert.assertEquals(expected.headers(), actual.headers());
-        Assert.assertEquals(expected.checksum(), actual.checksum());
-        Assert.assertEquals(expected.key(), actual.key());
-        Assert.assertEquals(expected.value(), actual.value());
+        Assert.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @SuppressWarnings("deprecation")
@@ -239,7 +218,7 @@ public class ConsumerRecordJsonDeserializerTest {
     public void testDeserialization4() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
-                Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
+                Collections.singletonList(new RecordHeader("1", "1".getBytes())));
         ConsumerRecord<String, String> expected = new ConsumerRecord<>(
                 "topic",
                 1,
@@ -254,23 +233,21 @@ public class ConsumerRecordJsonDeserializerTest {
                 headers);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(ConsumerRecordFields.TOPIC, "topic");
-        objectNode.put(ConsumerRecordFields.PARTITION, 1);
-        objectNode.put(ConsumerRecordFields.OFFSET, 1);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP, now);
-        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, TimestampType.NO_TIMESTAMP_TYPE.name());
-        objectNode.put(ConsumerRecordFields.CHECKSUM, 1L);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, 1);
-        objectNode.put(ConsumerRecordFields.KEY, (String)null);
-        objectNode.put(ConsumerRecordFields.VALUE, (String)null);
+        objectNode.put(ConsumerRecordFields.TOPIC, expected.topic());
+        objectNode.put(ConsumerRecordFields.PARTITION, expected.partition());
+        objectNode.put(ConsumerRecordFields.OFFSET, expected.offset());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP, expected.timestamp());
+        objectNode.put(ConsumerRecordFields.TIMESTAMP_TYPE, expected.timestampType().name());
+        objectNode.put(ConsumerRecordFields.CHECKSUM, expected.checksum());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_KEY_SIZE, expected.serializedKeySize());
+        objectNode.put(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, expected.serializedValueSize());
+        objectNode.put(ConsumerRecordFields.KEY, expected.key());
+        objectNode.put(ConsumerRecordFields.VALUE, expected.value());
         ArrayNode headerArray = objectNode.putArray(ConsumerRecordFields.HEADERS);
+        Header header = headers.iterator().next();
         headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "1")
-                .put(RecordHeaderFields.VALUE, "1".getBytes());
-        headerArray.addObject()
-                .put(RecordHeaderFields.KEY, "2")
-                .put(RecordHeaderFields.VALUE, "2".getBytes());
+                .put(RecordHeaderFields.KEY, header.key())
+                .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);
@@ -278,17 +255,6 @@ public class ConsumerRecordJsonDeserializerTest {
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
                 new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.topic(), actual.topic());
-        Assert.assertEquals(expected.partition(), actual.partition());
-        Assert.assertEquals(expected.timestampType(), actual.timestampType());
-        Assert.assertEquals(expected.timestamp(), actual.timestamp());
-        Assert.assertEquals(expected.serializedKeySize(), actual.serializedKeySize());
-        Assert.assertEquals(expected.serializedValueSize(), actual.serializedValueSize());
-        Assert.assertEquals(expected.offset(), actual.offset());
-        Assert.assertEquals(expected.headers(), actual.headers());
-        Assert.assertEquals(expected.checksum(), actual.checksum());
-        Assert.assertEquals(expected.key(), actual.key());
-        Assert.assertEquals(expected.value(), actual.value());
+        Assert.assertTrue(consumerRecordEquals(expected, actual));
     }
 }

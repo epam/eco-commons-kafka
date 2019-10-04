@@ -53,7 +53,7 @@ public class TopicPartitionJsonSerializerTest {
 
         JsonNode jsonNode = objectMapper.readTree(json);
         Assert.assertEquals(2, jsonNode.size());
-        Assert.assertEquals("topic", jsonNode.get(TopicPartitionFields.TOPIC).textValue());
-        Assert.assertEquals(1, jsonNode.get(TopicPartitionFields.PARTITION).intValue());
+        Assert.assertEquals(origin.topic(), jsonNode.get(TopicPartitionFields.TOPIC).textValue());
+        Assert.assertEquals(origin.partition(), jsonNode.get(TopicPartitionFields.PARTITION).intValue());
     }
 }

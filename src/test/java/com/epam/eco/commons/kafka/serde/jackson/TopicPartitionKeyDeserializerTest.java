@@ -50,15 +50,18 @@ public class TopicPartitionKeyDeserializerTest {
 
     @Test
     public void testKeyDeserialization() throws Exception {
+        String partition0 = "topic-0";
+        String partition1 = "topic-1";
+        String partition2 = "topic-2";
         Map<TopicPartition, String> expected = new HashMap<>();
-        expected.put(new TopicPartition("topic", 0), "topic-0");
-        expected.put(new TopicPartition("topic", 1), "topic-1");
-        expected.put(new TopicPartition("topic", 2), "topic-2");
+        expected.put(new TopicPartition("topic", 0), partition0);
+        expected.put(new TopicPartition("topic", 1), partition1);
+        expected.put(new TopicPartition("topic", 2), partition2);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("topic-0", "topic-0");
-        objectNode.put("topic-1", "topic-1");
-        objectNode.put("topic-2", "topic-2");
+        objectNode.put(partition0, partition0);
+        objectNode.put(partition1, partition1);
+        objectNode.put(partition2, partition2);
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);

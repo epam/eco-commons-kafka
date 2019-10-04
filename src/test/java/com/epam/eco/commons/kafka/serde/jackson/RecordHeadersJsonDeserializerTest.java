@@ -54,16 +54,20 @@ public class RecordHeadersJsonDeserializerTest {
 
     @Test
     public void testDeserialization() throws Exception {
+        String firstSample = "1";
+        String secondSample = "2";
         Headers expected = new RecordHeaders(
-                Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
+                Arrays.asList(
+                        new RecordHeader(firstSample, firstSample.getBytes()),
+                        new RecordHeader(secondSample, secondSample.getBytes())));
 
         ArrayNode arrayNode = objectMapper.createArrayNode();
         arrayNode.addObject()
-                .put(RecordHeaderFields.KEY, "1")
-                .put(RecordHeaderFields.VALUE, "1".getBytes());
+                .put(RecordHeaderFields.KEY, firstSample)
+                .put(RecordHeaderFields.VALUE, firstSample.getBytes());
         arrayNode.addObject()
-                .put(RecordHeaderFields.KEY, "2")
-                .put(RecordHeaderFields.VALUE, "2".getBytes());
+                .put(RecordHeaderFields.KEY, secondSample)
+                .put(RecordHeaderFields.VALUE, secondSample.getBytes());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(arrayNode);
         Assert.assertNotNull(json);

@@ -49,8 +49,8 @@ public class KafkaPrincipalJsonDeserializerTest {
         KafkaPrincipal expected = new KafkaPrincipal("User", "John_Doe@acme.com");
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(KafkaPrincipalFields.PRINCIPAL_TYPE, "User");
-        objectNode.put(KafkaPrincipalFields.NAME, "John_Doe@acme.com");
+        objectNode.put(KafkaPrincipalFields.PRINCIPAL_TYPE, expected.getPrincipalType());
+        objectNode.put(KafkaPrincipalFields.NAME, expected.getName());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);

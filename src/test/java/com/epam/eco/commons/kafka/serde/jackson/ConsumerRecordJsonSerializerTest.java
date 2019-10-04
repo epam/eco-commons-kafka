@@ -15,11 +15,14 @@
  */
 package com.epam.eco.commons.kafka.serde.jackson;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
@@ -31,6 +34,8 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.type.SimpleType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
@@ -54,10 +59,9 @@ public class ConsumerRecordJsonSerializerTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerialization1() throws Exception {
         long now = new Date().getTime();
-        Headers headers = new RecordHeaders(
-                Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
+        Headers headers = new RecordHeaders(Collections.singletonList(new RecordHeader("1", "1".getBytes())));
         ConsumerRecord<String, String> origin = new ConsumerRecord<>(
                 "topic",
                 0,
@@ -75,25 +79,97 @@ public class ConsumerRecordJsonSerializerTest {
         Assert.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals("topic", jsonNode.get(ConsumerRecordFields.TOPIC).textValue());
-        Assert.assertEquals(0, jsonNode.get(ConsumerRecordFields.PARTITION).intValue());
-        Assert.assertEquals(0, jsonNode.get(ConsumerRecordFields.OFFSET).longValue());
-        Assert.assertEquals(now, jsonNode.get(ConsumerRecordFields.TIMESTAMP).longValue());
-        Assert.assertEquals(TimestampType.NO_TIMESTAMP_TYPE.name(), jsonNode.get(ConsumerRecordFields.TIMESTAMP_TYPE).textValue());
-        Assert.assertEquals(1L, jsonNode.get(ConsumerRecordFields.CHECKSUM).longValue());
-        Assert.assertEquals(1, jsonNode.get(ConsumerRecordFields.SERIALIZED_KEY_SIZE).intValue());
-        Assert.assertEquals(1, jsonNode.get(ConsumerRecordFields.SERIALIZED_VALUE_SIZE).intValue());
-        Assert.assertEquals(String.class.getName(), jsonNode.get(ConsumerRecordFields.KEY_CLASS).textValue());
-        Assert.assertEquals("1", jsonNode.get(ConsumerRecordFields.KEY).textValue());
-        Assert.assertEquals(String.class.getName(), jsonNode.get(ConsumerRecordFields.VALUE_CLASS).textValue());
-        Assert.assertEquals("2", jsonNode.get(ConsumerRecordFields.VALUE).textValue());
+        Assert.assertEquals(13, jsonNode.size());
+        Assert.assertEquals(origin.topic(), jsonNode.get(ConsumerRecordFields.TOPIC).textValue());
+        Assert.assertEquals(origin.partition(), jsonNode.get(ConsumerRecordFields.PARTITION).intValue());
+        Assert.assertEquals(origin.offset(), jsonNode.get(ConsumerRecordFields.OFFSET).longValue());
+        Assert.assertEquals(origin.timestamp(), jsonNode.get(ConsumerRecordFields.TIMESTAMP).longValue());
+        Assert.assertEquals(origin.timestampType().name(), jsonNode.get(ConsumerRecordFields.TIMESTAMP_TYPE).textValue());
+        Assert.assertEquals(origin.checksum(), jsonNode.get(ConsumerRecordFields.CHECKSUM).longValue());
+        Assert.assertEquals(origin.serializedKeySize(), jsonNode.get(ConsumerRecordFields.SERIALIZED_KEY_SIZE).intValue());
+        Assert.assertEquals(origin.serializedValueSize(), jsonNode.get(ConsumerRecordFields.SERIALIZED_VALUE_SIZE).intValue());
+        Assert.assertEquals(origin.key().getClass().getName(), jsonNode.get(ConsumerRecordFields.KEY_CLASS).textValue());
+        Assert.assertEquals(origin.key(), jsonNode.get(ConsumerRecordFields.KEY).textValue());
+        Assert.assertEquals(origin.value().getClass().getName(), jsonNode.get(ConsumerRecordFields.VALUE_CLASS).textValue());
+        Assert.assertEquals(origin.value(), jsonNode.get(ConsumerRecordFields.VALUE).textValue());
         Iterator<JsonNode> headerNodes = jsonNode.get(ConsumerRecordFields.HEADERS).elements();
         JsonNode tempNode = headerNodes.next();
-        Assert.assertEquals("1", tempNode.get(RecordHeaderFields.KEY).textValue());
-        Assert.assertArrayEquals("1".getBytes(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
-        tempNode = headerNodes.next();
-        Assert.assertEquals("2", tempNode.get(RecordHeaderFields.KEY).textValue());
-        Assert.assertArrayEquals("2".getBytes(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
-        Assert.assertFalse(headerNodes.hasNext());
+        Header header = origin.headers().iterator().next();
+        Assert.assertEquals(header.key(), tempNode.get(RecordHeaderFields.KEY).textValue());
+        Assert.assertArrayEquals(header.value(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
+    }
+
+    @Test
+    public void testSerialization2() throws Exception {
+        SimpleEntity simpleEntity = new SimpleEntity();
+        simpleEntity.id = 420;
+        simpleEntity.name = "It is time!";
+        Map<String, String> youngMan = new HashMap<>();
+        youngMan.put("Y", "M");
+        youngMan.put("C", "A");
+        long now = new Date().getTime();
+        Headers headers = new RecordHeaders(Collections.singletonList(new RecordHeader("1", "1".getBytes())));
+        ConsumerRecord<Map<String, String>, SimpleEntity> record = new ConsumerRecord<>(
+                "topic",
+                0,
+                0,
+                now,
+                TimestampType.NO_TIMESTAMP_TYPE,
+                1L,
+                1,
+                1,
+                youngMan,
+                simpleEntity,
+                headers);
+        EntityWithConsumerRecord origin = new EntityWithConsumerRecord();
+        origin.id = 42;
+        origin.name = "name";
+        origin.record = record;
+
+        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
+        Assert.assertNotNull(json);
+
+        JsonNode jsonNode = objectMapper.readTree(json);
+        JsonNode recordNode = jsonNode.get("record");
+        Assert.assertEquals(3, jsonNode.size());
+        Assert.assertEquals(origin.id, jsonNode.get("id").intValue());
+        Assert.assertEquals(origin.name, jsonNode.get("name").textValue());
+
+        Assert.assertEquals(13, recordNode.size());
+        Assert.assertEquals(record.topic(), recordNode.get(ConsumerRecordFields.TOPIC).textValue());
+        Assert.assertEquals(record.partition(), recordNode.get(ConsumerRecordFields.PARTITION).intValue());
+        Assert.assertEquals(record.offset(), recordNode.get(ConsumerRecordFields.OFFSET).longValue());
+        Assert.assertEquals(record.timestamp(), recordNode.get(ConsumerRecordFields.TIMESTAMP).longValue());
+        Assert.assertEquals(record.timestampType().name(), recordNode.get(ConsumerRecordFields.TIMESTAMP_TYPE).textValue());
+        Assert.assertEquals(record.checksum(), recordNode.get(ConsumerRecordFields.CHECKSUM).longValue());
+        Assert.assertEquals(record.serializedKeySize(), recordNode.get(ConsumerRecordFields.SERIALIZED_KEY_SIZE).intValue());
+        Assert.assertEquals(record.serializedValueSize(), recordNode.get(ConsumerRecordFields.SERIALIZED_VALUE_SIZE).intValue());
+        Assert.assertEquals(
+                TypeFactory.defaultInstance().constructMapType(Map.class, String.class, String.class).toCanonical(),
+                recordNode.get(ConsumerRecordFields.KEY_CLASS).textValue());
+        Assert.assertEquals(record.key().get("Y"), recordNode.get(ConsumerRecordFields.KEY).get("Y").textValue());
+        Assert.assertEquals(record.key().get("C"), recordNode.get(ConsumerRecordFields.KEY).get("C").textValue());
+        Assert.assertEquals(
+                SimpleType.constructUnsafe(SimpleEntity.class).toCanonical(),
+                recordNode.get(ConsumerRecordFields.VALUE_CLASS).textValue());
+        Assert.assertEquals(record.value().id, recordNode.get(ConsumerRecordFields.VALUE).get("id").intValue());
+        Assert.assertEquals(record.value().name, recordNode.get(ConsumerRecordFields.VALUE).get("name").textValue());
+        Iterator<JsonNode> headerNodes = recordNode.get(ConsumerRecordFields.HEADERS).elements();
+        JsonNode tempNode = headerNodes.next();
+        Header header = origin.record.headers().iterator().next();
+        Assert.assertEquals(header.key(), tempNode.get(RecordHeaderFields.KEY).textValue());
+        Assert.assertArrayEquals(header.value(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
+
+    }
+
+    private static class EntityWithConsumerRecord {
+        public int id;
+        public String name;
+        public ConsumerRecord<Map<String, String>, SimpleEntity> record;
+    }
+
+    private static class SimpleEntity {
+        public int id;
+        public String name;
     }
 }

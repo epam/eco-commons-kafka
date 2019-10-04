@@ -53,8 +53,8 @@ public class KafkaPrincipalJsonSerializerTest {
 
         JsonNode jsonNode = objectMapper.readTree(json);
         Assert.assertEquals(2, jsonNode.size());
-        Assert.assertEquals("User", jsonNode.get(KafkaPrincipalFields.PRINCIPAL_TYPE).textValue());
-        Assert.assertEquals("Raman_Babich@epam.com", jsonNode.get(KafkaPrincipalFields.NAME).textValue());
+        Assert.assertEquals(origin.getPrincipalType(), jsonNode.get(KafkaPrincipalFields.PRINCIPAL_TYPE).textValue());
+        Assert.assertEquals(origin.getName(), jsonNode.get(KafkaPrincipalFields.NAME).textValue());
     }
 
 }

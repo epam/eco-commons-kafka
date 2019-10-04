@@ -54,8 +54,8 @@ public class RecordHeaderJsonSerializerTest {
 
         JsonNode jsonNode = objectMapper.readTree(json);
         Assert.assertEquals(2, jsonNode.size());
-        Assert.assertEquals("1", jsonNode.get(RecordHeaderFields.KEY).textValue());
-        Assert.assertArrayEquals("1".getBytes(), jsonNode.get(RecordHeaderFields.VALUE).binaryValue());
+        Assert.assertEquals(origin.key(), jsonNode.get(RecordHeaderFields.KEY).textValue());
+        Assert.assertArrayEquals(origin.value(), jsonNode.get(RecordHeaderFields.VALUE).binaryValue());
     }
 
 }

@@ -51,8 +51,8 @@ public class RecordHeaderJsonDeserializerTest {
         Header expected = new RecordHeader("1", "1".getBytes());
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(RecordHeaderFields.KEY, "1");
-        objectNode.put(RecordHeaderFields.VALUE, "1".getBytes());
+        objectNode.put(RecordHeaderFields.KEY, expected.key());
+        objectNode.put(RecordHeaderFields.VALUE, expected.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);
