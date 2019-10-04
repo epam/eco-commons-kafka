@@ -17,7 +17,8 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.io.IOException;
 
-import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -26,23 +27,20 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 /**
  * @author Raman_Babich
  */
-public class TopicPartitionJsonSerializer extends StdSerializer<TopicPartition> {
+public class RecordHeadersJsonSerializer extends StdSerializer<RecordHeaders> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 266678686710865902L;
 
-    public TopicPartitionJsonSerializer() {
-        super(TopicPartition.class);
+    public RecordHeadersJsonSerializer() {
+        super(RecordHeaders.class);
     }
 
     @Override
-    public void serialize(
-            TopicPartition value,
-            JsonGenerator gen,
-            SerializerProvider serializers) throws IOException {
-        gen.writeStartObject();
-        gen.writeStringField(TopicPartitionFields.TOPIC, value.topic());
-        gen.writeNumberField(TopicPartitionFields.PARTITION, value.partition());
-        gen.writeEndObject();
+    public void serialize(RecordHeaders value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        gen.writeStartArray();
+        for (Header header : value) {
+            gen.writeObject(header);
+        }
+        gen.writeEndArray();
     }
-
 }

@@ -67,5 +67,4 @@ public class TopicPartitionSerdeTest {
         Assert.assertEquals(deserialized, origin);
     }
 
-
 }

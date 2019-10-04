@@ -18,12 +18,12 @@ package com.epam.eco.commons.kafka.serde.jackson;
 /**
  * @author Andrei_Tytsik
  */
-public abstract class HeaderFields {
+public abstract class RecordHeaderFields {
 
     public static final String KEY = "key";
     public static final String VALUE = "value";
 
-    private HeaderFields() {
+    private RecordHeaderFields() {
     }
 
 }

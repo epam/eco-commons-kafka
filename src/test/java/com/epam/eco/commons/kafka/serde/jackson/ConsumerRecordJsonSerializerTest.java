@@ -25,7 +25,7 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,25 +35,22 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonSerializer;
-import com.epam.eco.commons.kafka.serde.jackson.HeaderJsonSerializer;
-
 /**
  * @author Raman_Babich
  */
 public class ConsumerRecordJsonSerializerTest {
 
-    private ObjectMapper objectMapper;
+    private static ObjectMapper objectMapper;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .registerModule(new SimpleModule()
                         .addSerializer(new ConsumerRecordJsonSerializer())
-                        .addSerializer(new HeaderJsonSerializer()));
+                        .addSerializer(new RecordHeaderJsonSerializer()));
     }
 
     @Test
@@ -78,25 +75,25 @@ public class ConsumerRecordJsonSerializerTest {
         Assert.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals("topic", jsonNode.get("topic").textValue());
-        Assert.assertEquals(0, jsonNode.get("partition").intValue());
-        Assert.assertEquals(0, jsonNode.get("offset").longValue());
-        Assert.assertEquals(now, jsonNode.get("timestamp").longValue());
-        Assert.assertEquals("NoTimestampType", jsonNode.get("timestampType").textValue());
-        Assert.assertEquals(1L, jsonNode.get("checksum").longValue());
-        Assert.assertEquals(1, jsonNode.get("serializedKeySize").intValue());
-        Assert.assertEquals(1, jsonNode.get("serializedValueSize").intValue());
-        Assert.assertEquals(String.class.getName(), jsonNode.get("@keyClass").textValue());
-        Assert.assertEquals("1", jsonNode.get("key").textValue());
-        Assert.assertEquals(String.class.getName(), jsonNode.get("@valueClass").textValue());
-        Assert.assertEquals("2", jsonNode.get("value").textValue());
-        Iterator<JsonNode> headerNodes = jsonNode.get("headers").elements();
+        Assert.assertEquals("topic", jsonNode.get(ConsumerRecordFields.TOPIC).textValue());
+        Assert.assertEquals(0, jsonNode.get(ConsumerRecordFields.PARTITION).intValue());
+        Assert.assertEquals(0, jsonNode.get(ConsumerRecordFields.OFFSET).longValue());
+        Assert.assertEquals(now, jsonNode.get(ConsumerRecordFields.TIMESTAMP).longValue());
+        Assert.assertEquals(TimestampType.NO_TIMESTAMP_TYPE.name(), jsonNode.get(ConsumerRecordFields.TIMESTAMP_TYPE).textValue());
+        Assert.assertEquals(1L, jsonNode.get(ConsumerRecordFields.CHECKSUM).longValue());
+        Assert.assertEquals(1, jsonNode.get(ConsumerRecordFields.SERIALIZED_KEY_SIZE).intValue());
+        Assert.assertEquals(1, jsonNode.get(ConsumerRecordFields.SERIALIZED_VALUE_SIZE).intValue());
+        Assert.assertEquals(String.class.getName(), jsonNode.get(ConsumerRecordFields.KEY_CLASS).textValue());
+        Assert.assertEquals("1", jsonNode.get(ConsumerRecordFields.KEY).textValue());
+        Assert.assertEquals(String.class.getName(), jsonNode.get(ConsumerRecordFields.VALUE_CLASS).textValue());
+        Assert.assertEquals("2", jsonNode.get(ConsumerRecordFields.VALUE).textValue());
+        Iterator<JsonNode> headerNodes = jsonNode.get(ConsumerRecordFields.HEADERS).elements();
         JsonNode tempNode = headerNodes.next();
-        Assert.assertEquals("1", tempNode.get("key").textValue());
-        Assert.assertTrue(Arrays.equals("1".getBytes(), tempNode.get("value").binaryValue()));
+        Assert.assertEquals("1", tempNode.get(RecordHeaderFields.KEY).textValue());
+        Assert.assertArrayEquals("1".getBytes(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
         tempNode = headerNodes.next();
-        Assert.assertEquals("2", tempNode.get("key").textValue());
-        Assert.assertTrue(Arrays.equals("2".getBytes(), tempNode.get("value").binaryValue()));
+        Assert.assertEquals("2", tempNode.get(RecordHeaderFields.KEY).textValue());
+        Assert.assertArrayEquals("2".getBytes(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
         Assert.assertFalse(headerNodes.hasNext());
     }
 }

@@ -41,29 +41,22 @@ public class ConsumerRecordJsonSerializer extends StdSerializer<ConsumerRecord> 
             ConsumerRecord value,
             JsonGenerator gen,
             SerializerProvider serializers) throws IOException {
-        if (value == null) {
-            gen.writeNull();
-            return;
-        }
-
         gen.writeStartObject();
         gen.writeStringField(ConsumerRecordFields.TOPIC, value.topic());
         gen.writeNumberField(ConsumerRecordFields.PARTITION, value.partition());
         gen.writeNumberField(ConsumerRecordFields.OFFSET, value.offset());
         gen.writeNumberField(ConsumerRecordFields.TIMESTAMP, value.timestamp());
-        gen.writeStringField(
-                ConsumerRecordFields.TIMESTAMP_TYPE,
-                value.timestampType() != null ? value.timestampType().toString() : null);
+        gen.writeObjectField(ConsumerRecordFields.TIMESTAMP_TYPE, value.timestampType());
         gen.writeNumberField(ConsumerRecordFields.CHECKSUM, value.checksum());
         gen.writeNumberField(ConsumerRecordFields.SERIALIZED_KEY_SIZE, value.serializedKeySize());
         gen.writeNumberField(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, value.serializedValueSize());
         gen.writeObjectField(
                 ConsumerRecordFields.KEY_CLASS,
-                value.key() != null ? value.key().getClass().getName() : null);
+                value.key() != null ? value.key().getClass() : null);
         gen.writeObjectField(ConsumerRecordFields.KEY, value.key());
         gen.writeObjectField(
                 ConsumerRecordFields.VALUE_CLASS,
-                value.value() != null ? value.key().getClass().getName() : null);
+                value.value() != null ? value.value().getClass() : null);
         gen.writeObjectField(ConsumerRecordFields.VALUE, value.value());
         gen.writeObjectField(ConsumerRecordFields.HEADERS, value.headers());
         gen.writeEndObject();

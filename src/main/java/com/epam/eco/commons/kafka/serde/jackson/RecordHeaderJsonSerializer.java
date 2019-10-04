@@ -17,7 +17,7 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.io.IOException;
 
-import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -26,24 +26,19 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 /**
  * @author Raman_Babich
  */
-public class HeaderJsonSerializer extends StdSerializer<Header> {
+public class RecordHeaderJsonSerializer extends StdSerializer<RecordHeader> {
 
     private static final long serialVersionUID = 1L;
 
-    public HeaderJsonSerializer() {
-        super(Header.class);
+    public RecordHeaderJsonSerializer() {
+        super(RecordHeader.class);
     }
 
     @Override
-    public void serialize(Header value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        if (value == null) {
-            gen.writeNull();
-            return;
-        }
-
+    public void serialize(RecordHeader value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeStartObject();
-        gen.writeStringField(HeaderFields.KEY, value.key());
-        gen.writeBinaryField(HeaderFields.VALUE, value.value());
+        gen.writeStringField(RecordHeaderFields.KEY, value.key());
+        gen.writeBinaryField(RecordHeaderFields.VALUE, value.value());
         gen.writeEndObject();
     }
 

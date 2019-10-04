@@ -20,9 +20,8 @@ import java.io.IOException;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 /**
@@ -38,16 +37,25 @@ public class KafkaPrincipalJsonDeserializer extends StdDeserializer<KafkaPrincip
 
     @Override
     public KafkaPrincipal deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
-        ObjectCodec oc = jsonParser.getCodec();
-        JsonNode node = oc.readTree(jsonParser);
-        if (node == null || node.isNull()) {
-            return null;
+        if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
+            jsonParser.nextToken();
         }
+        String fieldName = jsonParser.getCurrentName();
 
-        String principalType =
-                JsonDeserializerUtils.readFieldAsString(node, KafkaPrincipalFields.PRINCIPAL_TYPE, false, ctxt);
-        String name =
-                JsonDeserializerUtils.readFieldAsString(node, KafkaPrincipalFields.NAME, false, ctxt);
+        String principalType = null;
+        String name = null;
+        while (fieldName != null) {
+            if (KafkaPrincipalFields.PRINCIPAL_TYPE.equals(fieldName)) {
+                jsonParser.nextToken();
+                principalType = _parseString(jsonParser, ctxt);
+            } else if (KafkaPrincipalFields.NAME.equals(fieldName)) {
+                jsonParser.nextToken();
+                name = _parseString(jsonParser, ctxt);
+            } else {
+                handleUnknownProperty(jsonParser, ctxt, _valueClass, fieldName);
+            }
+            fieldName = jsonParser.nextFieldName();
+        }
         return new KafkaPrincipal(principalType, name);
     }
 

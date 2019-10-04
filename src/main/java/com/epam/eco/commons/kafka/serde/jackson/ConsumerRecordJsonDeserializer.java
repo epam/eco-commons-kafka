@@ -17,105 +17,184 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.record.TimestampType;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.type.SimpleType;
 
 /**
  * @author Raman_Babich
  */
 @SuppressWarnings("rawtypes")
-public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerRecord> {
+public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerRecord> implements ContextualDeserializer {
 
     private static final long serialVersionUID = 1L;
+
+    private static final JavaType JAVA_OBJECT_TYPE = SimpleType.constructUnsafe(Object.class);
+    private JavaType keyType = JAVA_OBJECT_TYPE;
+    private JavaType valueType = JAVA_OBJECT_TYPE;
 
     public ConsumerRecordJsonDeserializer() {
         super(ConsumerRecord.class);
     }
 
     @Override
-    public ConsumerRecord deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        ObjectCodec oc = p.getCodec();
-        JsonNode node = oc.readTree(p);
-        if (node == null || node.isNull()) {
-            return null;
+    public JsonDeserializer<?> createContextual(
+            DeserializationContext ctxt,
+            BeanProperty property) throws JsonMappingException {
+        JavaType recordType;
+        if (property != null) {
+            recordType = property.getType();
+        } else {
+            recordType = ctxt.getContextualType();
+        }
+        ConsumerRecordJsonDeserializer deserializer = new ConsumerRecordJsonDeserializer();
+        if (recordType.hasGenericTypes()) {
+            deserializer.keyType = recordType.containedType(0);
+            deserializer.valueType = recordType.containedType(1);
+        }
+        return deserializer;
+    }
+
+
+    // TODO: simplify this method
+    @Override
+    public ConsumerRecord deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
+        if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
+            jsonParser.nextToken();
+        }
+        String fieldName = jsonParser.getCurrentName();
+
+        String topic = null;
+        Integer partition = null;
+        Long offset = null;
+        long timestamp = ConsumerRecord.NO_TIMESTAMP;
+        TimestampType timestampType = TimestampType.NO_TIMESTAMP_TYPE;
+        long checksum = (long) ConsumerRecord.NULL_CHECKSUM;
+        int serializedKeySize = ConsumerRecord.NULL_SIZE;
+        int serializedValueSize = ConsumerRecord.NULL_SIZE;
+        Class<?> keyClass = Object.class;
+        JsonNode keyNode = null;
+        Object key = null;
+        Class<?> valueClass = Object.class;
+        JsonNode valueNode = null;
+        Object value = null;
+        Headers headers = null;
+
+        while (fieldName != null) {
+            switch (fieldName) {
+                case ConsumerRecordFields.TOPIC:
+                    jsonParser.nextToken();
+                    topic = _parseString(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.PARTITION:
+                    jsonParser.nextToken();
+                    partition = _parseIntPrimitive(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.OFFSET:
+                    jsonParser.nextToken();
+                    offset = _parseLongPrimitive(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.TIMESTAMP:
+                    jsonParser.nextToken();
+                    timestamp = _parseLongPrimitive(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.TIMESTAMP_TYPE:
+                    jsonParser.nextToken();
+                    timestampType = jsonParser.readValueAs(TimestampType.class);
+                    break;
+                case ConsumerRecordFields.CHECKSUM:
+                    jsonParser.nextToken();
+                    checksum = _parseLongPrimitive(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.SERIALIZED_KEY_SIZE:
+                    jsonParser.nextToken();
+                    serializedKeySize = _parseIntPrimitive(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.SERIALIZED_VALUE_SIZE:
+                    jsonParser.nextToken();
+                    serializedValueSize = _parseIntPrimitive(jsonParser, ctxt);
+                    break;
+                case ConsumerRecordFields.KEY_CLASS:
+                    jsonParser.nextToken();
+                    if (jsonParser.getCurrentToken() != JsonToken.VALUE_NULL) {
+                        keyClass = jsonParser.readValueAs(Class.class);
+                    }
+                    break;
+                case ConsumerRecordFields.KEY:
+                    jsonParser.nextToken();
+                    keyNode = jsonParser.getCodec().readTree(jsonParser);
+                    break;
+                case ConsumerRecordFields.VALUE_CLASS:
+                    jsonParser.nextToken();
+                    if (jsonParser.getCurrentToken() != JsonToken.VALUE_NULL) {
+                        valueClass = jsonParser.readValueAs(Class.class);
+                    }
+                    break;
+                case ConsumerRecordFields.VALUE:
+                    jsonParser.nextToken();
+                    valueNode = jsonParser.getCodec().readTree(jsonParser);
+                    break;
+                case ConsumerRecordFields.HEADERS:
+                    jsonParser.nextToken();
+                    headers = jsonParser.readValueAs(Headers.class);
+                    break;
+                default:
+                    handleUnknownProperty(jsonParser, ctxt, _valueClass, fieldName);
+                    break;
+            }
+            fieldName = jsonParser.nextFieldName();
         }
 
-        try {
-            String topic =
-                    JsonDeserializerUtils.readFieldAsString(node, ConsumerRecordFields.TOPIC, false, ctxt);
-            Integer partition =
-                    JsonDeserializerUtils.readFieldAsInteger(node, ConsumerRecordFields.PARTITION, false, ctxt);
-            Long offset =
-                    JsonDeserializerUtils.readFieldAsLong(node, ConsumerRecordFields.OFFSET, false, ctxt);
-            Long timestamp =
-                    JsonDeserializerUtils.readFieldAsLong(node, ConsumerRecordFields.TIMESTAMP, false, ctxt);
+        validateNotNull(partition, ConsumerRecordFields.PARTITION, ctxt);
+        validateNotNull(offset, ConsumerRecordFields.OFFSET, ctxt);
 
-            String timestampTypeStr =
-                    JsonDeserializerUtils.readFieldAsString(node, ConsumerRecordFields.TIMESTAMP_TYPE, true, ctxt);
-            TimestampType timestampType =
-                    timestampTypeStr != null ? TimestampType.forName(timestampTypeStr) : null;
-
-            Long checksum =
-                    JsonDeserializerUtils.readFieldAsLong(node, ConsumerRecordFields.CHECKSUM, true, ctxt);
-
-            Integer serializedKeySize =
-                    JsonDeserializerUtils.readFieldAsInteger(
-                            node, ConsumerRecordFields.SERIALIZED_KEY_SIZE, false, ctxt);
-            Integer serializedValueSize =
-                    JsonDeserializerUtils.readFieldAsInteger(
-                            node, ConsumerRecordFields.SERIALIZED_VALUE_SIZE, false, ctxt);
-
-            Object key = null;
-            JsonNode keyNode = node.get(ConsumerRecordFields.KEY);
-            if (keyNode != null && !keyNode.isNull()) {
-                String keyClass =
-                        JsonDeserializerUtils.readFieldAsString(
-                                node, ConsumerRecordFields.KEY_CLASS, false, ctxt);;
-                key = oc.readValue(keyNode.traverse(oc), ClassUtils.getClass(keyClass));
+        ObjectCodec codec = jsonParser.getCodec();
+        if (keyNode != null) {
+            if (!keyType.isJavaLangObject()) {
+                key = codec.readValue(keyNode.traverse(codec), valueType);
+            } else {
+                key = codec.readValue(keyNode.traverse(codec), keyClass);
             }
-
-            Object value = null;
-            JsonNode valueNode = node.get(ConsumerRecordFields.VALUE);
-            if (valueNode != null && !valueNode.isNull()) {
-                String valueClass =
-                        JsonDeserializerUtils.readFieldAsString(
-                                node, ConsumerRecordFields.VALUE_CLASS, false, ctxt);;
-                value = oc.readValue(valueNode.traverse(oc), ClassUtils.getClass(valueClass));
+        }
+        if (valueNode != null) {
+            if (!valueType.isJavaLangObject()) {
+                value = codec.readValue(valueNode.traverse(codec), valueType);
+            } else {
+                value = codec.readValue(valueNode.traverse(codec), valueClass);
             }
+        }
 
-            Headers headers = null;
-            JsonNode headersNode = node.get(ConsumerRecordFields.HEADERS);
-            if (headersNode != null && !headersNode.isNull()) {
-                headers = oc.readValue(headersNode.traverse(oc), Headers.class);
-            }
+        return new ConsumerRecord<>(
+                topic,
+                partition,
+                offset,
+                timestamp,
+                timestampType,
+                checksum,
+                serializedKeySize,
+                serializedValueSize,
+                key,
+                value,
+                headers);
+    }
 
-            return new ConsumerRecord<>(
-                    topic,
-                    partition,
-                    offset,
-                    timestamp,
-                    timestampType,
-                    checksum,
-                    serializedKeySize,
-                    serializedValueSize,
-                    key,
-                    value,
-                    headers);
-        } catch (ClassNotFoundException cnfe) {
-            throw new JsonMappingException(
-                    null,
-                    String.format(
-                            "Error has been encountered while parsing '%s' as ConsumerRecord.", node.toString()),
-                    cnfe);
+    private void validateNotNull(
+            Object value, String fieldName, DeserializationContext ctxt) throws JsonMappingException {
+        if (value == null) {
+            ctxt.reportInputMismatch(_valueClass, "Field '%s' is required", fieldName);
         }
     }
 

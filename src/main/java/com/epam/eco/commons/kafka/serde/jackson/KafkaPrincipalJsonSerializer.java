@@ -17,7 +17,7 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.io.IOException;
 
-import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -26,23 +26,19 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 /**
  * @author Raman_Babich
  */
-public class TopicPartitionJsonSerializer extends StdSerializer<TopicPartition> {
+public class KafkaPrincipalJsonSerializer extends StdSerializer<KafkaPrincipal> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -186630991795542295L;
 
-    public TopicPartitionJsonSerializer() {
-        super(TopicPartition.class);
+    public KafkaPrincipalJsonSerializer() {
+        super(KafkaPrincipal.class);
     }
 
     @Override
-    public void serialize(
-            TopicPartition value,
-            JsonGenerator gen,
-            SerializerProvider serializers) throws IOException {
+    public void serialize(KafkaPrincipal value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
-        gen.writeStringField(TopicPartitionFields.TOPIC, value.topic());
-        gen.writeNumberField(TopicPartitionFields.PARTITION, value.partition());
+        gen.writeStringField(KafkaPrincipalFields.PRINCIPAL_TYPE, value.getPrincipalType());
+        gen.writeStringField(KafkaPrincipalFields.NAME, value.getName());
         gen.writeEndObject();
     }
-
 }

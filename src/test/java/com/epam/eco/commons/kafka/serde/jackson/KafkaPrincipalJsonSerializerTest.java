@@ -15,51 +15,46 @@
  */
 package com.epam.eco.commons.kafka.serde.jackson;
 
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import com.epam.eco.commons.kafka.serde.jackson.HeaderJsonDeserializer;
-
 /**
  * @author Raman_Babich
  */
-public class HeaderJsonDeserializerTest {
+public class KafkaPrincipalJsonSerializerTest {
 
-    private ObjectMapper objectMapper;
+    private static ObjectMapper objectMapper;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .registerModule(new SimpleModule()
-                        .addDeserializer(Header.class, new HeaderJsonDeserializer()));
+                        .addSerializer(KafkaPrincipal.class, new KafkaPrincipalJsonSerializer()));
     }
 
     @Test
-    public void testDeserialization() throws Exception {
-        Header expected = new RecordHeader("1", "1".getBytes());
+    public void testSerialization() throws Exception {
+        KafkaPrincipal origin = new KafkaPrincipal("User", "Raman_Babich@epam.com");
 
-        ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("key", "1");
-        objectNode.put("value", "1".getBytes());
-
-        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
+        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
         Assert.assertNotNull(json);
 
-        Header actual = objectMapper.readValue(json, Header.class);
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(expected, actual);
+        JsonNode jsonNode = objectMapper.readTree(json);
+        Assert.assertEquals(2, jsonNode.size());
+        Assert.assertEquals("User", jsonNode.get(KafkaPrincipalFields.PRINCIPAL_TYPE).textValue());
+        Assert.assertEquals("Raman_Babich@epam.com", jsonNode.get(KafkaPrincipalFields.NAME).textValue());
     }
+
 }

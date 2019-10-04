@@ -17,7 +17,7 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,19 +27,18 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import com.epam.eco.commons.kafka.serde.jackson.TopicPartitionJsonDeserializer;
-
 /**
  * @author Raman_Babich
  */
 public class TopicPartitionJsonDeserializerTest {
 
-    private ObjectMapper objectMapper;
+    private static ObjectMapper objectMapper;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new ParameterNamesModule())
+        objectMapper
+                .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .registerModule(new SimpleModule()
@@ -48,11 +47,11 @@ public class TopicPartitionJsonDeserializerTest {
 
     @Test
     public void testDeserialization() throws Exception {
-        TopicPartition expected = new TopicPartition("topic", 0);
+        TopicPartition expected = new TopicPartition("topic", 2);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("topic", "topic");
-        objectNode.put("partition", 0);
+        objectNode.put(TopicPartitionFields.TOPIC, "topic");
+        objectNode.put(TopicPartitionFields.PARTITION, 2);
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);

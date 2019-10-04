@@ -17,7 +17,7 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.io.IOException;
 
-import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.internals.RecordHeader;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -27,41 +27,41 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 /**
  * @author Raman_Babich
  */
-public class TopicPartitionJsonDeserializer extends StdDeserializer<TopicPartition> {
+public class RecordHeaderJsonDeserializer extends StdDeserializer<RecordHeader> {
 
     private static final long serialVersionUID = 1L;
 
-    public TopicPartitionJsonDeserializer() {
-        super(TopicPartition.class);
+    public RecordHeaderJsonDeserializer() {
+        super(RecordHeader.class);
+    }
+
+    public RecordHeaderJsonDeserializer(Class<?> vc) {
+        super(vc);
     }
 
     @Override
-    public TopicPartition deserialize(
-            JsonParser jsonParser,
-            DeserializationContext ctxt) throws IOException {
+    public RecordHeader deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
             jsonParser.nextToken();
         }
         String fieldName = jsonParser.getCurrentName();
 
-        String topic = null;
-        Integer partition = null;
+        String key = null;
+        byte[] value = null;
         while (fieldName != null) {
-            if (TopicPartitionFields.TOPIC.equals(fieldName)) {
+            if (RecordHeaderFields.KEY.equals(fieldName)) {
                 jsonParser.nextToken();
-                topic = _parseString(jsonParser, ctxt);
-            } else if (TopicPartitionFields.PARTITION.equals(fieldName)) {
+                key = _parseString(jsonParser, ctxt);
+            } else if (RecordHeaderFields.VALUE.equals(fieldName)) {
                 jsonParser.nextToken();
-                partition = _parseIntPrimitive(jsonParser, ctxt);
+                value = jsonParser.getBinaryValue();
             } else {
                 handleUnknownProperty(jsonParser, ctxt, _valueClass, fieldName);
             }
             fieldName = jsonParser.nextFieldName();
         }
-        if (partition == null) {
-            ctxt.reportInputMismatch(_valueClass, "Field '%s' is required", TopicPartitionFields.PARTITION);
-        }
-        return new TopicPartition(topic, partition);
+
+        return new RecordHeader(key, value);
     }
 
 }

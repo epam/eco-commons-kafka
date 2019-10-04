@@ -15,7 +15,8 @@
  */
 package com.epam.eco.commons.kafka.serde.jackson;
 
-import org.apache.kafka.common.security.auth.KafkaPrincipal;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,7 +31,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 /**
  * @author Raman_Babich
  */
-public class KafkaPrincipalJsonDeserializerTest {
+public class RecordHeaderJsonDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
@@ -41,22 +42,23 @@ public class KafkaPrincipalJsonDeserializerTest {
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .registerModule(new SimpleModule()
-                        .addDeserializer(KafkaPrincipal.class, new KafkaPrincipalJsonDeserializer()));
+                        .addDeserializer(RecordHeader.class, new RecordHeaderJsonDeserializer())
+                        .addDeserializer(Header.class, new RecordHeaderJsonDeserializer(Header.class)));
     }
 
     @Test
     public void testDeserialization() throws Exception {
-        KafkaPrincipal expected = new KafkaPrincipal("User", "John_Doe@acme.com");
+        Header expected = new RecordHeader("1", "1".getBytes());
 
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put(KafkaPrincipalFields.PRINCIPAL_TYPE, "User");
-        objectNode.put(KafkaPrincipalFields.NAME, "John_Doe@acme.com");
+        objectNode.put(RecordHeaderFields.KEY, "1");
+        objectNode.put(RecordHeaderFields.VALUE, "1".getBytes());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
         Assert.assertNotNull(json);
 
-        KafkaPrincipal actual = objectMapper.readValue(json, KafkaPrincipal.class);
+        Header actual = objectMapper.readValue(json, Header.class);
+        Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);
     }
-
 }

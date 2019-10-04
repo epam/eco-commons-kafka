@@ -15,12 +15,10 @@
  */
 package com.epam.eco.commons.kafka.serde.jackson;
 
-import java.util.Arrays;
-
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,35 +28,33 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import com.epam.eco.commons.kafka.serde.jackson.HeaderJsonSerializer;
-
 /**
  * @author Raman_Babich
  */
-public class HeaderJsonSerializerTest {
+public class RecordHeadersJsonSerializerTest {
 
-    private ObjectMapper objectMapper;
+    private static ObjectMapper objectMapper;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .registerModule(new SimpleModule()
-                        .addSerializer(new HeaderJsonSerializer()));
+                        .addSerializer(RecordHeaders.class, new RecordHeadersJsonSerializer()));
     }
 
     @Test
     public void testSerialization() throws Exception {
-        Header origin = new RecordHeader("1", "1".getBytes());
+        Headers origin = new RecordHeaders();
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
         Assert.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals("1", jsonNode.get("key").textValue());
-        Assert.assertTrue(Arrays.equals("1".getBytes(), jsonNode.get("value").binaryValue()));
+        Assert.assertTrue(jsonNode.isArray());
+        Assert.assertEquals(0, jsonNode.size());
     }
 
 }

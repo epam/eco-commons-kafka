@@ -19,6 +19,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -35,12 +37,16 @@ public class KafkaModule extends SimpleModule {
 
         addKeyDeserializer(TopicPartition.class, new TopicPartitionKeyDeserializer());
 
-        addSerializer(new HeaderJsonSerializer());
+        addSerializer(new RecordHeadersJsonSerializer());
+        addSerializer(new RecordHeaderJsonSerializer());
         addSerializer(new ConsumerRecordJsonSerializer());
         addSerializer(new TopicPartitionJsonSerializer());
+        addSerializer(new KafkaPrincipalJsonSerializer());
 
-        addDeserializer(Header.class, new HeaderJsonDeserializer());
-        addDeserializer(Headers.class, new HeadersJsonDeserializer());
+        addDeserializer(RecordHeader.class, new RecordHeaderJsonDeserializer());
+        addDeserializer(RecordHeaders.class, new RecordHeadersJsonDeserializer());
+        addDeserializer(Header.class, new RecordHeaderJsonDeserializer(Header.class));
+        addDeserializer(Headers.class, new RecordHeadersJsonDeserializer(Headers.class));
         addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer());
         addDeserializer(TopicPartition.class, new TopicPartitionJsonDeserializer());
         addDeserializer(KafkaPrincipal.class, new KafkaPrincipalJsonDeserializer());
