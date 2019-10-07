@@ -158,8 +158,9 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
             fieldName = jsonParser.nextFieldName();
         }
 
-        validateNotNull(partition, ConsumerRecordFields.PARTITION, ctxt);
-        validateNotNull(offset, ConsumerRecordFields.OFFSET, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertNotNullValue(topic, ConsumerRecordFields.TOPIC, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(partition, ConsumerRecordFields.PARTITION, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(offset, ConsumerRecordFields.OFFSET, _valueClass, ctxt);
 
         ObjectCodec codec = jsonParser.getCodec();
         if (keyNode != null) {
@@ -189,10 +190,10 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
             return new ConsumerRecord<>(topic, partition, offset, key, value);
         }
 
-        validateNotNull(timestamp, ConsumerRecordFields.TIMESTAMP, ctxt);
-        validateNotNull(checksum, ConsumerRecordFields.CHECKSUM, ctxt);
-        validateNotNull(serializedKeySize, ConsumerRecordFields.SERIALIZED_KEY_SIZE, ctxt);
-        validateNotNull(serializedValueSize, ConsumerRecordFields.SERIALIZED_VALUE_SIZE, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(timestamp, ConsumerRecordFields.TIMESTAMP, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(checksum, ConsumerRecordFields.CHECKSUM, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(serializedKeySize, ConsumerRecordFields.SERIALIZED_KEY_SIZE, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(serializedValueSize, ConsumerRecordFields.SERIALIZED_VALUE_SIZE, _valueClass, ctxt);
 
         if (headers == null) {
             return new ConsumerRecord<>(
@@ -219,13 +220,6 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
                 key,
                 value,
                 headers);
-    }
-
-    private void validateNotNull(
-            Object value, String fieldName, DeserializationContext ctxt) throws JsonMappingException {
-        if (value == null) {
-            ctxt.reportInputMismatch(_valueClass, "Field '%s' is required", fieldName);
-        }
     }
 
 }

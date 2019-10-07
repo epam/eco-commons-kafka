@@ -56,6 +56,10 @@ public class KafkaPrincipalJsonDeserializer extends StdDeserializer<KafkaPrincip
             }
             fieldName = jsonParser.nextFieldName();
         }
+
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertNotNullValue(principalType, KafkaPrincipalFields.PRINCIPAL_TYPE, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertNotNullValue(name, KafkaPrincipalFields.NAME, _valueClass, ctxt);
+
         return new KafkaPrincipal(principalType, name);
     }
 

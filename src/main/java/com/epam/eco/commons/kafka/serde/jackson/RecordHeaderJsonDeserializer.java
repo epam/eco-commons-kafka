@@ -61,6 +61,8 @@ public class RecordHeaderJsonDeserializer extends StdDeserializer<RecordHeader> 
             fieldName = jsonParser.nextFieldName();
         }
 
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertNotNullValue(key, RecordHeaderFields.KEY, _valueClass, ctxt);
+
         return new RecordHeader(key, value);
     }
 

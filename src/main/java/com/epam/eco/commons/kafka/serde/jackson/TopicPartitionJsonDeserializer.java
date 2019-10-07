@@ -49,7 +49,15 @@ public class TopicPartitionJsonDeserializer extends StdDeserializer<TopicPartiti
         while (fieldName != null) {
             if (TopicPartitionFields.TOPIC.equals(fieldName)) {
                 jsonParser.nextToken();
-                topic = _parseString(jsonParser, ctxt);
+                JsonToken currentToken = jsonParser.getCurrentToken();
+                if (currentToken == JsonToken.VALUE_STRING || currentToken == JsonToken.VALUE_NULL) {
+                    topic = jsonParser.getValueAsString();
+                } else {
+                    ctxt.reportInputMismatch(
+                            _valueClass,
+                            "Can't parse string value for '%s' field from '%s' token",
+                            TopicPartitionFields.TOPIC, currentToken.name());
+                }
             } else if (TopicPartitionFields.PARTITION.equals(fieldName)) {
                 jsonParser.nextToken();
                 partition = _parseIntPrimitive(jsonParser, ctxt);
@@ -58,9 +66,9 @@ public class TopicPartitionJsonDeserializer extends StdDeserializer<TopicPartiti
             }
             fieldName = jsonParser.nextFieldName();
         }
-        if (partition == null) {
-            ctxt.reportInputMismatch(_valueClass, "Field '%s' is required", TopicPartitionFields.PARTITION);
-        }
+
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(partition, TopicPartitionFields.PARTITION, _valueClass, ctxt);
+
         return new TopicPartition(topic, partition);
     }
 
