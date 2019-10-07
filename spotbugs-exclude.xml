@@ -96,12 +96,16 @@
     <Match>
         <Class name="com.epam.eco.commons.kafka.serde.jackson.TopicPartitionJsonDeserializer" />
         <Method name="deserialize" />
-        <Bug pattern="NP_NULL_ON_SOME_PATH" />
+        <Or>
+            <Bug pattern="NP_NULL_ON_SOME_PATH" />
+            <Bug pattern="CC_CYCLOMATIC_COMPLEXITY" />
+            <Bug pattern="NP_GUARANTEED_DEREF" />
+            <Bug pattern="NP_NULL_ON_SOME_PATH_MIGHT_BE_INFEASIBLE" />
+        </Or>
     </Match>
     <Match>
         <Class name="com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonDeserializer" />
         <Method name="deserialize" />
-        <Bug pattern="CC_CYCLOMATIC_COMPLEXITY" />
     </Match>
 
 </FindBugsFilter>

@@ -24,12 +24,12 @@ import org.apache.kafka.common.record.TimestampType;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.type.SimpleType;
@@ -80,16 +80,16 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
         String topic = null;
         Integer partition = null;
         Long offset = null;
-        long timestamp = ConsumerRecord.NO_TIMESTAMP;
-        TimestampType timestampType = TimestampType.NO_TIMESTAMP_TYPE;
-        long checksum = (long) ConsumerRecord.NULL_CHECKSUM;
-        int serializedKeySize = ConsumerRecord.NULL_SIZE;
-        int serializedValueSize = ConsumerRecord.NULL_SIZE;
+        Long timestamp = null;
+        TimestampType timestampType = null;
+        Long checksum = null;
+        Integer serializedKeySize = null;
+        Integer serializedValueSize = null;
         JavaType keyClass = JAVA_OBJECT_TYPE;
-        JsonNode keyNode = null;
+        TreeNode keyNode = null;
         Object key = null;
         JavaType valueClass = JAVA_OBJECT_TYPE;
-        JsonNode valueNode = null;
+        TreeNode valueNode = null;
         Object value = null;
         Headers headers = null;
 
@@ -163,20 +163,50 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
 
         ObjectCodec codec = jsonParser.getCodec();
         if (keyNode != null) {
-            if (!keyType.isJavaLangObject()) {
-                key = codec.readValue(keyNode.traverse(codec), valueType);
-            } else {
-                key = codec.readValue(keyNode.traverse(codec), keyClass);
+            JavaType targetType = valueType;
+            if (keyType.isJavaLangObject()) {
+                targetType = keyClass;
             }
+            key = codec.readValue(keyNode.traverse(codec), targetType);
+
         }
         if (valueNode != null) {
-            if (!valueType.isJavaLangObject()) {
-                value = codec.readValue(valueNode.traverse(codec), valueType);
-            } else {
-                value = codec.readValue(valueNode.traverse(codec), valueClass);
+            JavaType targetType = valueType;
+            if (valueType.isJavaLangObject()) {
+                targetType = valueClass;
             }
+            value = codec.readValue(valueNode.traverse(codec), targetType);
         }
 
+        if (
+                timestamp == null &&
+                timestampType == null &&
+                checksum == null &&
+                serializedKeySize == null &&
+                serializedValueSize == null &&
+                headers == null
+        ) {
+            return new ConsumerRecord<>(topic, partition, offset, key, value);
+        }
+
+        validateNotNull(timestamp, ConsumerRecordFields.TIMESTAMP, ctxt);
+        validateNotNull(checksum, ConsumerRecordFields.CHECKSUM, ctxt);
+        validateNotNull(serializedKeySize, ConsumerRecordFields.SERIALIZED_KEY_SIZE, ctxt);
+        validateNotNull(serializedValueSize, ConsumerRecordFields.SERIALIZED_VALUE_SIZE, ctxt);
+
+        if (headers == null) {
+            return new ConsumerRecord<>(
+                    topic,
+                    partition,
+                    offset,
+                    timestamp,
+                    timestampType,
+                    checksum,
+                    serializedKeySize,
+                    serializedValueSize,
+                    key,
+                    value);
+        }
         return new ConsumerRecord<>(
                 topic,
                 partition,
