@@ -54,13 +54,25 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
     public JsonDeserializer<?> createContextual(
             DeserializationContext ctxt,
             BeanProperty property) throws JsonMappingException {
-        JavaType recordType;
+        JavaType contextType;
         if (property != null) {
-            recordType = property.getType();
+            contextType = property.getType();
         } else {
-            recordType = ctxt.getContextualType();
+            contextType = ctxt.getContextualType();
         }
         ConsumerRecordJsonDeserializer deserializer = new ConsumerRecordJsonDeserializer();
+        if (contextType == null) {
+            return deserializer;
+        }
+
+        JavaType recordType = traverseByContentTypes(contextType, ConsumerRecord.class);
+        if (recordType == null) {
+            ctxt.reportBadDefinition(
+                    contextType,
+                    String.format(
+                            "Can't identify any type parts which are associated with '%s' class",
+                            ConsumerRecord.class.getName()));
+        }
         if (recordType.hasGenericTypes()) {
             deserializer.keyType = recordType.containedType(0);
             deserializer.valueType = recordType.containedType(1);
@@ -68,6 +80,20 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
         return deserializer;
     }
 
+    private static JavaType traverseByContentTypes(JavaType root, Class<?> stopClass) {
+        JavaType currentType = root;
+        while (true) {
+            if (currentType.hasRawClass(stopClass)) {
+                return currentType;
+            }
+
+            if (currentType.isCollectionLikeType() || currentType.isMapLikeType()) {
+                currentType = currentType.getContentType();
+            } else {
+                return null;
+            }
+        }
+    }
 
     // TODO: simplify this method
     @Override
@@ -164,7 +190,7 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
 
         ObjectCodec codec = jsonParser.getCodec();
         if (keyNode != null) {
-            JavaType targetType = valueType;
+            JavaType targetType = keyType;
             if (keyType.isJavaLangObject()) {
                 targetType = keyClass;
             }

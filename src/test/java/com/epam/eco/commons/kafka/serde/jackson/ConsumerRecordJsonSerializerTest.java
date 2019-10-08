@@ -15,10 +15,13 @@
  */
 package com.epam.eco.commons.kafka.serde.jackson;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -55,7 +58,10 @@ public class ConsumerRecordJsonSerializerTest {
                 .registerModule(new JavaTimeModule())
                 .registerModule(new SimpleModule()
                         .addSerializer(new ConsumerRecordJsonSerializer())
-                        .addSerializer(new RecordHeaderJsonSerializer()));
+                        .addSerializer(new RecordHeaderJsonSerializer())
+                        .addDeserializer(Headers.class, new RecordHeadersJsonDeserializer())
+                        .addDeserializer(Header.class, new RecordHeaderJsonDeserializer())
+                        .addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer()));
     }
 
     @Test
@@ -160,6 +166,30 @@ public class ConsumerRecordJsonSerializerTest {
         Assert.assertEquals(header.key(), tempNode.get(RecordHeaderFields.KEY).textValue());
         Assert.assertArrayEquals(header.value(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
 
+    }
+
+    @Test
+    public void testSerialization3() throws IOException {
+        EntityWithConsumerRecords origin = new EntityWithConsumerRecords();
+        origin.records = new ArrayList<>();
+        origin.records.add(Collections.singletonList(
+                new ConsumerRecord<>(
+                        "topic",
+                        0,
+                        0,
+                        "1",
+                        Collections.singletonList(
+                                new ConsumerRecord<>("topic", 0, 0, "2", "3")))));
+
+        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
+        Assert.assertNotNull(json);
+
+        EntityWithConsumerRecords entity = objectMapper.readValue(json, EntityWithConsumerRecords.class);
+        Assert.assertEquals("3", entity.records.get(0).get(0).value().get(0).value());
+    }
+
+    private static class EntityWithConsumerRecords {
+        public List<List<ConsumerRecord<String, List<ConsumerRecord<String, String>>>>> records;
     }
 
     private static class EntityWithConsumerRecord {

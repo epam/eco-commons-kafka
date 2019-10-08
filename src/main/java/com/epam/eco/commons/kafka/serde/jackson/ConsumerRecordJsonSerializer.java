@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -48,17 +49,42 @@ public class ConsumerRecordJsonSerializer extends StdSerializer<ConsumerRecord> 
     @Override
     public JsonSerializer<?> createContextual(
             SerializerProvider prov, BeanProperty property) throws JsonMappingException {
-        JavaType recordType;
-        if (property == null) {
-            return new ConsumerRecordJsonSerializer();
-        }
-        recordType = property.getType();
         ConsumerRecordJsonSerializer serializer = new ConsumerRecordJsonSerializer();
+        if (property == null) {
+            return serializer;
+        }
+        JavaType recordType = traverseByContentTypes(property.getType(), ConsumerRecord.class);
+        if (recordType == null) {
+            prov.reportBadDefinition(
+                    property.getType(),
+                    String.format(
+                            "Can't identify any type parts which are associated with '%s' class",
+                            ConsumerRecord.class.getName()));
+        }
         if (recordType.hasGenericTypes()) {
             serializer.keyType = recordType.containedType(0);
             serializer.valueType = recordType.containedType(1);
         }
         return serializer;
+    }
+
+    private static JavaType traverseByContentTypes(JavaType root, Class<?> stopClass) {
+        JavaType currentType = root;
+        while (true) {
+            if (currentType.hasRawClass(stopClass)) {
+                return currentType;
+            }
+
+            if (currentType.isCollectionLikeType() || currentType.isMapLikeType()) {
+                currentType = currentType.getContentType();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private static BeanProperty typeHolderBeanProperty(JavaType type) {
+        return new BeanProperty.Std(PropertyName.NO_NAME, type, PropertyName.NO_NAME, null, null);
     }
 
     @SuppressWarnings({"deprecation"})
@@ -76,20 +102,31 @@ public class ConsumerRecordJsonSerializer extends StdSerializer<ConsumerRecord> 
         gen.writeNumberField(ConsumerRecordFields.CHECKSUM, value.checksum());
         gen.writeNumberField(ConsumerRecordFields.SERIALIZED_KEY_SIZE, value.serializedKeySize());
         gen.writeNumberField(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, value.serializedValueSize());
+
+        JavaType effectiveKeyType = keyType;
         if (keyType.isJavaLangObject()) {
-            gen.writeObjectField(ConsumerRecordFields.KEY_CLASS,
-                    value.key() != null ? value.key().getClass() : keyType);
-        } else {
-            gen.writeObjectField(ConsumerRecordFields.KEY_CLASS, keyType);
+            if (value.key() != null) {
+                effectiveKeyType = SimpleType.constructUnsafe(value.key().getClass());
+            }
         }
-        gen.writeObjectField(ConsumerRecordFields.KEY, value.key());
+        gen.writeObjectField(ConsumerRecordFields.KEY_CLASS, effectiveKeyType);
+        BeanProperty keyProp = typeHolderBeanProperty(effectiveKeyType);
+        JsonSerializer<Object> keySerializer = serializers.findValueSerializer(effectiveKeyType, keyProp);
+        gen.writeFieldName(ConsumerRecordFields.KEY);
+        keySerializer.serialize(value.key(), gen, serializers);
+
+        JavaType effectiveValueType = valueType;
         if (valueType.isJavaLangObject()) {
-            gen.writeObjectField(ConsumerRecordFields.VALUE_CLASS,
-                    value.value() != null ? value.value().getClass() : valueType);
-        } else {
-            gen.writeObjectField(ConsumerRecordFields.VALUE_CLASS, valueType);
+            if (value.value() != null) {
+                effectiveValueType = SimpleType.constructUnsafe(value.value().getClass());
+            }
         }
-        gen.writeObjectField(ConsumerRecordFields.VALUE, value.value());
+        gen.writeObjectField(ConsumerRecordFields.VALUE_CLASS, effectiveValueType);
+        BeanProperty valueProp = typeHolderBeanProperty(effectiveValueType);
+        JsonSerializer<Object> valueSerializer = serializers.findValueSerializer(effectiveValueType, valueProp);
+        gen.writeFieldName(ConsumerRecordFields.VALUE);
+        valueSerializer.serialize(value.value(), gen, serializers);
+
         gen.writeObjectField(ConsumerRecordFields.HEADERS, value.headers());
         gen.writeEndObject();
     }

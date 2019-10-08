@@ -94,7 +94,7 @@
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
     </Match>
     <Match>
-        <Class name="com.epam.eco.commons.kafka.serde.jackson.TopicPartitionJsonDeserializer" />
+        <Class name="com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonDeserializer" />
         <Method name="deserialize" />
         <Or>
             <Bug pattern="NP_NULL_ON_SOME_PATH" />
@@ -105,7 +105,13 @@
     </Match>
     <Match>
         <Class name="com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonDeserializer" />
-        <Method name="deserialize" />
+        <Method name="createContextual" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonSerializer" />
+        <Method name="createContextual" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH" />
     </Match>
 
 </FindBugsFilter>
