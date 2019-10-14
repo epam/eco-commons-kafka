@@ -2,7 +2,7 @@
 
 It's a library of utilities, helpers and higher-level APIs for the [Kafka](https://kafka.apache.org/) client library.
 
-The currently supported version is [1.0.2](https://kafka.apache.org/downloads#1.0.2)
+The currently supported version is [2.0.1](https://kafka.apache.org/downloads#2.0.1)
 
 The library can be obtained from the Maven by adding the following dependency in the pom.xml:
 
