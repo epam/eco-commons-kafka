@@ -15,13 +15,15 @@
  */
 package com.epam.eco.commons.kafka;
 
-import kafka.utils.ZkUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.common.security.JaasUtils;
+
+import kafka.utils.ZkUtils;
 
 /**
  * @author Andrei_Tytsik
  */
+@Deprecated
 public abstract class ZkCaller {
 
     private static final int DEFAULT_SESSION_TIMEOUT = 10000;
