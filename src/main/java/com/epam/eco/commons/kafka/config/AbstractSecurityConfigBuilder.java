@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
+import org.apache.kafka.common.security.auth.Login;
 
 import com.epam.eco.commons.kafka.SslProtocol;
 
@@ -66,6 +68,10 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
         return property(
                 SslConfigs.SSL_CIPHER_SUITES_CONFIG,
                 sslCipherSuites);
+    }
+
+    public T sslEnabledProtocolsDefault() {
+        return sslEnabledProtocols(SslConfigs.DEFAULT_SSL_ENABLED_PROTOCOLS);
     }
 
     public T sslEnabledProtocols(SslProtocol ... sslEnabledProtocols) {
@@ -157,6 +163,10 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
                 sslTrustmanagerAlgorithm);
     }
 
+    public T sslEndpointIdentificationAlgorithmDefault() {
+        return sslEndpointIdentificationAlgorithm(SslConfigs.DEFAULT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM);
+    }
+
     public T sslEndpointIdentificationAlgorithm(String sslEndpointIdentificationAlgorithm) {
         return property(
                 SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
@@ -173,6 +183,38 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
         return property(
                 SaslConfigs.SASL_JAAS_CONFIG,
                 saslJaas);
+    }
+
+    public <H extends AuthenticateCallbackHandler> T saslClientCallbackHandlerClass(
+            Class<H> saslClientCallbackHandlerClass) {
+        return saslClientCallbackHandlerClass(saslClientCallbackHandlerClass.getName());
+    }
+
+    public T saslClientCallbackHandlerClass(String saslClientCallbackHandlerClass) {
+        return property(
+                SaslConfigs.SASL_CLIENT_CALLBACK_HANDLER_CLASS,
+                saslClientCallbackHandlerClass);
+    }
+
+    public <H extends AuthenticateCallbackHandler> T saslLoginCallbackHandlerClass(
+            Class<H> saslLoginCallbackHandlerClass) {
+        return saslLoginCallbackHandlerClass(saslLoginCallbackHandlerClass.getName());
+    }
+
+    public T saslLoginCallbackHandlerClass(String saslLoginCallbackHandlerClass) {
+        return property(
+                SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS,
+                saslLoginCallbackHandlerClass);
+    }
+
+    public <L extends Login> T saslLoginClass(Class<L> saslLoginClass) {
+        return saslLoginClass(saslLoginClass.getName());
+    }
+
+    public T saslLoginClass(String saslLoginClass) {
+        return property(
+                SaslConfigs.SASL_LOGIN_CLASS,
+                saslLoginClass);
     }
 
     public T saslKerberosServiceName(String saslKerberosServiceName) {
@@ -219,6 +261,46 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
         return property(
                 SaslConfigs.SASL_KERBEROS_MIN_TIME_BEFORE_RELOGIN,
                 saslKerberosMinTimeBeforeRelogin);
+    }
+
+    public T saslLoginRefreshWindowFactorDefault() {
+        return saslLoginRefreshWindowFactor(SaslConfigs.DEFAULT_LOGIN_REFRESH_WINDOW_FACTOR);
+    }
+
+    public T saslLoginRefreshWindowFactor(double saslLoginRefreshWindowFactor) {
+        return property(
+                SaslConfigs.SASL_LOGIN_REFRESH_WINDOW_FACTOR,
+                saslLoginRefreshWindowFactor);
+    }
+
+    public T saslLoginRefreshWindowJitterDefault() {
+        return saslLoginRefreshWindowJitter(SaslConfigs.DEFAULT_LOGIN_REFRESH_WINDOW_JITTER);
+    }
+
+    public T saslLoginRefreshWindowJitter(double saslLoginRefreshWindowJitter) {
+        return property(
+                SaslConfigs.SASL_LOGIN_REFRESH_WINDOW_JITTER,
+                saslLoginRefreshWindowJitter);
+    }
+
+    public T saslLoginRefreshMinPeriodSecondsDefault() {
+        return saslLoginRefreshMinPeriodSeconds(SaslConfigs.DEFAULT_LOGIN_REFRESH_MIN_PERIOD_SECONDS);
+    }
+
+    public T saslLoginRefreshMinPeriodSeconds(short saslLoginRefreshMinPeriodSeconds) {
+        return property(
+                SaslConfigs.SASL_LOGIN_REFRESH_MIN_PERIOD_SECONDS,
+                saslLoginRefreshMinPeriodSeconds);
+    }
+
+    public T saslLoginRefreshBufferSecondsDefault() {
+        return saslLoginRefreshBufferSeconds(SaslConfigs.DEFAULT_LOGIN_REFRESH_BUFFER_SECONDS);
+    }
+
+    public T saslLoginRefreshBufferSeconds(short saslLoginRefreshBufferSeconds) {
+        return property(
+                SaslConfigs.SASL_LOGIN_REFRESH_BUFFER_SECONDS,
+                saslLoginRefreshBufferSeconds);
     }
 
 }

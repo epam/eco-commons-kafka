@@ -15,10 +15,14 @@
  */
 package com.epam.eco.commons.kafka.config;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.common.metrics.MetricsReporter;
+import org.apache.kafka.common.metrics.Sensor.RecordingLevel;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 /**
@@ -90,10 +94,69 @@ public abstract class AbstractClientConfigBuilder<T extends AbstractSecurityConf
                 reconnectBackoffMaxMs);
     }
 
+    public T retriesMin() {
+        return retries(0);
+    }
+
+    public T retriesMax() {
+        return retries(Integer.MAX_VALUE);
+    }
+
+    public T retries(int retries) {
+        return property(CommonClientConfigs.RETRIES_CONFIG, retries);
+    }
+
     public T retryBackoffMs(long retryBackoffMs) {
         return property(
                 CommonClientConfigs.RETRY_BACKOFF_MS_CONFIG,
                 retryBackoffMs);
+    }
+
+    public T metricSampleWindowMs(long metricSampleWindowMs) {
+        return property(
+                CommonClientConfigs.METRICS_SAMPLE_WINDOW_MS_CONFIG,
+                metricSampleWindowMs);
+    }
+
+    public T metricNumSamples(int metricNumSamples) {
+        return property(
+                CommonClientConfigs.METRICS_NUM_SAMPLES_CONFIG,
+                metricNumSamples);
+    }
+
+    public T metricRecordingLevelInfo() {
+        return metricRecordingLevel(RecordingLevel.INFO);
+    }
+
+    public T metricRecordingLevelDebug() {
+        return metricRecordingLevel(RecordingLevel.DEBUG);
+    }
+
+    public T metricRecordingLevel(RecordingLevel recordingLevel) {
+        return metricRecordingLevel(recordingLevel.toString());
+    }
+
+    public T metricRecordingLevel(String metricRecordingLevel) {
+        return property(
+                CommonClientConfigs.METRICS_RECORDING_LEVEL_CONFIG,
+                metricRecordingLevel);
+    }
+
+    public <R extends MetricsReporter> T metricReporterClasses(
+            Class<R> metricReporterClasse) {
+        return metricReporterClasses(metricReporterClasse.getName());
+    }
+
+    public <R extends MetricsReporter> T metricReporterClasses(
+            List<Class<? extends R>> metricReporterClasses) {
+        return metricReporterClasses(
+                metricReporterClasses.stream().map(Class::getName).collect(Collectors.joining(",")));
+    }
+
+    public T metricReporterClasses(String metricReporterClasses) {
+        return property(
+                CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
+                metricReporterClasses);
     }
 
     public T securityProtocolDefault() {

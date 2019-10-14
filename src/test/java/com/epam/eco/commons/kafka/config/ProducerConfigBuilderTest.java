@@ -20,8 +20,12 @@ import java.util.Map;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
+import org.apache.kafka.common.metrics.JmxReporter;
 import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.common.security.authenticator.DefaultLogin;
+import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLoginCallbackHandler;
+import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Test;
 
@@ -65,6 +69,10 @@ public class ProducerConfigBuilderTest {
                 reconnectBackoffMs(Long.MAX_VALUE).
                 reconnectBackoffMaxMs(Long.MAX_VALUE).
                 retryBackoffMs(Long.MAX_VALUE).
+                metricSampleWindowMs(Long.MAX_VALUE).
+                metricNumSamples(Integer.MAX_VALUE).
+                metricRecordingLevelInfo().
+                metricReporterClasses(JmxReporter.class).
                 securityProtocol(SecurityProtocol.PLAINTEXT).
                 connectionMaxIdleMs(Long.MAX_VALUE).
                 requestTimeoutMs(Integer.MAX_VALUE).
@@ -97,11 +105,18 @@ public class ProducerConfigBuilderTest {
                         "org.apache.kafka.common.security.plain.PlainLoginModule required " +
                         "username=\"alice\"" +
                         "password=\"alice-secret\"").
+                saslClientCallbackHandlerClass(KerberosClientCallbackHandler.class).
+                saslLoginCallbackHandlerClass(DefaultLoginCallbackHandler.class).
+                saslLoginClass(DefaultLogin.class).
                 saslKerberosServiceName("kafka").
                 saslKerberosKinitCmd("/usr/bin/kinit").
                 saslKerberosTicketRenewWindowFactor(Double.MAX_VALUE).
                 saslKerberosTicketRenewJitter(Double.MAX_VALUE).
                 saslKerberosMinTimeBeforeRelogin(Long.MAX_VALUE).
+                saslLoginRefreshWindowFactor(1.0).
+                saslLoginRefreshWindowJitter(0.25).
+                saslLoginRefreshMinPeriodSeconds((short)900).
+                saslLoginRefreshBufferSeconds((short)3600).
 
                 build();
         try (KafkaProducer<byte[],byte[]> producer = new KafkaProducer<>(props)) {

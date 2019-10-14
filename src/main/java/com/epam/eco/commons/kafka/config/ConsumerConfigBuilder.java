@@ -258,6 +258,12 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
         }
     }
 
+    public ConsumerConfigBuilder defaultApiTimeoutMs(int defaultApiTimeoutMs) {
+        return property(
+                ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG,
+                defaultApiTimeoutMs);
+    }
+
     public <I extends ConsumerInterceptor<?, ?>> ConsumerConfigBuilder interceptorClasses(
             Class<I> interceptorClass) {
         return interceptorClasses(interceptorClass.getName());

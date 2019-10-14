@@ -115,18 +115,6 @@ public class ProducerConfigBuilder extends AbstractClientConfigBuilder<ProducerC
                 maxRequests);
     }
 
-    public ProducerConfigBuilder retriesMin() {
-        return retries(0);
-    }
-
-    public ProducerConfigBuilder retriesMax() {
-        return retries(Integer.MAX_VALUE);
-    }
-
-    public ProducerConfigBuilder retries(int retries) {
-        return property(ProducerConfig.RETRIES_CONFIG, retries);
-    }
-
     public ProducerConfigBuilder keySerializerByteArray() {
         return property(
                 ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,

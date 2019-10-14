@@ -164,4 +164,16 @@ public class TopicConfigBuilder extends AbstractConfigBuilder<TopicConfigBuilder
         return property(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG, messageTimestampDifferenceMaxMs);
     }
 
+    public TopicConfigBuilder messageDownconversionEnabled() {
+        return messageDownconversionEnable(true);
+    }
+
+    public TopicConfigBuilder messageDownconversionDisabled() {
+        return messageDownconversionEnable(false);
+    }
+
+    public TopicConfigBuilder messageDownconversionEnable(boolean messageDownconversionEnable) {
+        return property(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG, messageDownconversionEnable);
+    }
+
 }
