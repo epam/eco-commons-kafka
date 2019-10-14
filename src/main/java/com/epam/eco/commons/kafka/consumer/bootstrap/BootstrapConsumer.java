@@ -16,6 +16,8 @@
 package com.epam.eco.commons.kafka.consumer.bootstrap;
 
 import java.io.Closeable;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,9 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
 
     private static final OffsetInitializer DEFAULT_OFFSET_INITIALIZER = BeginningOffsetInitializer.INSTANCE;
     private static final long DEFAULT_BOOTSTRAP_TIMEOUT_MS = 1 * 60 * 1000;
+
+    private static final Duration BOOTSTRAP_POLL_TIMEOUT = Duration.of(100, ChronoUnit.MILLIS);
+    private static final Duration FETCH_POLL_TIMEOUT = Duration.of(Long.MAX_VALUE, ChronoUnit.MILLIS);
 
     private final String topicName;
     private final Map<String, Object> consumerConfig;
@@ -140,7 +145,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
                 long statusLogInterval = bootstrapTimeoutInMs / 100;
                 long lastStatusLogTs = bootstrapStartTs;
                 while (true) {
-                    ConsumerRecords<K,V> records = consumer.poll(100);
+                    ConsumerRecords<K,V> records = consumer.poll(BOOTSTRAP_POLL_TIMEOUT);
 
                     long batchRecordCount = records.count();
                     if (batchRecordCount > 0) {
@@ -193,7 +198,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
 
     private R fetchUpdates() {
         try {
-            ConsumerRecords<K,V> records = consumer.poll(Long.MAX_VALUE);
+            ConsumerRecords<K,V> records = consumer.poll(FETCH_POLL_TIMEOUT);
 
             LOGGER.debug("Topic [{}]: {} update records fetched", topicName, records.count());
 

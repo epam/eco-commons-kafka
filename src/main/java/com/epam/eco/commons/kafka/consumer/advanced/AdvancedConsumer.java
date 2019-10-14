@@ -15,6 +15,8 @@
  */
 package com.epam.eco.commons.kafka.consumer.advanced;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,12 +60,13 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
  */
 public final class AdvancedConsumer<K, V> extends Thread {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(AdvancedConsumer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdvancedConsumer.class);
 
-    private final static AtomicInteger THREAD_IDX = new AtomicInteger(-1);
+    private static final AtomicInteger THREAD_IDX = new AtomicInteger(-1);
 
-    private final static long SHUTDOWN_TIMEOUT_SECONDS = 30;
-    private final static long POLL_TIMEOUT_MS = 100;
+    private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
+
+    private static final Duration POLL_TIMEOUT = Duration.of(100, ChronoUnit.MILLIS);
 
     private final Map<String, Object> consumerConfig;
     private final String groupId;
@@ -144,7 +147,7 @@ public final class AdvancedConsumer<K, V> extends Thread {
                         continue;
                     }
 
-                    ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT_MS);
+                    ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT);
                     if (records.isEmpty()) {
                         continue;
                     }
@@ -219,7 +222,7 @@ public final class AdvancedConsumer<K, V> extends Thread {
         consumer.pause(consumer.assignment());
         try {
             while (isHandlerTaskRunning()) {
-                consumer.poll(POLL_TIMEOUT_MS);
+                consumer.poll(POLL_TIMEOUT);
             }
         } finally {
             consumer.resume(consumer.assignment());

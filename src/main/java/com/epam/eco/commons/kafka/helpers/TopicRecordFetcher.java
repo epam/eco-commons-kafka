@@ -15,6 +15,8 @@
  */
 package com.epam.eco.commons.kafka.helpers;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,7 +45,7 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
  */
 public class TopicRecordFetcher<K, V> {
 
-    private static final long POLL_TIMEOUT = 100;
+    private static final Duration POLL_TIMEOUT = Duration.of(100, ChronoUnit.MILLIS);
 
     private final Map<String, Object> consumerConfig;
 
