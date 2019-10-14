@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.resource.PatternType;
 
 import kafka.coordinator.group.GroupTopicPartition;
 import kafka.security.auth.Resource;
@@ -100,7 +101,22 @@ public class ScalaConversions {
 
         return new Resource(
                 asScalaResourceType(resourceType),
-                resourceName);
+                resourceName,
+                PatternType.LITERAL);
+    }
+
+    public static kafka.security.auth.Resource asScalaResource(
+            org.apache.kafka.common.resource.ResourceType resourceType,
+            String resourceName,
+            PatternType patternType) {
+        Validate.notNull(resourceType, "Resource type is null");
+        Validate.notBlank(resourceName, "Resource name is blank");
+        Validate.notNull(patternType, "Pattern type is null");
+
+        return new Resource(
+                asScalaResourceType(resourceType),
+                resourceName,
+                patternType);
     }
 
     public static kafka.security.auth.ResourceType asScalaResourceType(
