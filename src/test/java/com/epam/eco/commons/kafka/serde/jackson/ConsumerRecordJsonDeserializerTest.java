@@ -58,6 +58,7 @@ public class ConsumerRecordJsonDeserializerTest {
                         .addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer()));
     }
 
+    @SuppressWarnings({ "deprecation", "rawtypes" })
     private static boolean consumerRecordEquals(ConsumerRecord a, ConsumerRecord b) {
         return
                 StringUtils.equals(a.topic(), b.topic()) &&
@@ -168,7 +169,7 @@ public class ConsumerRecordJsonDeserializerTest {
         Assert.assertTrue(consumerRecordEquals(expected, actual));
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({ "deprecation", "rawtypes" })
     @Test
     public void testDeserialization3() throws Exception {
         long now = new Date().getTime();

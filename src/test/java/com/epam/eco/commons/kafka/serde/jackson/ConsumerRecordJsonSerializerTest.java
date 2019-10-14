@@ -64,6 +64,7 @@ public class ConsumerRecordJsonSerializerTest {
                         .addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer()));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSerialization1() throws Exception {
         long now = new Date().getTime();
@@ -105,6 +106,7 @@ public class ConsumerRecordJsonSerializerTest {
         Assert.assertArrayEquals(header.value(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSerialization2() throws Exception {
         SimpleEntity simpleEntity = new SimpleEntity();
