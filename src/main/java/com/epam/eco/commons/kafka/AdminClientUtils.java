@@ -15,14 +15,28 @@
  */
 package com.epam.eco.commons.kafka;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.NewPartitions;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.RecordsToDelete;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
@@ -421,11 +435,69 @@ public abstract class AdminClientUtils {
         return completeAndGet(client.deleteAcls(aclBindingFilters).all());
     }
 
-    private static Map<ConfigResource, Config> describeConfigs(
-            AdminClient client,
-            Collection<ConfigResource> resources) {
-        return completeAndGet(
-                client.describeConfigs(resources).all());
+    public static void deleteRecords(
+            Map<String, Object> clientConfig,
+            Map<TopicPartition, Long> beforeOffsets) {
+        try (AdminClient client = initClient(clientConfig)) {
+            deleteRecords(client, beforeOffsets);
+        }
+    }
+
+    public static void deleteRecords(AdminClient client, Map<TopicPartition, Long> beforeOffsets) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notEmpty(beforeOffsets, "Before-offsets map is null or empty");
+        Validate.noNullElements(beforeOffsets.keySet(), "Before-offsets map contains null keys");
+        Validate.noNullElements(beforeOffsets.values(), "Before-offsets map contains null values");
+
+        Map<TopicPartition, RecordsToDelete> recordsToDelete = beforeOffsets.entrySet().stream().
+                collect(
+                        Collectors.toMap(
+                                e -> e.getKey(),
+                                e -> RecordsToDelete.beforeOffset(e.getValue())));
+
+        completeAndGet(client.deleteRecords(recordsToDelete).all());
+    }
+
+    public static void deleteAllRecords(
+            Map<String, Object> clientConfig,
+            Collection<TopicPartition> topicPartitions) {
+        try (AdminClient client = initClient(clientConfig)) {
+            deleteAllRecords(client, topicPartitions);
+        }
+    }
+
+    public static void deleteAllRecords(AdminClient client, Collection<TopicPartition> topicPartitions) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notEmpty(topicPartitions, "Collection of topic partitions is null or empty");
+
+        Map<TopicPartition, RecordsToDelete> recordsToDelete = topicPartitions.stream().
+                collect(
+                        Collectors.toMap(
+                                tp -> tp,
+                                tp -> RecordsToDelete.beforeOffset(-1)));
+
+        completeAndGet(client.deleteRecords(recordsToDelete).all());
+    }
+
+    public static void deleteAllRecords(Map<String, Object> clientConfig, String topicName) {
+        try (AdminClient client = initClient(clientConfig)) {
+            deleteAllRecords(client, topicName);
+        }
+    }
+
+    public static void deleteAllRecords(AdminClient client, String topicName) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notBlank(topicName, "Topic name is blank");
+
+        TopicDescription topicDescription = describeTopic(client, topicName);
+
+        Map<TopicPartition, RecordsToDelete> recordsToDelete = topicDescription.partitions().stream().
+                collect(
+                        Collectors.toMap(
+                                tpi -> new TopicPartition(topicName, tpi.partition()),
+                                tpi -> RecordsToDelete.beforeOffset(-1)));
+
+        completeAndGet(client.deleteRecords(recordsToDelete).all());
     }
 
     public static Map<String, String> configToMap(Config config) {
@@ -491,6 +563,13 @@ public abstract class AdminClientUtils {
         } catch (Exception ex) {
             // ignore
         }
+    }
+
+    private static Map<ConfigResource, Config> describeConfigs(
+            AdminClient client,
+            Collection<ConfigResource> resources) {
+        return completeAndGet(
+                client.describeConfigs(resources).all());
     }
 
     public interface AdminClientCallable<R> {
