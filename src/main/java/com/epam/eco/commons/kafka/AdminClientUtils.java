@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
@@ -473,7 +474,7 @@ public abstract class AdminClientUtils {
         Map<TopicPartition, RecordsToDelete> recordsToDelete = topicPartitions.stream().
                 collect(
                         Collectors.toMap(
-                                tp -> tp,
+                                Function.identity(),
                                 tp -> RecordsToDelete.beforeOffset(-1)));
 
         completeAndGet(client.deleteRecords(recordsToDelete).all());
