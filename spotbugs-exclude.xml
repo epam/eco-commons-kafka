@@ -49,11 +49,6 @@
         <Bug pattern="ACEM_ABSTRACT_CLASS_EMPTY_METHODS" />
     </Match>
     <Match>
-        <Class name="com.epam.eco.commons.kafka.ZkCaller" />
-        <Method name="call" />
-        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
-    </Match>
-    <Match>
         <Class name="com.epam.eco.commons.kafka.cache.CacheProducer" />
         <Method name="initProducer" />
         <Bug pattern="CE_CLASS_ENVY" />
