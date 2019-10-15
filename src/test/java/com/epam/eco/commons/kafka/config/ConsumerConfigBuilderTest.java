@@ -18,6 +18,7 @@ package com.epam.eco.commons.kafka.config;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.RangeAssignor;
 import org.apache.kafka.clients.consumer.StickyAssignor;
@@ -70,6 +71,7 @@ public class ConsumerConfigBuilderTest {
 
                 // common
                 bootstrapServers("localhost:9092").
+                clientDnsLookup(ClientDnsLookup.USE_ALL_DNS_IPS).
                 metadataMaxAge(Long.MAX_VALUE).
                 sendBuffer(Integer.MAX_VALUE).
                 receiveBuffer(Integer.MAX_VALUE).

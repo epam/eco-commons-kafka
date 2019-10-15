@@ -28,7 +28,7 @@ import com.epam.eco.commons.kafka.config.ProducerConfigBuilder;
  */
 class CacheProducer<K, V> implements Closeable {
 
-    private static final long LINGER = 20;
+    private static final int LINGER = 20;
 
     private final String topicName;
     private final KafkaProducer<K, V> producer;

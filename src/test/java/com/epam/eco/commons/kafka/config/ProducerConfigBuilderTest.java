@@ -18,13 +18,14 @@ package com.epam.eco.commons.kafka.config;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.apache.kafka.common.metrics.JmxReporter;
 import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLoginCallbackHandler;
+import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Test;
@@ -42,7 +43,8 @@ public class ProducerConfigBuilderTest {
         Map<String, Object> props = ProducerConfigBuilder.withEmpty().
                 // producer
                 acks(Acks.ALL).
-                lingerMs(Long.MAX_VALUE).
+                lingerMs(Integer.MAX_VALUE).
+                deliveryTimeoutMs(Integer.MAX_VALUE).
                 maxRequestSize(Integer.MAX_VALUE).
                 maxBlockMs(Long.MAX_VALUE).
                 bufferMemory(Long.MAX_VALUE).
@@ -62,6 +64,7 @@ public class ProducerConfigBuilderTest {
 
                 // common
                 bootstrapServers("localhost:9092").
+                clientDnsLookup(ClientDnsLookup.USE_ALL_DNS_IPS).
                 metadataMaxAge(Long.MAX_VALUE).
                 sendBuffer(Integer.MAX_VALUE).
                 receiveBuffer(Integer.MAX_VALUE).

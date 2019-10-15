@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.common.metrics.Sensor.RecordingLevel;
@@ -38,6 +39,16 @@ public abstract class AbstractClientConfigBuilder<T extends AbstractSecurityConf
         return property(
                 CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
                 bootstrapServers);
+    }
+
+    public T clientDnsLookup(ClientDnsLookup clientDnsLookup) {
+        return clientDnsLookup(clientDnsLookup.toString());
+    }
+
+    public T clientDnsLookup(String clientDnsLookup) {
+        return property(
+                CommonClientConfigs.CLIENT_DNS_LOOKUP_CONFIG,
+                clientDnsLookup);
     }
 
     public T metadataMaxAge(long metadataMaxAge) {

@@ -77,8 +77,12 @@ public class ProducerConfigBuilder extends AbstractClientConfigBuilder<ProducerC
         return property(ProducerConfig.ACKS_CONFIG, acks);
     }
 
-    public ProducerConfigBuilder lingerMs(long lingerMs) {
+    public ProducerConfigBuilder lingerMs(int lingerMs) {
         return property(ProducerConfig.LINGER_MS_CONFIG, lingerMs);
+    }
+
+    public ProducerConfigBuilder deliveryTimeoutMs(int deliveryTimeoutMs) {
+        return property(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, deliveryTimeoutMs);
     }
 
     public ProducerConfigBuilder maxRequestSize(int maxRequestSize) {
