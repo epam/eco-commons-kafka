@@ -16,10 +16,8 @@
 package com.epam.eco.commons.kafka.helpers;
 
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.kafka.clients.admin.AdminClient;
 
 import com.epam.eco.commons.kafka.AdminClientUtils;
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
@@ -50,30 +48,6 @@ public class TopicPurger {
         Validate.notBlank(topicName, "Topic name is blank");
 
         AdminClientUtils.deleteAllRecords(consumerConfig, topicName);
-    }
-
-    /**
-     * @param topicName
-     * @param topicConfigBackup
-     * @deprecated topicConfigBackup is ignored as "backup-restore" feature is not supported after switching
-     * to {@link AdminClientUtils#deleteAllRecords(AdminClient, String)}
-     */
-    @Deprecated
-    public void purge(String topicName, Consumer<Map<String, String>> topicConfigBackup) {
-        purge(topicName);
-    }
-
-    /**
-     * @param topicName
-     * @param topicConfig
-     * @deprecated "backup-restore" feature is not supported anymore after switching
-     * to {@link AdminClientUtils#deleteAllRecords(AdminClient, String)}
-     */
-    @Deprecated
-    public void restore(
-            String topicName,
-            Map<String, String> topicConfig) {
-        throw new UnsupportedOperationException();
     }
 
 }
