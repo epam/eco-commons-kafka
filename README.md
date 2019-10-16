@@ -14,6 +14,14 @@ The library can be obtained from the Maven by adding the following dependency in
 </dependency>
 ```
 
+## Compatibility matrix
+
+Eco Commons Kafka | Kafka
+---  | --- 
+1.1.x | 2.1.x
+1.0.x | 2.0.x
+0.1.x | 1.0.x
+
 ## Features
 
 * Advanced consumer to handle long-running tasks
