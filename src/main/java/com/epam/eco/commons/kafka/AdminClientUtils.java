@@ -16,6 +16,7 @@
 package com.epam.eco.commons.kafka;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,14 +28,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsOptions;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewPartitions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.RecordsToDelete;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
@@ -60,11 +68,22 @@ public abstract class AdminClientUtils {
     }
 
     public static void deleteTopic(AdminClient client, String topicName) {
+        deleteTopics(client, Collections.singleton(topicName));
+    }
+
+    public static void deleteTopics(Map<String, Object> clientConfig, Collection<String> topicNames) {
+        try (AdminClient client = initClient(clientConfig)) {
+            deleteTopics(client, topicNames);
+        }
+    }
+
+    public static void deleteTopics(AdminClient client, Collection<String> topicNames) {
         Validate.notNull(client, "Admin client is null");
-        Validate.notBlank(topicName, "Topic name is blank");
+        Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
+        Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
 
         completeAndGet(
-                client.deleteTopics(Collections.singletonList(topicName)).all());
+                client.deleteTopics(topicNames).all());
     }
 
     public static void createPartitions(
@@ -165,6 +184,29 @@ public abstract class AdminClientUtils {
                 client.alterConfigs(Collections.singletonMap(resource, configs)).all());
     }
 
+    public static Collection<TopicListing> listTopics(Map<String, Object> clientConfig) {
+        return listTopics(clientConfig, false);
+    }
+
+    public static Collection<TopicListing> listTopics(Map<String, Object> clientConfig, boolean listInternalTopics) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return listTopics(client, listInternalTopics);
+        }
+    }
+
+    public static Collection<TopicListing> listTopics(AdminClient client) {
+        return listTopics(client, false);
+    }
+
+    public static Collection<TopicListing> listTopics(AdminClient client, boolean listInternalTopics) {
+        Validate.notNull(client, "Admin client is null");
+
+        ListTopicsOptions options = new ListTopicsOptions();
+        options.listInternal(listInternalTopics);
+
+        return completeAndGet(client.listTopics(options).listings());
+    }
+
     public static boolean topicExists(Map<String, Object> clientConfig, String topicName) {
         try (AdminClient client = initClient(clientConfig)) {
             return topicExists(client, topicName);
@@ -189,9 +231,25 @@ public abstract class AdminClientUtils {
         Validate.notNull(client, "Admin client is null");
         Validate.notBlank(topicName, "Topic name is blank");
 
-        Map<String, TopicDescription> descriptions = completeAndGet(
-                client.describeTopics(Collections.singletonList(topicName)).all());
-        return descriptions.get(topicName);
+        return describeTopics(client, Collections.singleton(topicName)).get(topicName);
+    }
+
+    public static Map<String, TopicDescription> describeTopics(
+            Map<String, Object> clientConfig,
+            Collection<String> topicNames) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return describeTopics(client, topicNames);
+        }
+    }
+
+    public static Map<String, TopicDescription> describeTopics(
+            AdminClient client,
+            Collection<String> topicNames) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
+        Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
+
+        return completeAndGet(client.describeTopics(topicNames).all());
     }
 
     public static ConfigEntry describeTopicConfigEntry(
@@ -379,8 +437,8 @@ public abstract class AdminClientUtils {
 
     public static void createAcl(AdminClient client, Collection<AclBinding> aclBindings) {
         Validate.notNull(client, "Admin client is null");
-        Validate.notNull(aclBindings, "ACL bindings is null");
-        Validate.noNullElements(aclBindings, "ACL bindings collection contains null elements");
+        Validate.notNull(aclBindings, "Collection of ACL bindings is null");
+        Validate.noNullElements(aclBindings, "Collection of ACL bindings contains null elements");
 
         completeAndGet(client.createAcls(aclBindings).all());
     }
@@ -428,10 +486,8 @@ public abstract class AdminClientUtils {
             AdminClient client,
             Collection<AclBindingFilter> aclBindingFilters) {
         Validate.notNull(client, "Admin client is null");
-        Validate.notNull(aclBindingFilters, "ACL binding filters is null");
-        Validate.noNullElements(
-                aclBindingFilters,
-                "ACL binding filters collection contains null elements");
+        Validate.notNull(aclBindingFilters, "Collection fo ACL binding filters is null");
+        Validate.noNullElements(aclBindingFilters, "Collection of ACL binding filters contains null elements");
 
         return completeAndGet(client.deleteAcls(aclBindingFilters).all());
     }
@@ -470,6 +526,7 @@ public abstract class AdminClientUtils {
     public static void deleteAllRecords(AdminClient client, Collection<TopicPartition> topicPartitions) {
         Validate.notNull(client, "Admin client is null");
         Validate.notEmpty(topicPartitions, "Collection of topic partitions is null or empty");
+        Validate.noNullElements(topicPartitions, "Collection of topic partitions contains null elements");
 
         Map<TopicPartition, RecordsToDelete> recordsToDelete = topicPartitions.stream().
                 collect(
@@ -499,6 +556,130 @@ public abstract class AdminClientUtils {
                                 tpi -> RecordsToDelete.beforeOffset(-1)));
 
         completeAndGet(client.deleteRecords(recordsToDelete).all());
+    }
+
+    public static boolean consumerGroupExists(Map<String, Object> clientConfig, String groupName) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return consumerGroupExists(client, groupName);
+        }
+    }
+
+    public static boolean consumerGroupExists(AdminClient client, String groupName) {
+        return describeConsumerGroup(client, groupName) != null;
+    }
+
+    public static ConsumerGroupDescription describeConsumerGroup(Map<String, Object> clientConfig, String groupName) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return describeConsumerGroup(client, groupName);
+        }
+    }
+
+    public static ConsumerGroupDescription describeConsumerGroup(AdminClient client, String groupName) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notBlank(groupName, "Group name is blank");
+
+        return describeConsumerGroups(client, Collections.singleton(groupName)).get(groupName);
+    }
+
+    public static Map<String, ConsumerGroupDescription> describeConsumerGroups(
+            Map<String, Object> clientConfig,
+            Collection<String> groupNames) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return describeConsumerGroups(client, groupNames);
+        }
+    }
+
+    public static Map<String, ConsumerGroupDescription> describeConsumerGroups(
+            AdminClient client,
+            Collection<String> groupNames) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notEmpty(groupNames, "Collection of group names is null or empty");
+        Validate.noNullElements(groupNames, "Collection of group names contains null elements");
+
+        return completeAndGet(client.describeConsumerGroups(groupNames).all());
+    }
+
+    public static Collection<ConsumerGroupListing> listConsumerGroups(Map<String, Object> clientConfig) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return listConsumerGroups(client);
+        }
+    }
+
+    public static Collection<ConsumerGroupListing> listConsumerGroups(AdminClient client) {
+        Validate.notNull(client, "Admin client is null");
+
+        return completeAndGet(
+                client.listConsumerGroups().all());
+    }
+
+    public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
+            Map<String, Object> clientConfig,
+            String groupName,
+            TopicPartition ... topicPartitions) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return listConsumerGroupOffsets(client, groupName, topicPartitions);
+        }
+    }
+
+    public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
+            AdminClient client,
+            String groupName,
+            TopicPartition ... topicPartitions) {
+        return listConsumerGroupOffsets(
+                client,
+                groupName,
+                topicPartitions != null ? Arrays.asList(topicPartitions) : null);
+    }
+
+    public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
+            Map<String, Object> clientConfig,
+            String groupName,
+            List<TopicPartition> topicPartitions) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return listConsumerGroupOffsets(client, groupName, topicPartitions);
+        }
+    }
+
+    public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
+            AdminClient client,
+            String groupName,
+            List<TopicPartition> topicPartitions) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notBlank(groupName, "Group name is blank");
+        if (!CollectionUtils.isEmpty(topicPartitions)) {
+            Validate.noNullElements(topicPartitions, "Collection of topic partitions contains null elements");
+        }
+
+        ListConsumerGroupOffsetsOptions options = new ListConsumerGroupOffsetsOptions();
+        options.topicPartitions(
+                !CollectionUtils.isEmpty(topicPartitions) ? topicPartitions : null);
+
+        return completeAndGet(
+                client.listConsumerGroupOffsets(groupName, options).partitionsToOffsetAndMetadata());
+    }
+
+    public static void deleteConsumerGroup(Map<String, Object> clientConfig, String groupName) {
+        try (AdminClient client = initClient(clientConfig)) {
+            deleteConsumerGroup(client, groupName);
+        }
+    }
+
+    public static void deleteConsumerGroup(AdminClient client, String groupName) {
+        deleteConsumerGroups(client, Collections.singleton(groupName));
+    }
+
+    public static void deleteConsumerGroups(Map<String, Object> clientConfig, Collection<String> groupNames) {
+        try (AdminClient client = initClient(clientConfig)) {
+            deleteConsumerGroups(client, groupNames);
+        }
+    }
+
+    public static void deleteConsumerGroups(AdminClient client, Collection<String> groupNames) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notEmpty(groupNames, "Collection of group names is null or empty");
+        Validate.noNullElements(groupNames, "Collection of group names contains null elements");
+
+        completeAndGet(client.deleteConsumerGroups(groupNames).all());
     }
 
     public static Map<String, String> configToMap(Config config) {
