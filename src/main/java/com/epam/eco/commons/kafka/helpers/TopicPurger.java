@@ -24,7 +24,9 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 
 /**
  * @author Andrei_Tytsik
+ * @deprecated use {@link AdminClientUtils#deleteAllRecords(Map, java.util.Collection) instead}
  */
+@Deprecated
 public class TopicPurger {
 
     private final Map<String, Object> consumerConfig;
