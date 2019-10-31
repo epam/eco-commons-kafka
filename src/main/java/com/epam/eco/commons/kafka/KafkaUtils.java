@@ -32,6 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -39,15 +40,11 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrei_Tytsik
  */
 public abstract class KafkaUtils {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaUtils.class);
 
     public static final Pattern TOPIC_PARTITION_PATTERN = Pattern.compile("^(.+)-(0|[1-9]\\d*)$");
 
@@ -91,22 +88,19 @@ public abstract class KafkaUtils {
         Validate.notNull(consumer, "Consumer is null");
         Validate.notNull(topicNames, "Collection of topic names is null");
 
-        topicNames = topicNames.stream().
-                filter(Objects::nonNull).
-                collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(topicNames)) {
+            return Collections.emptyList();
+        }
 
         List<TopicPartition> topicPartitions = new ArrayList<>();
         for (String topicName : topicNames) {
             List<PartitionInfo> partitionInfos = consumer.partitionsFor(topicName);
-            if (partitionInfos == null || partitionInfos.isEmpty()) {
-                LOGGER.warn("Partitions metadata not found for topic {}", topicName);
-                continue;
+            if (CollectionUtils.isEmpty(partitionInfos)) {
+                throw new RuntimeException("Partitions metadata not found for topic " + topicName);
             }
 
-            topicPartitions.addAll(
-                        partitionInfos.stream().
-                        map(info -> new TopicPartition(info.topic(), info.partition())).
-                        collect(Collectors.toList()));
+            partitionInfos.forEach(
+                    info -> topicPartitions.add(new TopicPartition(info.topic(), info.partition())));
         }
 
         return topicPartitions;
@@ -138,22 +132,19 @@ public abstract class KafkaUtils {
         Validate.notNull(producer, "Producer is null");
         Validate.notNull(topicNames, "Collection of topic names is null");
 
-        topicNames = topicNames.stream().
-                filter(Objects::nonNull).
-                collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(topicNames)) {
+            return Collections.emptyList();
+        }
 
         List<TopicPartition> topicPartitions = new ArrayList<>();
         for (String topicName : topicNames) {
             List<PartitionInfo> partitionInfos = producer.partitionsFor(topicName);
-            if (partitionInfos == null || partitionInfos.isEmpty()) {
-                LOGGER.warn("Partitions metadata not found for topic {}", topicName);
-                continue;
+            if (CollectionUtils.isEmpty(partitionInfos)) {
+                throw new RuntimeException("Partitions metadata not found for topic " + topicName);
             }
 
-            topicPartitions.addAll(
-                        partitionInfos.stream().
-                        map(info -> new TopicPartition(info.topic(), info.partition())).
-                        collect(Collectors.toList()));
+            partitionInfos.forEach(
+                    info -> topicPartitions.add(new TopicPartition(info.topic(), info.partition())));
         }
 
         return topicPartitions;
@@ -173,28 +164,6 @@ public abstract class KafkaUtils {
         return new TopicPartition(
                 topic,
                 partition);
-    }
-
-    public static void closeQuietly(KafkaConsumer<?, ?> consumer) {
-        if (consumer == null) {
-            return;
-        }
-        try {
-            consumer.close();
-        } catch (Exception ex) {
-            // ignore
-        }
-    }
-
-    public static void closeQuietly(KafkaProducer<?, ?> producer) {
-        if (producer == null) {
-            return;
-        }
-        try {
-            producer.close();
-        } catch (Exception ex) {
-            // ignore
-        }
     }
 
     public static void closeQuietly(Closeable closeable) {
