@@ -15,6 +15,8 @@
  */
 package com.epam.eco.commons.kafka;
 
+import org.apache.commons.lang3.Validate;
+
 /**
  * @author Andrei_Tytsik
  */
@@ -26,6 +28,18 @@ public enum Acks {
 
     Acks(String name) {
         this.name = name;
+    }
+
+    public static Acks forName(String name) {
+        Validate.notBlank(name, "Name is blank");
+
+        for (Acks acks : values()) {
+            if (acks.name.equals(name)) {
+                return acks;
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown value: " + name);
     }
 
 }

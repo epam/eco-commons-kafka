@@ -31,32 +31,44 @@ public enum TransactionState {
     DEAD("Dead"),
     PREPARE_EPOCH_FENCE("PrepareEpochFence");
 
-    private final String id;
+    public final String name;
 
-    TransactionState(String id) {
-        this.id = id;
-    }
-
-    public String id() {
-        return id;
+    TransactionState(String name) {
+        this.name = name;
     }
 
     public static TransactionState fromScala(kafka.coordinator.transaction.TransactionState state) {
         Validate.notNull(state, "Transaction State is null");
 
-        return getById(state.toString());
+        return forName(state.toString());
     }
 
-    public static TransactionState getById(String id) {
-        Validate.notBlank(id, "Id is blank");
+    public static TransactionState forName(String name) {
+        Validate.notBlank(name, "Name is blank");
 
         for (TransactionState state : values()) {
-            if (state.id.equals(id)) {
+            if (state.name.equals(name)) {
                 return state;
             }
         }
 
-        throw new IllegalArgumentException(String.format("Unknown transaction state '%s'", id));
+        throw new IllegalArgumentException("Unknown value: " + name);
+    }
+
+    /**
+     * @deprecated use {@link #name} instead
+     */
+    @Deprecated
+    public String id() {
+        return name;
+    }
+
+    /**
+     * @deprecated use {@link #forName(String)} instead
+     */
+    @Deprecated
+    public static TransactionState getById(String id) {
+        return forName(id);
     }
 
 }

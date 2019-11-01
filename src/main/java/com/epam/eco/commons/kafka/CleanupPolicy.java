@@ -15,6 +15,7 @@
  */
 package com.epam.eco.commons.kafka;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.kafka.common.config.TopicConfig;
 
 /**
@@ -29,6 +30,18 @@ public enum CleanupPolicy {
 
     CleanupPolicy(String name) {
         this.name = name;
+    }
+
+    public static CleanupPolicy forName(String name) {
+        Validate.notBlank(name, "Name is blank");
+
+        for (CleanupPolicy policy : values()) {
+            if (policy.name.equals(name)) {
+                return policy;
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown value: " + name);
     }
 
 }

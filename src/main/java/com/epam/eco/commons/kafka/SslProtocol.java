@@ -15,6 +15,8 @@
  */
 package com.epam.eco.commons.kafka;
 
+import org.apache.commons.lang3.Validate;
+
 /**
  * @author Andrei_Tytsik
  */
@@ -31,6 +33,18 @@ public enum SslProtocol {
 
     SslProtocol(String name) {
         this.name = name;
+    }
+
+    public static SslProtocol forName(String name) {
+        Validate.notBlank(name, "Name is blank");
+
+        for (SslProtocol protocol : values()) {
+            if (protocol.name.equals(name)) {
+                return protocol;
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown value: " + name);
     }
 
 }
