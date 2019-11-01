@@ -48,15 +48,25 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
+import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.common.config.ConfigDef.ConfigKey;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.ConfigResource.Type;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
+
+import com.epam.eco.commons.kafka.config.TopicConfigDef;
 
 
 /**
  * @author Andrei_Tytsik
  */
+/**
+ * @author Andrei_Tytsik
+ *
+ */
 public abstract class AdminClientUtils {
+
+    public static final Config TOPIC_DEFAULT_CONFIG = createTopicDefaultConfig();
 
     private AdminClientUtils() {
     }
@@ -774,6 +784,37 @@ public abstract class AdminClientUtils {
             } else {
                 throw new RuntimeException(cause);
             }
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Config createTopicDefaultConfig() {
+        List<ConfigEntry> entries = new ArrayList<>(TopicConfigDef.INSTANCE.keys().size());
+        for (ConfigKey key : TopicConfigDef.INSTANCE.keys()) {
+            entries.add(new ConfigEntry(
+                    key.name,
+                    getConfigDefaultValue(key),
+                    true,
+                    false,
+                    false));
+        }
+        return new Config(Collections.unmodifiableList(entries));
+    }
+
+    private static String getConfigDefaultValue(ConfigKey key) {
+        if (!key.hasDefault()) {
+            return "";
+        }
+
+        if (key.defaultValue == null) {
+            return "null";
+        }
+
+        String defaultValueStr = ConfigDef.convertToString(key.defaultValue, key.type);
+        if (defaultValueStr.isEmpty()) {
+            return "\"\"";
+        } else {
+            return defaultValueStr;
         }
     }
 
