@@ -60,10 +60,6 @@ import com.epam.eco.commons.kafka.config.TopicConfigDef;
 /**
  * @author Andrei_Tytsik
  */
-/**
- * @author Andrei_Tytsik
- *
- */
 public abstract class AdminClientUtils {
 
     public static final Config TOPIC_DEFAULT_CONFIG = createTopicDefaultConfig();
