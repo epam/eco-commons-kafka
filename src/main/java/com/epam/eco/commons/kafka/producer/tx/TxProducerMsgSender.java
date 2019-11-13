@@ -15,8 +15,8 @@
  */
 package com.epam.eco.commons.kafka.producer.tx;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.Callback;
@@ -133,7 +133,7 @@ final class TxProducerMsgSender<K, V> {
         }
 
         doQuietly(producer::abortTransaction);
-        doQuietly(() -> producer.close(0, TimeUnit.SECONDS));
+        doQuietly(() -> producer.close(Duration.ofMinutes(0)));
 
         closed = true;
     }
