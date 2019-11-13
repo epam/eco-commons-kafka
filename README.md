@@ -2,7 +2,7 @@
 
 It's a library of utilities, helpers and higher-level APIs for the [Kafka](https://kafka.apache.org/) client library.
 
-The currently supported version is [2.1.1](https://kafka.apache.org/downloads#2.1.1)
+The currently supported version is [2.2.1](https://kafka.apache.org/downloads#2.2.1)
 
 The library can be obtained from the Maven by adding the following dependency in the pom.xml:
 
@@ -37,6 +37,7 @@ mvn clean package
 
 Eco Commons Kafka | Kafka
 ---  | --- 
+1.2.x | 2.2.x
 1.1.x | 2.1.x
 1.0.x | 2.0.x
 0.1.x | 1.0.x
