@@ -104,6 +104,7 @@ public class ProducerConfigBuilderTest {
                 sslSecureRandomImplementation("SHA1PRNG").
 
                 // sasl
+                saslMechanism("GSSAPI").
                 saslJaas(
                         "org.apache.kafka.common.security.plain.PlainLoginModule required " +
                         "username=\"alice\"" +

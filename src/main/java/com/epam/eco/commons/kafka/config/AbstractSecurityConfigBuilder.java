@@ -179,6 +179,16 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
                 sslSecureRandomImplementation);
     }
 
+    public T saslMechanismDefault() {
+        return saslMechanism(SaslConfigs.DEFAULT_SASL_MECHANISM);
+    }
+
+    public T saslMechanism(String saslMechanism) {
+        return property(
+                SaslConfigs.SASL_MECHANISM,
+                saslMechanism);
+    }
+
     public T saslJaas(String saslJaas) {
         return property(
                 SaslConfigs.SASL_JAAS_CONFIG,
