@@ -688,6 +688,32 @@ public abstract class AdminClientUtils {
         completeAndGet(client.deleteConsumerGroups(groupNames).all());
     }
 
+    public static void electPreferredLeaders(Map<String, Object> clientConfig) {
+        electPreferredLeaders(clientConfig, null);
+    }
+
+    public static void electPreferredLeaders(AdminClient client) {
+        electPreferredLeaders(client, null);
+    }
+
+    public static void electPreferredLeaders(
+            Map<String, Object> clientConfig,
+            Collection<TopicPartition> partitions) {
+        try (AdminClient client = initClient(clientConfig)) {
+            electPreferredLeaders(client, partitions);
+        }
+    }
+
+    public static void electPreferredLeaders(AdminClient client, Collection<TopicPartition> partitions) {
+        Validate.notNull(client, "Admin client is null");
+        if (partitions != null) {
+            Validate.noNullElements(partitions, "Collection of topic partitions contains null elements");
+        }
+
+        completeAndGet(
+                client.electPreferredLeaders(partitions).all());
+    }
+
     public static Map<String, String> configToMap(Config config) {
         return configToMap(config, true, true);
     }
