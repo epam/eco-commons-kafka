@@ -587,6 +587,19 @@ public abstract class AdminClientUtils {
         return describeConsumerGroups(client, Collections.singleton(groupName)).get(groupName);
     }
 
+    public static Map<String, ConsumerGroupDescription> describeAllConsumerGroups(
+            Map<String, Object> clientConfig) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return describeAllConsumerGroups(client);
+        }
+    }
+
+    public static Map<String, ConsumerGroupDescription> describeAllConsumerGroups(
+            AdminClient client) {
+        Collection<String> groupNames = listAllConsumerGroupNames(client);
+        return describeConsumerGroups(client, groupNames);
+    }
+
     public static Map<String, ConsumerGroupDescription> describeConsumerGroups(
             Map<String, Object> clientConfig,
             Collection<String> groupNames) {
@@ -605,6 +618,19 @@ public abstract class AdminClientUtils {
         return completeAndGet(client.describeConsumerGroups(groupNames).all());
     }
 
+    public static Collection<String> listAllConsumerGroupNames(Map<String, Object> clientConfig) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return listAllConsumerGroupNames(client);
+        }
+    }
+
+    public static Collection<String> listAllConsumerGroupNames(AdminClient client) {
+        Collection<ConsumerGroupListing> groups = listConsumerGroups(client);
+        return groups.stream().
+                map(ConsumerGroupListing::groupId).
+                collect(Collectors.toSet());
+    }
+
     public static Collection<ConsumerGroupListing> listConsumerGroups(Map<String, Object> clientConfig) {
         try (AdminClient client = initClient(clientConfig)) {
             return listConsumerGroups(client);
@@ -616,6 +642,29 @@ public abstract class AdminClientUtils {
 
         return completeAndGet(
                 client.listConsumerGroups().all());
+    }
+
+    public static Map<String, Map<TopicPartition, OffsetAndMetadata>> listAllConsumerGroupOffsets(
+            Map<String, Object> clientConfig) {
+        try (AdminClient client = initClient(clientConfig)) {
+            return listAllConsumerGroupOffsets(client);
+        }
+    }
+
+    public static Map<String, Map<TopicPartition, OffsetAndMetadata>> listAllConsumerGroupOffsets(
+            AdminClient client) {
+        Collection<String> groupNames = listAllConsumerGroupNames(client);
+        if (CollectionUtils.isEmpty(groupNames)) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Map<TopicPartition, OffsetAndMetadata>> allOffsets =
+                new HashMap<>((int)Math.ceil(groupNames.size() / 0.75f));
+        for (String groupName : groupNames) {
+            Map<TopicPartition, OffsetAndMetadata> offsets = listConsumerGroupOffsets(client, groupName);
+            allOffsets.put(groupName, offsets);
+        }
+        return allOffsets;
     }
 
     public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
