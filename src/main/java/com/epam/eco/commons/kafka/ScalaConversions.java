@@ -24,9 +24,11 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.resource.PatternType;
 
+import kafka.coordinator.group.GroupState;
 import kafka.coordinator.group.GroupTopicPartition;
 import kafka.security.auth.Resource;
 import kafka.utils.VerifiableProperties;
@@ -37,7 +39,10 @@ import scala.collection.Seq;
 /**
  * @author Andrei_Tytsik
  */
-public class ScalaConversions {
+public abstract class ScalaConversions {
+
+    private ScalaConversions() {
+    }
 
     @SuppressWarnings("unchecked")
     public static <T> Seq<T> asScalaSeq(T ... values) {
@@ -124,6 +129,12 @@ public class ScalaConversions {
         Validate.notNull(resourceType, "Resource type is null");
 
         return kafka.security.auth.ResourceType$.MODULE$.fromJava(resourceType);
+    }
+
+    public static ConsumerGroupState asJavaGroupState(GroupState groupState) {
+        Validate.notNull(groupState, "Group state is null");
+
+        return ConsumerGroupState.parse(groupState.toString());
     }
 
 }
