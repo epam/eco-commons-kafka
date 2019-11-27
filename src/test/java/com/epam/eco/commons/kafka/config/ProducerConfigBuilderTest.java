@@ -50,7 +50,6 @@ public class ProducerConfigBuilderTest {
                 bufferMemory(Long.MAX_VALUE).
                 compressionType(CompressionType.GZIP).
                 maxInflightRequestsPerConnection(5).
-                retries(Integer.MAX_VALUE).
                 keySerializer(StringSerializer.class).
                 valueSerializer(StringSerializer.class).
                 partitionerClass(DefaultPartitioner.class).
@@ -69,8 +68,10 @@ public class ProducerConfigBuilderTest {
                 sendBuffer(Integer.MAX_VALUE).
                 receiveBuffer(Integer.MAX_VALUE).
                 clientId("clientId").
+                clientRack("rack1").
                 reconnectBackoffMs(Long.MAX_VALUE).
                 reconnectBackoffMaxMs(Long.MAX_VALUE).
+                retries(Integer.MAX_VALUE).
                 retryBackoffMs(Long.MAX_VALUE).
                 metricSampleWindowMs(Long.MAX_VALUE).
                 metricNumSamples(Integer.MAX_VALUE).

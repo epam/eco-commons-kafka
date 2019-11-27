@@ -37,7 +37,6 @@ public class AdminClientConfigBuilderTest {
     public void testConfigParsed() throws Exception {
         Map<String, Object> props = AdminClientConfigBuilder.withEmpty().
                 // admin
-                retries(Integer.MAX_VALUE).
 
                 // common
                 bootstrapServers("localhost:9092").
@@ -46,8 +45,10 @@ public class AdminClientConfigBuilderTest {
                 sendBuffer(Integer.MAX_VALUE).
                 receiveBuffer(Integer.MAX_VALUE).
                 clientId("clientId").
+                clientRack("rack1").
                 reconnectBackoffMs(Long.MAX_VALUE).
                 reconnectBackoffMaxMs(Long.MAX_VALUE).
+                retries(Integer.MAX_VALUE).
                 retryBackoffMs(Long.MAX_VALUE).
                 metricSampleWindowMs(Long.MAX_VALUE).
                 metricNumSamples(Integer.MAX_VALUE).

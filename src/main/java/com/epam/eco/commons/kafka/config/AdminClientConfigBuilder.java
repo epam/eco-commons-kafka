@@ -17,8 +17,6 @@ package com.epam.eco.commons.kafka.config;
 
 import java.util.Map;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
-
 /**
  * @author Andrei_Tytsik
  */
@@ -34,10 +32,6 @@ public class AdminClientConfigBuilder extends AbstractClientConfigBuilder<AdminC
 
     public static AdminClientConfigBuilder withEmpty() {
         return new AdminClientConfigBuilder(null);
-    }
-
-    public AdminClientConfigBuilder retries(int retries) {
-        return property(AdminClientConfig.RETRIES_CONFIG, retries);
     }
 
 }

@@ -71,6 +71,12 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
                 groupId);
     }
 
+    public ConsumerConfigBuilder groupInstanceId(String groupInstanceId) {
+        return property(
+                ConsumerConfig.GROUP_INSTANCE_ID_CONFIG,
+                groupInstanceId);
+    }
+
     public ConsumerConfigBuilder maxPollRecordsMin() {
         return maxPollRecords(1);
     }
@@ -319,6 +325,24 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
         return property(
                 ConsumerConfig.ISOLATION_LEVEL_CONFIG,
                 isolationLevel);
+    }
+
+    public ConsumerConfigBuilder allowAutoCreateTopicDefault() {
+        return allowAutoCreateTopic(ConsumerConfig.DEFAULT_ALLOW_AUTO_CREATE_TOPICS);
+    }
+
+    public ConsumerConfigBuilder allowAutoCreateTopicEnabled() {
+        return allowAutoCreateTopic(true);
+    }
+
+    public ConsumerConfigBuilder allowAutoCreateTopicDisabled() {
+        return allowAutoCreateTopic(false);
+    }
+
+    public ConsumerConfigBuilder allowAutoCreateTopic(boolean allowAutoCreateTopic) {
+        return property(
+                ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG,
+                allowAutoCreateTopic);
     }
 
 }

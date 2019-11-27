@@ -92,6 +92,10 @@ public class TopicConfigBuilder extends AbstractConfigBuilder<TopicConfigBuilder
         return property(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG, minCompactionLagMs);
     }
 
+    public TopicConfigBuilder maxCompactionLagMs(long maxCompactionLagMs) {
+        return property(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG, maxCompactionLagMs);
+    }
+
     public TopicConfigBuilder minCleanableDirtyRatio(double minCleanableDirtyRatio) {
         return property(TopicConfig.MIN_CLEANABLE_DIRTY_RATIO_CONFIG, minCleanableDirtyRatio);
     }

@@ -25,8 +25,8 @@ import org.apache.kafka.clients.consumer.StickyAssignor;
 import org.apache.kafka.common.metrics.JmxReporter;
 import org.apache.kafka.common.requests.IsolationLevel;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLoginCallbackHandler;
+import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Test;
@@ -44,6 +44,7 @@ public class ConsumerConfigBuilderTest {
         Map<String, Object> props = ConsumerConfigBuilder.withEmpty().
                 // consumer
                 groupId("groupId").
+                groupInstanceId("groupInstanceId").
                 maxPollRecords(Integer.MAX_VALUE).
                 maxPollIntervalMs(Integer.MAX_VALUE).
                 sessionTimeoutMs(Integer.MAX_VALUE - 1).
@@ -68,6 +69,7 @@ public class ConsumerConfigBuilderTest {
                                 TestConsumerInterceptor2.class)).
                 excludeInternalTopics(true).
                 isolationLevel(IsolationLevel.READ_COMMITTED).
+                allowAutoCreateTopic(false).
 
                 // common
                 bootstrapServers("localhost:9092").
@@ -76,8 +78,10 @@ public class ConsumerConfigBuilderTest {
                 sendBuffer(Integer.MAX_VALUE).
                 receiveBuffer(Integer.MAX_VALUE).
                 clientId("clientId").
+                clientRack("rack1").
                 reconnectBackoffMs(Long.MAX_VALUE).
                 reconnectBackoffMaxMs(Long.MAX_VALUE).
+                retries(Integer.MAX_VALUE).
                 retryBackoffMs(Long.MAX_VALUE).
                 metricSampleWindowMs(Long.MAX_VALUE).
                 metricNumSamples(Integer.MAX_VALUE).

@@ -93,6 +93,12 @@ public abstract class AbstractClientConfigBuilder<T extends AbstractSecurityConf
                 clientId);
     }
 
+    public T clientRack(String clientRack) {
+        return property(
+                CommonClientConfigs.CLIENT_RACK_CONFIG,
+                clientRack);
+    }
+
     public T reconnectBackoffMs(long reconnectBackoffMs) {
         return property(
                 CommonClientConfigs.RECONNECT_BACKOFF_MS_CONFIG,
