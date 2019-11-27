@@ -44,40 +44,59 @@ public abstract class AbstractConfigDef {
                 collect(Collectors.toList());
     }
 
+    public ConfigKey keyRequired(String name) {
+        ConfigKey key = key(name);
+        if (key == null) {
+            throw new IllegalArgumentException("No config key found for name: " + name);
+        }
+
+        return key;
+    }
+
     public ConfigKey key(String name) {
         return def.configKeys().get(name);
     }
 
     public String doc(String name) {
-        ConfigKey key = key(name);
-        return key != null ? key.documentation : null;
+        return keyRequired(name).documentation;
     }
 
     public Importance importance(String name) {
-        ConfigKey key = key(name);
-        return key != null ? key.importance : null;
+        return keyRequired(name).importance;
     }
 
     public Type type(String name) {
-        ConfigKey key = key(name);
-        return key != null ? key.type : null;
+        return keyRequired(name).type;
     }
 
     public boolean isDefaultValue(String name, Object value) {
-        Object defaultValue = defaultValue(name);
-        if (Objects.equals(defaultValue, value)) {
-            return true;
-        }
-
-        defaultValue = defaultValue != null ? defaultValue.toString() : null;
-        value = value != null ? value.toString() : null;
-
-        return Objects.equals(defaultValue, value);
+        return
+                Objects.equals(defaultValue(name), value) ||
+                (value instanceof String && Objects.equals(defaultValueAsString(name), value));
     }
 
     public Object defaultValue(String name) {
-        ConfigKey key = key(name);
-        return key != null ? key.defaultValue : null;
+        return keyRequired(name).defaultValue;
+    }
+
+
+    public String defaultValueAsString(String name) {
+        ConfigKey key = keyRequired(name);
+
+        if (!key.hasDefault()) {
+            return "";
+        }
+
+        if (key.defaultValue == null) {
+            return "null";
+        }
+
+        String defaultValueStr = ConfigDef.convertToString(key.defaultValue, key.type);
+        if (defaultValueStr.isEmpty()) {
+            return "\"\"";
+        } else {
+            return defaultValueStr;
+        }
     }
 
 }
