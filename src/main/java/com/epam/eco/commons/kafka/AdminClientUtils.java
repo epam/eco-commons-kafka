@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +30,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
@@ -48,12 +51,13 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
-import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.ConfigKey;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.ConfigResource.Type;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 
+import com.epam.eco.commons.kafka.config.AbstractConfigDef;
+import com.epam.eco.commons.kafka.config.BrokerConfigDef;
 import com.epam.eco.commons.kafka.config.TopicConfigDef;
 
 
@@ -63,6 +67,15 @@ import com.epam.eco.commons.kafka.config.TopicConfigDef;
 public abstract class AdminClientUtils {
 
     public static final Config TOPIC_DEFAULT_CONFIG = createTopicDefaultConfig();
+    public static final Config BROKER_DEFAULT_CONFIG = createBrokerDefaultConfig();
+
+    public interface AdminClientCallable<R> {
+        R call(AdminClient client) throws Exception;
+    }
+
+    public interface UncheckedAdminClientCallable<R> {
+        R call(AdminClient client);
+    }
 
     private AdminClientUtils() {
     }
@@ -159,35 +172,64 @@ public abstract class AdminClientUtils {
                 client.createTopics(Collections.singletonList(newTopic)).all());
     }
 
-    public static void resetTopicConfig(
-            Map<String, Object> clientConfig,
-            String topicName) {
+    /**
+     * @deprecated use {@link #resetAllTopicConfigs(Map, String)}
+     */
+    @Deprecated
+    public static void resetTopicConfig(Map<String, Object> clientConfig, String topicName) {
+        resetAllTopicConfigs(clientConfig, topicName);
+    }
+
+    public static void resetAllTopicConfigs(Map<String, Object> clientConfig, String topicName) {
         try (AdminClient client = initClient(clientConfig)) {
-            alterTopicConfig(client, topicName, Collections.emptyMap());
+            resetAllTopicConfigs(client, topicName);
         }
     }
 
+    public static void resetAllTopicConfigs(AdminClient client, String topicName) {
+        Validate.notBlank(topicName, "Topic name is blank");
+
+        resetAllResourceConfigs(client, new ConfigResource(Type.TOPIC, topicName));
+    }
+
+    /**
+     * @deprecated use {@link #alterTopicConfigs(Map, String, Map)}
+     */
+    @Deprecated
     public static void alterTopicConfig(
             Map<String, Object> clientConfig,
             String topicName,
             Map<String, String> configMap) {
+        alterTopicConfigs(clientConfig, topicName, configMap);
+    }
+
+    public static void alterTopicConfigs(
+            Map<String, Object> clientConfig,
+            String topicName,
+            Map<String, String> configs) {
         try (AdminClient client = initClient(clientConfig)) {
-            alterTopicConfig(client, topicName, configMap);
+            alterTopicConfigs(client, topicName, configs);
         }
     }
 
+    /**
+     * @deprecated use {@link #alterTopicConfigs(AdminClient, String, Map)}
+     */
+    @Deprecated
     public static void alterTopicConfig(
             AdminClient client,
             String topicName,
-            Map<String, String> configMap) {
-        Validate.notNull(client, "Admin client is null");
+            Map<String, String> configs) {
+        alterTopicConfigs(client, topicName, configs);
+    }
+
+    public static void alterTopicConfigs(
+            AdminClient client,
+            String topicName,
+            Map<String, String> configs) {
         Validate.notBlank(topicName, "Topic name is blank");
 
-        ConfigResource resource = new ConfigResource(Type.TOPIC, topicName);
-        Config configs = mapToConfig(configMap);
-
-        completeAndGet(
-                client.alterConfigs(Collections.singletonMap(resource, configs)).all());
+        alterResourceConfigs(client, new ConfigResource(Type.TOPIC, topicName), configs);
     }
 
     public static Collection<TopicListing> listTopics(Map<String, Object> clientConfig) {
@@ -421,6 +463,36 @@ public abstract class AdminClientUtils {
 
         return completeAndGet(
                 client.describeCluster().nodes());
+    }
+
+    public static void resetAllBrokerConfigs(Map<String, Object> clientConfig, int brokerId) {
+        try (AdminClient client = initClient(clientConfig)) {
+            resetAllBrokerConfigs(client, brokerId);
+        }
+    }
+
+    public static void resetAllBrokerConfigs(AdminClient client, int brokerId) {
+        Validate.isTrue(brokerId >= 0, "Broker id is invalid: %d", brokerId);
+
+        resetAllResourceConfigs(client, new ConfigResource(Type.BROKER, "" + brokerId));
+    }
+
+    public static void alterBrokerConfigs(
+            Map<String, Object> clientConfig,
+            int brokerId,
+            Map<String, String> configs) {
+        try (AdminClient client = initClient(clientConfig)) {
+            alterBrokerConfigs(client, brokerId, configs);
+        }
+    }
+
+    public static void alterBrokerConfigs(
+            AdminClient client,
+            int brokerId,
+            Map<String, String> configs) {
+        Validate.isTrue(brokerId >= 0, "Broker id is invalid: %d", brokerId);
+
+        alterResourceConfigs(client, new ConfigResource(Type.BROKER, "" + brokerId), configs);
     }
 
     public static void createAcl(Map<String, Object> clientConfig, AclBinding aclBinding) {
@@ -763,6 +835,117 @@ public abstract class AdminClientUtils {
                 client.electPreferredLeaders(partitions).all());
     }
 
+    public static void alterResourceConfigs(
+            Map<String, Object> clientConfig,
+            ConfigResource resource,
+            Map<String, String> configs) {
+        try (AdminClient client = initClient(clientConfig)) {
+            alterResourceConfigs(client, resource, configs);
+        }
+    }
+
+    public static void alterResourceConfigs(
+            AdminClient client,
+            ConfigResource resource,
+            Map<String, String> configs) {
+        Validate.notNull(resource, "Config resource is null");
+        Validate.notNull(configs, "Map of configs is null");
+        Validate.noNullElements(configs.keySet(), "Map of configs contains null keys");
+
+        AbstractConfigDef configDef = getConfigDef(resource);
+
+        Collection<AlterConfigOp> configOps = new LinkedList<>();
+        configs.forEach((name, value) -> {
+            if (StringUtils.isBlank(value) || configDef.isDefaultValue(name, value)) {
+                configOps.add(asDeleteConfigOp(name));
+            } else {
+                configOps.add(asSetConfigOp(name, value));
+            }
+        });
+
+        incrementalAlterResourceConfigs(client, resource, configOps);
+    }
+
+    public static void resetAllResourceConfigs(Map<String, Object> clientConfig, ConfigResource resource) {
+        try (AdminClient client = initClient(clientConfig)) {
+            resetAllResourceConfigs(client, resource);
+        }
+    }
+
+    public static void resetAllResourceConfigs(AdminClient client, ConfigResource resource) {
+        Validate.notNull(resource, "Config resource is null");
+
+        AbstractConfigDef configDef = getConfigDef(resource);
+        Collection<String> configNames = configDef.keys().stream().
+                map(key -> key.name).
+                collect(Collectors.toList());
+
+        resetResourceConfigs(client, resource, configNames);
+    }
+
+    public static void resetResourceConfigs(
+            Map<String, Object> clientConfig,
+            ConfigResource resource,
+            Collection<String> configNames) {
+        try (AdminClient client = initClient(clientConfig)) {
+            resetResourceConfigs(client, resource, configNames);
+        }
+    }
+
+    public static void resetResourceConfigs(
+            AdminClient client,
+            ConfigResource resource,
+            Collection<String> configNames) {
+        Validate.notNull(resource, "Config resource is null");
+        Validate.notNull(configNames, "Collection of config names is null");
+        Validate.noNullElements(configNames, "Collection of config names contains null elements");
+
+        Collection<AlterConfigOp> deleteOps = configNames.stream().
+                map(AdminClientUtils::asDeleteConfigOp).
+                collect(Collectors.toList());
+
+        incrementalAlterResourceConfigs(client, resource, deleteOps);
+    }
+
+    public static void incrementalAlterResourceConfigs(
+            Map<String, Object> clientConfig,
+            ConfigResource resource,
+            Collection<AlterConfigOp> configOps) {
+        try (AdminClient client = initClient(clientConfig)) {
+            incrementalAlterResourceConfigs(client, resource, configOps);
+        }
+    }
+
+    public static void incrementalAlterResourceConfigs(
+            AdminClient client,
+            ConfigResource resource,
+            Collection<AlterConfigOp> configOps) {
+        Validate.notNull(resource, "Config resource is null");
+        Validate.notNull(configOps, "Collection of config operations is null");
+        Validate.noNullElements(configOps, "Collection of config operations contains null elements");
+
+        incrementalAlterConfigs(client, Collections.singletonMap(resource, configOps));
+    }
+
+    public static void incrementalAlterConfigs(
+            Map<String, Object> clientConfig,
+            Map<ConfigResource, Collection<AlterConfigOp>> configs) {
+        try (AdminClient client = initClient(clientConfig)) {
+            incrementalAlterConfigs(client, configs);
+        }
+    }
+
+    public static void incrementalAlterConfigs(
+            AdminClient client,
+            Map<ConfigResource, Collection<AlterConfigOp>> configs) {
+        Validate.notNull(client, "Admin client is null");
+        Validate.notNull(configs, "Map of configs is null");
+        Validate.noNullElements(configs.keySet(), "Map of configs contains null keys");
+        Validate.noNullElements(configs.values(), "Map of configs contains null values");
+
+        completeAndGet(client.incrementalAlterConfigs(configs).all());
+    }
+
     public static Map<String, String> configToMap(Config config) {
         return configToMap(config, true, true);
     }
@@ -835,14 +1018,6 @@ public abstract class AdminClientUtils {
                 client.describeConfigs(resources).all());
     }
 
-    public interface AdminClientCallable<R> {
-        R call(AdminClient client) throws Exception;
-    }
-
-    public interface UncheckedAdminClientCallable<R> {
-        R call(AdminClient client);
-    }
-
     private static <T> T completeAndGet(KafkaFuture<T> future) {
         try {
             return future.get();
@@ -858,13 +1033,32 @@ public abstract class AdminClientUtils {
         }
     }
 
+    private static AlterConfigOp asSetConfigOp(String name, String value) {
+        return new AlterConfigOp(new ConfigEntry(name, value), AlterConfigOp.OpType.SET);
+    }
+
+    private static AlterConfigOp asDeleteConfigOp(String name) {
+        return new AlterConfigOp(new ConfigEntry(name, null), AlterConfigOp.OpType.DELETE);
+    }
+
+    private static AbstractConfigDef getConfigDef(ConfigResource resource) {
+        if (resource.type() == Type.BROKER) {
+            return BrokerConfigDef.INSTANCE;
+        } else if (resource.type() == Type.TOPIC) {
+            return TopicConfigDef.INSTANCE;
+        } else {
+            throw new IllegalArgumentException("Unsupported resource type: " + resource.type());
+        }
+    }
+
     @SuppressWarnings("deprecation")
     private static Config createTopicDefaultConfig() {
-        List<ConfigEntry> entries = new ArrayList<>(TopicConfigDef.INSTANCE.keys().size());
-        for (ConfigKey key : TopicConfigDef.INSTANCE.keys()) {
+        TopicConfigDef configDef = TopicConfigDef.INSTANCE;
+        List<ConfigEntry> entries = new ArrayList<>(configDef.keys().size());
+        for (ConfigKey key : configDef.keys()) {
             entries.add(new ConfigEntry(
                     key.name,
-                    getConfigDefaultValue(key),
+                    configDef.defaultValueAsString(key.name),
                     true,
                     false,
                     false));
@@ -872,21 +1066,19 @@ public abstract class AdminClientUtils {
         return new Config(Collections.unmodifiableList(entries));
     }
 
-    private static String getConfigDefaultValue(ConfigKey key) {
-        if (!key.hasDefault()) {
-            return "";
+    @SuppressWarnings("deprecation")
+    private static Config createBrokerDefaultConfig() {
+        BrokerConfigDef configDef = BrokerConfigDef.INSTANCE;
+        List<ConfigEntry> entries = new ArrayList<>(configDef.keys().size());
+        for (ConfigKey key : configDef.keys()) {
+            entries.add(new ConfigEntry(
+                    key.name,
+                    configDef.defaultValueAsString(key.name),
+                    true,
+                    false,
+                    false));
         }
-
-        if (key.defaultValue == null) {
-            return "null";
-        }
-
-        String defaultValueStr = ConfigDef.convertToString(key.defaultValue, key.type);
-        if (defaultValueStr.isEmpty()) {
-            return "\"\"";
-        } else {
-            return defaultValueStr;
-        }
+        return new Config(Collections.unmodifiableList(entries));
     }
 
 }
