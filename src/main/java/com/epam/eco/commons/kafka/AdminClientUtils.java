@@ -669,6 +669,10 @@ public abstract class AdminClientUtils {
     public static Map<String, ConsumerGroupDescription> describeAllConsumerGroups(
             AdminClient client) {
         Collection<String> groupNames = listAllConsumerGroupNames(client);
+        if (groupNames.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
         return describeConsumerGroups(client, groupNames);
     }
 

@@ -82,6 +82,7 @@
         <fb-contrib.version>7.4.3.sb</fb-contrib.version>
 
         <junit.version>4.12</junit.version>
+        <mockito.version>2.23.4</mockito.version>
         <awaitility.version>3.0.0</awaitility.version>
     </properties>
 
@@ -137,6 +138,11 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
             <version>${junit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
