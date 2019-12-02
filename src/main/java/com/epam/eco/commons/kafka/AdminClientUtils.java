@@ -66,8 +66,8 @@ import com.epam.eco.commons.kafka.config.TopicConfigDef;
  */
 public abstract class AdminClientUtils {
 
-    public static final Config TOPIC_DEFAULT_CONFIG = createTopicDefaultConfig();
-    public static final Config BROKER_DEFAULT_CONFIG = createBrokerDefaultConfig();
+    public static final Config TOPIC_DEFAULT_CONFIG = createDefaultConfig(Type.TOPIC);
+    public static final Config BROKER_DEFAULT_CONFIG = createDefaultConfig(Type.BROKER);
 
     public interface AdminClientCallable<R> {
         R call(AdminClient client) throws Exception;
@@ -1044,35 +1044,27 @@ public abstract class AdminClientUtils {
     }
 
     private static AbstractConfigDef getConfigDef(ConfigResource resource) {
-        if (resource.type() == Type.BROKER) {
+        return getConfigDef(resource.type());
+    }
+
+    private static AbstractConfigDef getConfigDef(ConfigResource.Type resourceType) {
+        if (resourceType == Type.BROKER) {
             return BrokerConfigDef.INSTANCE;
-        } else if (resource.type() == Type.TOPIC) {
+        } else if (resourceType == Type.TOPIC) {
             return TopicConfigDef.INSTANCE;
         } else {
-            throw new IllegalArgumentException("Unsupported resource type: " + resource.type());
+            throw new IllegalArgumentException("Unsupported resource type: " + resourceType);
         }
     }
 
     @SuppressWarnings("deprecation")
-    private static Config createTopicDefaultConfig() {
-        TopicConfigDef configDef = TopicConfigDef.INSTANCE;
-        List<ConfigEntry> entries = new ArrayList<>(configDef.keys().size());
-        for (ConfigKey key : configDef.keys()) {
-            entries.add(new ConfigEntry(
-                    key.name,
-                    configDef.defaultValueAsString(key.name),
-                    true,
-                    false,
-                    false));
-        }
-        return new Config(Collections.unmodifiableList(entries));
-    }
+    private static Config createDefaultConfig(ConfigResource.Type resourceType) {
+        AbstractConfigDef configDef = getConfigDef(resourceType);
 
-    @SuppressWarnings("deprecation")
-    private static Config createBrokerDefaultConfig() {
-        BrokerConfigDef configDef = BrokerConfigDef.INSTANCE;
-        List<ConfigEntry> entries = new ArrayList<>(configDef.keys().size());
-        for (ConfigKey key : configDef.keys()) {
+        List<ConfigKey> keys = configDef.keys();
+
+        List<ConfigEntry> entries = new ArrayList<>(keys.size());
+        for (ConfigKey key : keys) {
             entries.add(new ConfigEntry(
                     key.name,
                     configDef.defaultValueAsString(key.name),
