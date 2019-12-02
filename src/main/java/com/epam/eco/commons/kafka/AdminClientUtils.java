@@ -856,11 +856,9 @@ public abstract class AdminClientUtils {
         Validate.notNull(configs, "Map of configs is null");
         Validate.noNullElements(configs.keySet(), "Map of configs contains null keys");
 
-        AbstractConfigDef configDef = getConfigDef(resource);
-
         Collection<AlterConfigOp> configOps = new LinkedList<>();
         configs.forEach((name, value) -> {
-            if (StringUtils.isBlank(value) || configDef.isDefaultValue(name, value)) {
+            if (StringUtils.isBlank(value)) {
                 configOps.add(asDeleteConfigOp(name));
             } else {
                 configOps.add(asSetConfigOp(name, value));
