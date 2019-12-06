@@ -582,7 +582,7 @@ public abstract class AdminClientUtils {
 
     public static ConsumerGroupDescription describeConsumerGroup(AdminClient client, String groupName) {
         Validate.notNull(client, "Admin client is null");
-        Validate.notBlank(groupName, "Group name is blank");
+        Validate.notNull(groupName, "Group name is null"); // should be notBlank(...) but Kafka for some reason allows blank group ids...
 
         return describeConsumerGroups(client, Collections.singleton(groupName)).get(groupName);
     }
@@ -704,7 +704,7 @@ public abstract class AdminClientUtils {
             String groupName,
             List<TopicPartition> topicPartitions) {
         Validate.notNull(client, "Admin client is null");
-        Validate.notBlank(groupName, "Group name is blank");
+        Validate.notNull(groupName, "Group name is null"); // should be notBlank(...) but Kafka for some reason allows blank group ids...
         if (!CollectionUtils.isEmpty(topicPartitions)) {
             Validate.noNullElements(topicPartitions, "Collection of topic partitions contains null elements");
         }
