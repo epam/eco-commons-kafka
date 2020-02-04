@@ -99,8 +99,7 @@ public abstract class KafkaUtils {
                 throw new RuntimeException("Partitions metadata not found for topic " + topicName);
             }
 
-            partitionInfos.forEach(
-                    info -> topicPartitions.add(new TopicPartition(info.topic(), info.partition())));
+            topicPartitions.addAll(toTopicPartitions(partitionInfos));
         }
 
         return topicPartitions;
@@ -143,8 +142,7 @@ public abstract class KafkaUtils {
                 throw new RuntimeException("Partitions metadata not found for topic " + topicName);
             }
 
-            partitionInfos.forEach(
-                    info -> topicPartitions.add(new TopicPartition(info.topic(), info.partition())));
+            topicPartitions.addAll(toTopicPartitions(partitionInfos));
         }
 
         return topicPartitions;
@@ -297,6 +295,26 @@ public abstract class KafkaUtils {
         }
 
         return largestConsumableOffset - consumerOffset;
+    }
+
+    public static List<TopicPartition> toTopicPartitions(List<PartitionInfo> partitionInfos) {
+        Validate.notNull(partitionInfos, "Collection of partition infos is null");
+
+        if (partitionInfos.isEmpty()) {
+            return Collections.emptyList();
+        } else if (partitionInfos.size() == 1) {
+            return Collections.singletonList(toTopicPartition(partitionInfos.get(0)));
+        } else {
+            return partitionInfos.stream().
+                    map(KafkaUtils::toTopicPartition).
+                    collect(Collectors.toList());
+        }
+    }
+
+    public static TopicPartition toTopicPartition(PartitionInfo partitionInfo) {
+        Validate.notNull(partitionInfo, "Partition info is null");
+
+        return new TopicPartition(partitionInfo.topic(), partitionInfo.partition());
     }
 
 }
