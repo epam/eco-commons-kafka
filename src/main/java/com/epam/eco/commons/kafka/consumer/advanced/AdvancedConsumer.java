@@ -105,8 +105,6 @@ public final class AdvancedConsumer<K, V> extends Thread {
                 with(consumerConfig).
                 minRequiredConfigs().
                 enableAutoCommitDisabled().
-                autoOffsetResetEarliest().
-                maxPollRecordsMax().
                 build();
         this.groupId = (String)this.consumerConfig.get(ConsumerConfig.GROUP_ID_CONFIG);
         this.handler = handler;
