@@ -78,8 +78,8 @@ public class AdvancedConsumerIT {
     private static final Map<String, Object> CONSUMER_CONFIG = ConsumerConfigBuilder.
             withEmpty().
             bootstrapServers(BOOTSTRAP_SERVERS).
-            enableAutoCommitDisabled().
             autoOffsetResetEarliest().
+            maxPollRecordsMax().
             keyDeserializerString().
             valueDeserializerString().
             build();
