@@ -35,7 +35,7 @@
     </Match>
     <Match>
         <Class name="com.epam.eco.commons.kafka.helpers.TopicRecordFetcher" />
-        <Method name="fetch" />
+        <Method name="fetchByOffsets" />
         <Bug pattern="NP_NULL_PARAM_DEREF" />
     </Match>
     <Match>
