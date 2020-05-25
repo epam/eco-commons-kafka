@@ -228,16 +228,6 @@ public class TopicRecordFetcher<K, V> {
         }
     }
 
-    @Deprecated
-    private RecordFetchResult<K, V> doFetch(
-            KafkaConsumer<K, V> consumer,
-            Map<TopicPartition, Long> offsets,
-            long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
-            long timeoutMs) {
-        return doFetchByOffsets(consumer, offsets, limit, filter, timeoutMs);
-    }
-
     private RecordFetchResult<K, V> doFetchByOffsets(
             KafkaConsumer<K, V> consumer,
             Map<TopicPartition, Long> offsets,
