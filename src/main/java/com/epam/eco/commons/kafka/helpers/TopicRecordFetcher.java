@@ -33,6 +33,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 
 import com.epam.eco.commons.kafka.KafkaUtils;
@@ -70,20 +71,38 @@ public class TopicRecordFetcher<K, V> {
         return new TopicRecordFetcher<>(bootstrapServers, null);
     }
 
+    @Deprecated
     public RecordFetchResult<K, V> fetch(
             String[] topicNames,
             long offset,
             long limit,
             long timeoutInMs) {
-        return fetch(topicNames, offset, limit, null, timeoutInMs);
+        return fetchByOffsets(topicNames, offset, limit, timeoutInMs);
     }
 
+    public RecordFetchResult<K, V> fetchByOffsets(
+            String[] topicNames,
+            long offset,
+            long limit,
+            long timeoutInMs) {
+        return fetchByOffsets(topicNames, offset, limit, null, timeoutInMs);
+    }
+
+    @Deprecated
     public RecordFetchResult<K, V> fetch(
             Collection<String> topicNames,
             long offset,
             long limit,
             long timeoutInMs) {
-        return fetch(
+        return fetchByOffsets(topicNames, offset, limit, timeoutInMs);
+    }
+
+    public RecordFetchResult<K, V> fetchByOffsets(
+            Collection<String> topicNames,
+            long offset,
+            long limit,
+            long timeoutInMs) {
+        return fetchByOffsets(
                 topicNames,
                 offset,
                 limit,
@@ -91,13 +110,28 @@ public class TopicRecordFetcher<K, V> {
                 timeoutInMs);
     }
 
+    @Deprecated
     public RecordFetchResult<K, V> fetch(
             Collection<String> topicNames,
             long offset,
             long limit,
             Predicate<ConsumerRecord<K, V>> filter,
             long timeoutInMs) {
-        return fetch(
+        return fetchByOffsets(
+                topicNames,
+                offset,
+                limit,
+                filter,
+                timeoutInMs);
+    }
+
+    public RecordFetchResult<K, V> fetchByOffsets(
+            Collection<String> topicNames,
+            long offset,
+            long limit,
+            Predicate<ConsumerRecord<K, V>> filter,
+            long timeoutInMs) {
+        return fetchByOffsets(
                 topicNames != null ? topicNames.stream().toArray(String[]::new) : null,
                 offset,
                 limit,
@@ -105,7 +139,17 @@ public class TopicRecordFetcher<K, V> {
                 timeoutInMs);
     }
 
+    @Deprecated
     public RecordFetchResult<K, V> fetch(
+            String[] topicNames,
+            long offset,
+            long limit,
+            Predicate<ConsumerRecord<K, V>> filter,
+            long timeoutInMs) {
+        return fetchByOffsets(topicNames, offset, limit, filter, timeoutInMs);
+    }
+
+    public RecordFetchResult<K, V> fetchByOffsets(
             String[] topicNames,
             long offset,
             long limit,
@@ -121,18 +165,42 @@ public class TopicRecordFetcher<K, V> {
             Map<TopicPartition, Long> offsets = toOffsets(
                     KafkaUtils.getTopicPartitionsAsList(consumer, topicNames),
                     offset);
-            return doFetch(consumer, offsets, limit, filter, timeoutInMs);
+            return doFetchByOffsets(consumer, offsets, limit, filter, timeoutInMs);
         }
     }
 
+    @Deprecated
     public RecordFetchResult<K, V> fetch(
             Map<TopicPartition, Long> offsets,
             long limit,
             long timeoutInMs) {
-        return fetch(offsets, limit, null, timeoutInMs);
+        return fetchByOffsets(offsets, limit, timeoutInMs);
     }
 
+    public RecordFetchResult<K, V> fetchByOffsets(
+            Map<TopicPartition, Long> offsets,
+            long limit,
+            long timeoutInMs) {
+        return fetchByOffsets(offsets, limit, null, timeoutInMs);
+    }
+
+    public RecordFetchResult<K, V> fetchByTimestamps(
+            Map<TopicPartition, Long> partitionTimestamps,
+            long limit,
+            long timeoutInMs) {
+        return fetchByTimestamps(partitionTimestamps, limit, null, timeoutInMs);
+    }
+
+    @Deprecated
     public RecordFetchResult<K, V> fetch(
+            Map<TopicPartition, Long> offsets,
+            long limit,
+            Predicate<ConsumerRecord<K, V>> filter,
+            long timeoutInMs) {
+        return fetchByOffsets(offsets, limit, filter, timeoutInMs);
+    }
+
+    public RecordFetchResult<K, V> fetchByOffsets(
             Map<TopicPartition, Long> offsets,
             long limit,
             Predicate<ConsumerRecord<K, V>> filter,
@@ -142,16 +210,34 @@ public class TopicRecordFetcher<K, V> {
         Validate.isTrue(timeoutInMs > 0, "Timeout is invalid");
 
         try (KafkaConsumer<K, V> consumer = new KafkaConsumer<>(consumerConfig)) {
-            return doFetch(consumer, offsets, limit, filter, timeoutInMs);
+            return doFetchByOffsets(consumer, offsets, limit, filter, timeoutInMs);
         }
     }
 
-    private RecordFetchResult<K, V> doFetch(
+    public RecordFetchResult<K, V> fetchByTimestamps(
+            Map<TopicPartition, Long> partitionTimestamps,
+            long limit,
+            Predicate<ConsumerRecord<K, V>> filter,
+            long timeoutInMs) {
+        validatePartitionTimestamps(partitionTimestamps);
+        Validate.isTrue(limit > 0, "Limit is invalid");
+        Validate.isTrue(timeoutInMs > 0, "Timeout is invalid");
+
+        try (KafkaConsumer<K, V> consumer = new KafkaConsumer<>(consumerConfig)) {
+            return doFetchByTimestamps(consumer, partitionTimestamps, limit, filter, timeoutInMs);
+        }
+    }
+
+    private RecordFetchResult<K, V> doFetchByOffsets(
             KafkaConsumer<K, V> consumer,
             Map<TopicPartition, Long> offsets,
             long limit,
             Predicate<ConsumerRecord<K, V>> filter,
             long timeoutMs) {
+        if (offsets.isEmpty()) {
+            return RecordFetchResult.emptyResult();
+        }
+
         Map<TopicPartition, OffsetRange> offsetRanges = fetchOffsetRanges(offsets.keySet());
 
         offsets = filterOutUselessOffsets(offsets, offsetRanges);
@@ -178,7 +264,7 @@ public class TopicRecordFetcher<K, V> {
 
                 if (
                         areAllCollectorsDone(collectors) ||
-                        areAllOffsetsReachedEndOfRange(consumedOffsets, offsetRanges)) {
+                                areAllOffsetsReachedEndOfRange(consumedOffsets, offsetRanges)) {
                     break;
                 }
             }
@@ -189,6 +275,21 @@ public class TopicRecordFetcher<K, V> {
         }
 
         return toFetchResult(collectors, offsetRanges);
+    }
+
+    private RecordFetchResult<K, V> doFetchByTimestamps(
+            KafkaConsumer<K, V> consumer,
+            Map<TopicPartition, Long> partitionTimestamps,
+            long limit,
+            Predicate<ConsumerRecord<K, V>> filter,
+            long timeoutMs) {
+        Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes = consumer.offsetsForTimes(partitionTimestamps);
+
+        Map<TopicPartition, Long> offsets = offsetsForTimes.entrySet().stream()
+                .filter(entry -> entry.getValue() != null)
+                .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().offset()));
+
+        return doFetchByOffsets(consumer, offsets, limit, filter, timeoutMs);
     }
 
     private void validateOffsets(Map<TopicPartition, Long> offsets) {
@@ -202,6 +303,21 @@ public class TopicRecordFetcher<K, V> {
             if (value < 0) {
                 throw new IllegalArgumentException(
                         String.format("Offset for %s is invalid: %s", key, value));
+            }
+        });
+    }
+
+    private void validatePartitionTimestamps(Map<TopicPartition, Long> partitionTimestamps) {
+        Validate.notNull(partitionTimestamps, "Collection of partition timestamps is null or empty");
+        Validate.noNullElements(partitionTimestamps.keySet(),
+                "Collection of partition timestamp keys contains null elements");
+        Validate.noNullElements(partitionTimestamps.values(),
+                "Collection of partition timestamps= values contains null elements");
+
+        partitionTimestamps.forEach((key, value) -> {
+            if (value < 0) {
+                throw new IllegalArgumentException(
+                        String.format("Timestamp for %s is invalid: %s", key, value));
             }
         });
     }
