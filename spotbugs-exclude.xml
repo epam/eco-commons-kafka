@@ -34,6 +34,22 @@
         <Bug pattern="NP_NULL_PARAM_DEREF" />
     </Match>
     <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.TopicOffsetForTimeFetcher" />
+        <Or>
+            <Method name="fetchForPartition" />
+            <Method name="fetchForTopics" />
+        </Or>
+        <Bug pattern="NP_NULL_PARAM_DEREF" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.TopicOffsetRangeFetcher" />
+        <Or>
+            <Method name="fetchForPartitions" />
+            <Method name="fetchForTopics" />
+        </Or>
+        <Bug pattern="NP_NULL_PARAM_DEREF" />
+    </Match>
+    <Match>
         <Class name="com.epam.eco.commons.kafka.helpers.TopicRecordFetcher" />
         <Method name="fetchByOffsets" />
         <Bug pattern="NP_NULL_PARAM_DEREF" />
