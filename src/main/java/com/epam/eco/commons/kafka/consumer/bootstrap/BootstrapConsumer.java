@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.epam.eco.commons.kafka.KafkaUtils;
 import com.epam.eco.commons.kafka.OffsetRange;
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
-import com.epam.eco.commons.kafka.helpers.TopicOffsetFetcher;
+import com.epam.eco.commons.kafka.helpers.TopicOffsetRangeFetcher;
 
 /**
  * @author Andrei_Tytsik
@@ -236,7 +236,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
     }
 
     private Map<TopicPartition, Long> fetchLatestReadableOffsets() {
-        Map<TopicPartition, OffsetRange> offsets = TopicOffsetFetcher.
+        Map<TopicPartition, OffsetRange> offsets = TopicOffsetRangeFetcher.
                 with(consumerConfig).
                 fetchForPartitions(partitions);
         return offsets.entrySet().stream().

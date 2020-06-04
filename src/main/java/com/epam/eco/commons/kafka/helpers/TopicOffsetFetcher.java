@@ -33,6 +33,8 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 
 /**
  * @author Andrei_Tytsik
+ *
+ * @deprecated use {@link TopicOffsetRangeFetcher} instead
  */
 @Deprecated
 public class TopicOffsetFetcher {

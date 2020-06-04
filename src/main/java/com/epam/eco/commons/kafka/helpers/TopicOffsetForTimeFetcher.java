@@ -15,7 +15,6 @@
  */
 package com.epam.eco.commons.kafka.helpers;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +31,9 @@ import org.apache.kafka.common.TopicPartition;
 import com.epam.eco.commons.kafka.KafkaUtils;
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 
+/**
+ * @author Naira_Tamrazyan
+ */
 public class TopicOffsetForTimeFetcher {
 
     private final Map<String, Object> consumerConfig;
@@ -69,14 +71,17 @@ public class TopicOffsetForTimeFetcher {
         }
     }
 
-    public Map<TopicPartition, Long> fetchForPartitions(Collection<TopicPartition> topicPartitions,
-                                                               Long timestamp) {
+    public Map<TopicPartition, Long> fetchForPartitions(
+            Collection<TopicPartition> topicPartitions,
+            Long timestamp) {
         Validate.notEmpty(topicPartitions, "Collection of partitions is null or empty");
         Validate.noNullElements(topicPartitions, "Collection of partitions contains null elements");
-        Validate.notNull(timestamp, "Timestamp is null or empty");
+        Validate.notNull(timestamp, "Timestamp is null");
 
         try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
-            return doFetch(consumer, topicPartitions, timestamp);
+            Map<TopicPartition, Long> partitionTimestamps =
+                    toPartitionTimestamps(topicPartitions, timestamp);
+            return doFetch(consumer, partitionTimestamps);
         }
     }
 
@@ -88,22 +93,21 @@ public class TopicOffsetForTimeFetcher {
     public Map<TopicPartition, Long> fetchForTopics(Collection<String> topicNames, Long timestamp) {
         Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
         Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
-        Validate.notNull(timestamp, "Timestamp is null or empty");
+        Validate.notNull(timestamp, "Timestamp is null");
 
         try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
-            List<TopicPartition> partitions =
-                    KafkaUtils.getTopicPartitionsAsList(consumer, topicNames);
-            return doFetch(consumer, partitions, timestamp);
+            List<TopicPartition> partitions = KafkaUtils.getTopicPartitionsAsList(consumer, topicNames);
+            Map<TopicPartition, Long> partitionTimestamps =
+                    toPartitionTimestamps(partitions, timestamp);
+            return doFetch(consumer, partitionTimestamps);
         }
     }
 
-    private static Map<TopicPartition, Long> doFetch(
-            Consumer<?, ?> consumer, Collection<TopicPartition> partitions, Long timestamp) {
-
-        Map<TopicPartition, Long> partitionTimestamps = partitions.stream()
-                .collect(Collectors.toMap(Function.identity(), partition -> timestamp));
-
-        return doFetch(consumer, partitionTimestamps);
+    private static Map<TopicPartition, Long> toPartitionTimestamps(
+            Collection<TopicPartition> partitions,
+            Long timestamp) {
+        return partitions.stream().
+                collect(Collectors.toMap(Function.identity(), partition -> timestamp));
     }
 
     private static Map<TopicPartition, Long> doFetch(Consumer<?, ?> consumer,
@@ -114,4 +118,5 @@ public class TopicOffsetForTimeFetcher {
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
                         entry.getValue() == null ? null : entry.getValue().offset()));
     }
+
 }
