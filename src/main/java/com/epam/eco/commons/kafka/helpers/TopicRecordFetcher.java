@@ -432,7 +432,7 @@ public class TopicRecordFetcher<K, V> {
     }
 
     private Map<TopicPartition, OffsetRange> fetchOffsetRanges(Collection<TopicPartition> partitions) {
-        return TopicOffsetFetcher.with(consumerConfig).fetchForPartitions(partitions);
+        return TopicOffsetRangeFetcher.with(consumerConfig).fetchForPartitions(partitions);
     }
 
     private boolean areAllCollectorsDone(Map<TopicPartition, RecordCollector> collectors) {

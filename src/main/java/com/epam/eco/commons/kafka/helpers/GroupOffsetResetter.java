@@ -173,7 +173,7 @@ public class GroupOffsetResetter {
     }
 
     private Map<TopicPartition, OffsetRange> fetchOffsetRanges(Collection<TopicPartition> partitions) {
-        return TopicOffsetFetcher.with(consumerConfig).fetchForPartitions(partitions);
+        return TopicOffsetRangeFetcher.with(consumerConfig).fetchForPartitions(partitions);
     }
 
     private Map<TopicPartition, Long> filterOutUselessAndAdjustOutOfRangeOffsets(

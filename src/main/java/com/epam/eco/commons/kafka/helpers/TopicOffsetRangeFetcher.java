@@ -33,15 +33,12 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 
 /**
  * @author Andrei_Tytsik
- *
- * @deprecated use {@link TopicOffsetRangeFetcher} instead
  */
-@Deprecated
-public class TopicOffsetFetcher {
+public class TopicOffsetRangeFetcher {
 
     private final Map<String, Object> consumerConfig;
 
-    private TopicOffsetFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
+    private TopicOffsetRangeFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
         this.consumerConfig = ConsumerConfigBuilder.
                 with(consumerConfig).
                 bootstrapServers(bootstrapServers).
@@ -51,12 +48,12 @@ public class TopicOffsetFetcher {
                 build();
     }
 
-    public static TopicOffsetFetcher with(Map<String, Object> consumerConfig) {
-        return new TopicOffsetFetcher(null, consumerConfig);
+    public static TopicOffsetRangeFetcher with(Map<String, Object> consumerConfig) {
+        return new TopicOffsetRangeFetcher(null, consumerConfig);
     }
 
-    public static TopicOffsetFetcher with(String bootstrapServers) {
-        return new TopicOffsetFetcher(bootstrapServers, null);
+    public static TopicOffsetRangeFetcher with(String bootstrapServers) {
+        return new TopicOffsetRangeFetcher(bootstrapServers, null);
     }
 
     public Map<TopicPartition, OffsetRange> fetchForPartitions(TopicPartition ... partitions) {
@@ -114,3 +111,4 @@ public class TopicOffsetFetcher {
     }
 
 }
+

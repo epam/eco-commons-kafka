@@ -36,7 +36,7 @@ public class RecordCounter {
     private static final long DEFAULT_BOOTSTRAP_TIMEOUT = 10 * 60 * 10000;
 
     private final Map<String, Object> consumerConfig;
-    private final TopicOffsetFetcher offsetsFetcher;
+    private final TopicOffsetRangeFetcher offsetRangeFetcher;
 
     private RecordCounter(String bootstrapServers, Map<String, Object> consumerConfig) {
         this.consumerConfig = ConsumerConfigBuilder.
@@ -47,7 +47,7 @@ public class RecordCounter {
                 autoOffsetResetEarliest().
                 clientIdRandom().
                 build();
-        this.offsetsFetcher = TopicOffsetFetcher.with(consumerConfig);
+        this.offsetRangeFetcher = TopicOffsetRangeFetcher.with(consumerConfig);
     }
 
     public static RecordCounter with(Map<String, Object> consumerConfig) {
@@ -98,7 +98,7 @@ public class RecordCounter {
     }
 
     private Map<TopicPartition, OffsetRange> fetchTopicOffsets(String topicName) {
-        return offsetsFetcher.fetchForTopics(topicName);
+        return offsetRangeFetcher.fetchForTopics(topicName);
     }
 
 }
