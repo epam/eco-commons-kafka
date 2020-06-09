@@ -17,6 +17,7 @@ package com.epam.eco.commons.kafka.helpers;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -79,8 +80,7 @@ public class TopicOffsetForTimeFetcher {
         Validate.notNull(timestamp, "Timestamp is null");
 
         try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
-            Map<TopicPartition, Long> partitionTimestamps =
-                    toPartitionTimestamps(topicPartitions, timestamp);
+            Map<TopicPartition, Long> partitionTimestamps = toPartitionTimestamps(topicPartitions, timestamp);
             return doFetch(consumer, partitionTimestamps);
         }
     }
@@ -97,8 +97,7 @@ public class TopicOffsetForTimeFetcher {
 
         try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
             List<TopicPartition> partitions = KafkaUtils.getTopicPartitionsAsList(consumer, topicNames);
-            Map<TopicPartition, Long> partitionTimestamps =
-                    toPartitionTimestamps(partitions, timestamp);
+            Map<TopicPartition, Long> partitionTimestamps = toPartitionTimestamps(partitions, timestamp);
             return doFetch(consumer, partitionTimestamps);
         }
     }
@@ -110,13 +109,16 @@ public class TopicOffsetForTimeFetcher {
                 collect(Collectors.toMap(Function.identity(), partition -> timestamp));
     }
 
-    private static Map<TopicPartition, Long> doFetch(Consumer<?, ?> consumer,
-                                                     Map<TopicPartition, Long> partitionTimestamps) {
+    private static Map<TopicPartition, Long> doFetch(
+            Consumer<?, ?> consumer,
+            Map<TopicPartition, Long> partitionTimestamps) {
         Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes = consumer.offsetsForTimes(partitionTimestamps);
-
-        return offsetsForTimes.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        entry.getValue() == null ? null : entry.getValue().offset()));
+        Map<TopicPartition, Long> resultOffsets = new HashMap<>((int) (offsetsForTimes.size() / 0.75));
+        offsetsForTimes.forEach(
+                (partition, offsetAndTimestamp) -> resultOffsets.put(
+                        partition,
+                        offsetAndTimestamp != null ? offsetAndTimestamp.offset() : null));
+        return resultOffsets;
     }
 
 }
