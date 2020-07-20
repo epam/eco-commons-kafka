@@ -20,8 +20,6 @@ import java.math.BigInteger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.serde.HexStringDeserializer;
-
 /**
  * @author Andrei_Tytsik
  */

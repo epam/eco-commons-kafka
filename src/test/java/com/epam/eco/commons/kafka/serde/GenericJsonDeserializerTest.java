@@ -22,8 +22,6 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.serde.GenericJsonDeserializer;
-
 /**
  * @author Andrei_Tytsik
  */

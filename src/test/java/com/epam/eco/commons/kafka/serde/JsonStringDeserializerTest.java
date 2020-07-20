@@ -21,8 +21,6 @@ import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.serde.JsonStringDeserializer;
-
 /**
  * @author Andrei_Tytsik
  */

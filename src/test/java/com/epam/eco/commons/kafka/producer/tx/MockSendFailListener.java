@@ -17,8 +17,6 @@ package com.epam.eco.commons.kafka.producer.tx;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.epam.eco.commons.kafka.producer.tx.SendFailListener;
-
 /**
  * @author Aliaksei_Valyaev
  */

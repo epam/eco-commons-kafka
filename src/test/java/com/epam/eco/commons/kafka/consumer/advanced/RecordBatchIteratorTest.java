@@ -26,8 +26,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.consumer.advanced.DefaultRecordBatchIterator;
-
 /**
  * @author Andrei_Tytsik
  */

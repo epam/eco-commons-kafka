@@ -18,7 +18,6 @@ package com.epam.eco.commons.kafka;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.StatsLogger;
 import com.epam.eco.commons.kafka.StatsLogger.Stats;
 
 /**

@@ -41,9 +41,6 @@ import com.epam.eco.commons.kafka.KafkaUtils;
 import com.epam.eco.commons.kafka.TopicPartitionComparator;
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 import com.epam.eco.commons.kafka.config.ProducerConfigBuilder;
-import com.epam.eco.commons.kafka.consumer.advanced.AdvancedConsumer;
-import com.epam.eco.commons.kafka.consumer.advanced.InternalRecordBatchIterator;
-import com.epam.eco.commons.kafka.consumer.advanced.RecordBatchIterator;
 
 /**
  * @author Andrei_Tytsik

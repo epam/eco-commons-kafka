@@ -29,8 +29,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.OffsetRange;
-import com.epam.eco.commons.kafka.helpers.PartitionRecordFetchResult;
-import com.epam.eco.commons.kafka.helpers.RecordFetchResult;
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 
 /**

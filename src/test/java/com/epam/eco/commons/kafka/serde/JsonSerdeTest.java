@@ -23,9 +23,6 @@ import java.util.Objects;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.serde.JsonDeserializer;
-import com.epam.eco.commons.kafka.serde.JsonSerializer;
-
 /**
  * @author Andrei_Tytsik
  */

@@ -19,9 +19,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.epam.eco.commons.kafka.KafkaUtils;
-import com.epam.eco.commons.kafka.OffsetRange;
-
 /**
  * @author Andrei_Tytsik
  */

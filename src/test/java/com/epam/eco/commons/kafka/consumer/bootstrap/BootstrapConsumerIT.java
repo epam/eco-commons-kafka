@@ -23,9 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
-import com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumer;
-import com.epam.eco.commons.kafka.consumer.bootstrap.TimestampOffsetInitializer;
-import com.epam.eco.commons.kafka.consumer.bootstrap.ToListRecordCollector;
 
 
 /**

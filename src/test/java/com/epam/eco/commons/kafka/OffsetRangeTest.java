@@ -20,7 +20,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.epam.eco.commons.kafka.OffsetRange;
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 
 /**
