@@ -18,6 +18,7 @@ package com.epam.eco.commons.kafka.consumer.bootstrap;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -140,6 +141,13 @@ public class TimestampOffsetInitializer implements OffsetInitializer {
     public static TimestampOffsetInitializer forNowMinus(long amount, TemporalUnit unit) {
         Validate.isTrue(amount > 0, "Amount is invalid");
         Validate.notNull(unit, "TimeUnit is null");
+
+        if (unit.getDuration().compareTo(ChronoUnit.WEEKS.getDuration()) == 0) {
+            amount *= 7;
+            unit = ChronoUnit.DAYS;
+        } else if (unit.getDuration().compareTo(ChronoUnit.WEEKS.getDuration()) > 0) {
+            throw new UnsupportedTemporalTypeException("Unit is not supported: " + unit);
+        }
 
         long timestamp = Instant.now().minus(amount, unit).toEpochMilli();
         return forTimestamp(timestamp);
