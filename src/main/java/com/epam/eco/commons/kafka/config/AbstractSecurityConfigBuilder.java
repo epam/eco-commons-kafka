@@ -21,9 +21,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.config.SecurityConfig;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.auth.Login;
+import org.apache.kafka.common.security.auth.SecurityProviderCreator;
 
 import com.epam.eco.commons.kafka.SslProtocol;
 
@@ -311,6 +313,22 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
         return property(
                 SaslConfigs.SASL_LOGIN_REFRESH_BUFFER_SECONDS,
                 saslLoginRefreshBufferSeconds);
+    }
+
+    public <P extends SecurityProviderCreator> T securityProviders(Class<P> securityProviders) {
+        return securityProviders(securityProviders.getName());
+    }
+
+    public <P extends SecurityProviderCreator> T securityProviders(
+            List<Class<? extends P>> securityProviders) {
+        return securityProviders(
+                securityProviders.stream().map(Class::getName).collect(Collectors.joining(",")));
+    }
+
+    public T securityProviders(String securityProviders) {
+        return property(
+                SecurityConfig.SECURITY_PROVIDERS_CONFIG,
+                securityProviders);
     }
 
 }

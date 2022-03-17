@@ -46,6 +46,7 @@ import org.apache.kafka.clients.admin.RecordsToDelete;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.ElectionType;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
@@ -831,12 +832,16 @@ public abstract class AdminClientUtils {
 
     public static void electPreferredLeaders(AdminClient client, Collection<TopicPartition> partitions) {
         Validate.notNull(client, "Admin client is null");
+
+        Set<TopicPartition> partitionSet = null;
         if (partitions != null) {
             Validate.noNullElements(partitions, "Collection of topic partitions contains null elements");
+
+            partitionSet = partitions instanceof Set ? (Set<TopicPartition>)partitions : new HashSet<>(partitions);
         }
 
         completeAndGet(
-                client.electPreferredLeaders(partitions).all());
+                client.electLeaders(ElectionType.PREFERRED, partitionSet).all());
     }
 
     public static void alterResourceConfigs(

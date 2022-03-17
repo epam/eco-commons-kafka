@@ -17,6 +17,7 @@ package com.epam.eco.commons.kafka.helpers;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -152,21 +153,24 @@ public class GroupOffsetResetter {
 
         consumer.assign(new ArrayList<>(offsets.keySet()));
 
+        Map<TopicPartition, OffsetAndMetadata> offsetsCommitted = Collections.emptyMap();
+        try {
+            offsetsCommitted = consumer.committed(offsets.keySet());
+        } catch (Exception e) {
+            // ignore
+        }
+
         Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = new HashMap<>();
         for (Entry<TopicPartition, Long> entry : offsets.entrySet()) {
             TopicPartition partition = entry.getKey();
             Long offset = entry.getValue();
 
-            OffsetAndMetadata meta = null;
-            try {
-                meta = consumer.committed(partition);
-            } catch (Exception ex) {
-                // ignore
-            }
+            OffsetAndMetadata meta = offsetsCommitted.get(partition);
             if (meta != null) {
                 offsetsToCommit.put(partition, new OffsetAndMetadata(offset));
             }
         }
+
         if (!offsetsToCommit.isEmpty()) {
             consumer.commitSync(offsetsToCommit);
         }

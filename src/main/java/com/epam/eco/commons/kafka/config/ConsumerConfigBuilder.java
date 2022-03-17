@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
-import org.apache.kafka.clients.consumer.internals.PartitionAssignor;
+import org.apache.kafka.clients.consumer.ConsumerPartitionAssignor;
 import org.apache.kafka.common.requests.IsolationLevel;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -129,12 +129,12 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
                 autoCommitIntervalMs);
     }
 
-    public <A extends PartitionAssignor> ConsumerConfigBuilder partitionAssignmentStrategy(
+    public <A extends ConsumerPartitionAssignor> ConsumerConfigBuilder partitionAssignmentStrategy(
             Class<A> partitionAssignmentStrategy) {
         return partitionAssignmentStrategy(partitionAssignmentStrategy.getName());
     }
 
-    public <A extends PartitionAssignor> ConsumerConfigBuilder partitionAssignmentStrategy(
+    public <A extends ConsumerPartitionAssignor> ConsumerConfigBuilder partitionAssignmentStrategy(
             List<Class<? extends A>> partitionAssignmentStrategy) {
         return partitionAssignmentStrategy(
                 partitionAssignmentStrategy.stream().map(Class::getName).collect(Collectors.joining(",")));

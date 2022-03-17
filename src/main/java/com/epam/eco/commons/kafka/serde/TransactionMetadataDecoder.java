@@ -41,7 +41,7 @@ public class TransactionMetadataDecoder implements KeyValueDecoder<TxnKey, Trans
         Validate.notNull(key, "Key can't be null");
 
         ByteBuffer byteBuffer = valueBytes != null ? ByteBuffer.wrap(valueBytes) : null;
-        return TransactionLog.readTxnRecordValue(key.transactionalId(), byteBuffer);
+        return TransactionLog.readTxnRecordValue(key.transactionalId(), byteBuffer).getOrElse(() -> null);
     }
 
 }

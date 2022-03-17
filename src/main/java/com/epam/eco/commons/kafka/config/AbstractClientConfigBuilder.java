@@ -208,7 +208,15 @@ public abstract class AbstractClientConfigBuilder<T extends AbstractSecurityConf
                 securityProtocol);
     }
 
+    /**
+     * @deprecated use {@link AbstractClientConfigBuilder#connectionsMaxIdleMs}
+     */
+    @Deprecated
     public T connectionMaxIdleMs(long connectionMaxIdleMs) {
+        return connectionsMaxIdleMs(connectionMaxIdleMs);
+    }
+
+    public T connectionsMaxIdleMs(long connectionMaxIdleMs) {
         return property(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, connectionMaxIdleMs);
     }
 

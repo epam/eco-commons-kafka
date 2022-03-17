@@ -78,7 +78,7 @@ public class ProducerConfigBuilderTest {
                 metricRecordingLevelInfo().
                 metricReporterClasses(JmxReporter.class).
                 securityProtocol(SecurityProtocol.PLAINTEXT).
-                connectionMaxIdleMs(Long.MAX_VALUE).
+                connectionsMaxIdleMs(Long.MAX_VALUE).
                 requestTimeoutMs(Integer.MAX_VALUE).
 
                 // ssl
