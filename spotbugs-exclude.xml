@@ -26,6 +26,11 @@
         </Or>
     </Match>
     <Match>
+        <Class name="com.epam.eco.commons.kafka.AdminClientUtils" />
+        <Method name="describeInParallel" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
         <Class name="com.epam.eco.commons.kafka.helpers.TopicOffsetFetcher" />
         <Or>
             <Method name="fetchForPartitions" />

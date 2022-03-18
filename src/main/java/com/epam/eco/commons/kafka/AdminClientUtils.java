@@ -24,12 +24,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -55,6 +57,8 @@ import org.apache.kafka.common.config.ConfigDef.ConfigKey;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.ConfigResource.Type;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.epam.eco.commons.kafka.config.AbstractConfigDef;
 import com.epam.eco.commons.kafka.config.BrokerConfigDef;
@@ -68,6 +72,10 @@ public abstract class AdminClientUtils {
 
     public static final Config TOPIC_DEFAULT_CONFIG = createDefaultConfig(Type.TOPIC);
     public static final Config BROKER_DEFAULT_CONFIG = createDefaultConfig(Type.BROKER);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminClientUtils.class);
+
+    private static final int PARALLELISM_THRESHOLD = 500;
 
     public interface AdminClientCallable<R> {
         R call(AdminClient client) throws Exception;
@@ -298,6 +306,24 @@ public abstract class AdminClientUtils {
         Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
 
         return completeAndGet(client.describeTopics(topicNames).all());
+    }
+
+    public static Map<String, TopicDescription> describeTopicsInParallel(
+            Map<String, Object> clientConfig,
+            Collection<String> topicNames) {
+        Validate.notNull(clientConfig, "Config is null");
+        Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
+        Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
+
+        if (topicNames.size() <= PARALLELISM_THRESHOLD) {
+            return describeTopics(clientConfig, topicNames);
+        }
+
+        return describeInParallel(
+                clientConfig,
+                "topic",
+                topicNames,
+                (client, names) -> client.describeTopics(names).values());
     }
 
     public static ConfigEntry describeTopicConfigEntry(
@@ -682,6 +708,34 @@ public abstract class AdminClientUtils {
         try (AdminClient client = initClient(clientConfig)) {
             return describeConsumerGroups(client, groupNames);
         }
+    }
+
+    public static Map<String, ConsumerGroupDescription> describeAllConsumerGroupsInParallel(
+            Map<String, Object> clientConfig) {
+        Collection<String> groupNames = listAllConsumerGroupNames(clientConfig);
+        if (groupNames.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return describeConsumerGroupsInParallel(clientConfig, groupNames);
+    }
+
+    public static Map<String, ConsumerGroupDescription> describeConsumerGroupsInParallel(
+            Map<String, Object> clientConfig,
+            Collection<String> groupNames) {
+        Validate.notNull(clientConfig, "Config is null");
+        Validate.notEmpty(groupNames, "Collection of group names is null or empty");
+        Validate.noNullElements(groupNames, "Collection of group names contains null elements");
+
+        if (groupNames.size() <= PARALLELISM_THRESHOLD) {
+            return describeConsumerGroups(clientConfig, groupNames);
+        }
+
+        return describeInParallel(
+                clientConfig,
+                "consumer group",
+                groupNames,
+                (client, names) -> client.describeConsumerGroups(names).describedGroups());
     }
 
     public static Map<String, ConsumerGroupDescription> describeConsumerGroups(
@@ -1073,6 +1127,67 @@ public abstract class AdminClientUtils {
                     false));
         }
         return new Config(Collections.unmodifiableList(entries));
+    }
+
+    private static <D> Map<String, D> describeInParallel(
+            Map<String, Object> clientConfig,
+            String label,
+            Collection<String> resourceNames,
+            DescribeFunction<D> describeFunction) {
+        label = StringUtils.isNotBlank(label) ? label : "resource";
+
+        int numClients = Runtime.getRuntime().availableProcessors();
+
+        LOGGER.info("Initiating parrallel description of {} {}s using {} clients", resourceNames.size(), label, numClients);
+
+        List<AdminClient> clients = new ArrayList<>(numClients);
+        try {
+            for (int i = 0; i < numClients; i++) {
+                clients.add(initClient(clientConfig));
+            }
+
+            List<List<String>> resourceNamePartitions = ListUtils.partition(
+                    new ArrayList<>(resourceNames),
+                    PARALLELISM_THRESHOLD);
+
+            Map<String, KafkaFuture<D>> futures = new HashMap<>();
+
+            for (int i = 0; i < resourceNamePartitions.size(); i++) {
+                List<String> resourceNamePartition = resourceNamePartitions.get(i);
+
+                AdminClient client = clients.get(i % numClients);
+                futures.putAll(describeFunction.apply(client, resourceNamePartition));
+            }
+
+            int describedCount = 0;
+
+            Map<String, D> descriptions = new HashMap<>((int) (resourceNames.size() / 0.75));
+            for (Entry<String, KafkaFuture<D>> entry : futures.entrySet()) {
+                descriptions.put(entry.getKey(), entry.getValue().get());
+
+                describedCount++;
+
+                if (describedCount % PARALLELISM_THRESHOLD == 0) {
+                    LOGGER.info("Described {} {}s out of {}", describedCount, label, resourceNames.size());
+                }
+            }
+
+            if (describedCount % PARALLELISM_THRESHOLD != 0) {
+                LOGGER.info("Described {} {}s out of {}", describedCount, label, resourceNames.size());
+            }
+
+            return descriptions;
+        } catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Failed to describe " + label + "s in parallel", ex);
+        } finally {
+            for (AdminClient client : clients) {
+                client.close();
+            }
+        }
+    }
+
+    private static interface DescribeFunction<D> {
+        Map<String, KafkaFuture<D>> apply(AdminClient client, Collection<String> resourceNames);
     }
 
 }
