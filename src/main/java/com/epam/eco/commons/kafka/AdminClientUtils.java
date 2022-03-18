@@ -843,6 +843,49 @@ public abstract class AdminClientUtils {
                 client.listConsumerGroupOffsets(groupName, options).partitionsToOffsetAndMetadata());
     }
 
+    public static Map<String, Map<TopicPartition, OffsetAndMetadata>> listAllConsumerGroupOffsetsInParallel(
+            Map<String, Object> clientConfig) {
+        Collection<String> groupNames = listAllConsumerGroupNames(clientConfig);
+        if (groupNames.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return listConsumerGroupOffsetsInParallel(clientConfig, groupNames);
+    }
+
+    public static Map<String, Map<TopicPartition, OffsetAndMetadata>> listConsumerGroupOffsetsInParallel(
+            Map<String, Object> clientConfig,
+            Collection<String> groupNames) {
+        Validate.notNull(clientConfig, "Config is null");
+        Validate.notEmpty(groupNames, "Collection of group names is null or empty");
+        Validate.noNullElements(groupNames, "Collection of group names contains null elements");
+
+        if (groupNames.size() <= PARALLELISM_THRESHOLD) {
+            Map<String, Map<TopicPartition, OffsetAndMetadata>> allOffsets =
+                    new HashMap<>((int)Math.ceil(groupNames.size() / 0.75f));
+            for (String groupName : groupNames) {
+                Map<TopicPartition, OffsetAndMetadata> offsets = listConsumerGroupOffsets(clientConfig, groupName);
+                allOffsets.put(groupName, offsets);
+            }
+            return allOffsets;
+        }
+
+        return describeInParallel(
+                clientConfig,
+                "consumer group offset",
+                groupNames,
+                (client, names) -> {
+                    Map<String, KafkaFuture<Map<TopicPartition, OffsetAndMetadata>>> futures =
+                            new HashMap<>((int) (names.size() / 0.75));
+                    for (String groupName : names) {
+                        futures.put(
+                                groupName,
+                                client.listConsumerGroupOffsets(groupName).partitionsToOffsetAndMetadata());
+                    }
+                    return futures;
+                });
+    }
+
     public static void deleteConsumerGroup(Map<String, Object> clientConfig, String groupName) {
         try (AdminClient client = initClient(clientConfig)) {
             deleteConsumerGroup(client, groupName);
