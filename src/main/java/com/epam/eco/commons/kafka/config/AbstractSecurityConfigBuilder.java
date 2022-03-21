@@ -26,6 +26,8 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.auth.Login;
 import org.apache.kafka.common.security.auth.SecurityProviderCreator;
+import org.apache.kafka.common.security.auth.SslEngineFactory;
+import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
 
 import com.epam.eco.commons.kafka.SslProtocol;
 
@@ -179,6 +181,14 @@ public abstract class AbstractSecurityConfigBuilder<T extends AbstractConfigBuil
         return property(
                 SslConfigs.SSL_SECURE_RANDOM_IMPLEMENTATION_CONFIG,
                 sslSecureRandomImplementation);
+    }
+
+    public T sslEngineFactoryClassDefault() {
+        return sslEngineFactoryClass(DefaultSslEngineFactory.class);
+    }
+
+    public <E extends SslEngineFactory> T sslEngineFactoryClass(Class<E> sslEngineFactoryClass) {
+        return property(SslConfigs.SSL_ENGINE_FACTORY_CLASS_CONFIG, sslEngineFactoryClass);
     }
 
     public T saslMechanismDefault() {
