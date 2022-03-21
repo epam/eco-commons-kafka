@@ -208,20 +208,64 @@ public abstract class AbstractClientConfigBuilder<T extends AbstractSecurityConf
                 securityProtocol);
     }
 
-    /**
-     * @deprecated use {@link AbstractClientConfigBuilder#connectionsMaxIdleMs}
-     */
-    @Deprecated
-    public T connectionMaxIdleMs(long connectionMaxIdleMs) {
-        return connectionsMaxIdleMs(connectionMaxIdleMs);
-    }
-
     public T connectionsMaxIdleMs(long connectionMaxIdleMs) {
         return property(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, connectionMaxIdleMs);
     }
 
     public T requestTimeoutMs(int timeoutMs) {
         return property(CommonClientConfigs.REQUEST_TIMEOUT_MS_CONFIG, timeoutMs);
+    }
+
+    public T groupIdRandom() {
+        return groupId(UUID.randomUUID().toString());
+    }
+
+    public T groupIdRandomIfAbsent() {
+        return propertyIfAbsent(
+                CommonClientConfigs.GROUP_ID_CONFIG,
+                () -> UUID.randomUUID().toString());
+    }
+
+    public T groupId(String groupId) {
+        return property(
+                CommonClientConfigs.GROUP_ID_CONFIG,
+                groupId);
+    }
+
+    public T groupInstanceId(String groupInstanceId) {
+        return property(
+                CommonClientConfigs.GROUP_INSTANCE_ID_CONFIG,
+                groupInstanceId);
+    }
+
+    public T maxPollIntervalMs(int maxPollIntervalMs) {
+        return property(
+                CommonClientConfigs.MAX_POLL_INTERVAL_MS_CONFIG,
+                maxPollIntervalMs);
+    }
+
+    public T rebalanceTimeoutMs(int rebalanceTimeoutMs) {
+        return property(
+                CommonClientConfigs.REBALANCE_TIMEOUT_MS_CONFIG,
+                rebalanceTimeoutMs);
+    }
+
+    public T sessionTimeoutMs(int sessionTimeoutMs) {
+        return property(
+                CommonClientConfigs.SESSION_TIMEOUT_MS_CONFIG,
+                sessionTimeoutMs);
+    }
+
+    public T heartbeatIntervalMs(int heartbeatIntervalMs) {
+        return property(
+                CommonClientConfigs.HEARTBEAT_INTERVAL_MS_CONFIG,
+                heartbeatIntervalMs);
+    }
+
+    public T defaultApiTimeoutMs(int defaultApiTimeoutMs) {
+        return property(
+                CommonClientConfigs.DEFAULT_API_TIMEOUT_MS_CONFIG,
+                defaultApiTimeoutMs);
     }
 
 }

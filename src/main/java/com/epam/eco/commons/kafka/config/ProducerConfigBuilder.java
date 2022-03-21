@@ -53,6 +53,10 @@ public class ProducerConfigBuilder extends AbstractClientConfigBuilder<ProducerC
                 valueSerializerByteArrayIfAbsent();
     }
 
+    public ProducerConfigBuilder metadataMaxIdle(long metadataMaxIdle) {
+        return property(ProducerConfig.METADATA_MAX_IDLE_CONFIG, metadataMaxIdle);
+    }
+
     public ProducerConfigBuilder batchSize(int batchSize) {
         return property(ProducerConfig.BATCH_SIZE_CONFIG, batchSize);
     }

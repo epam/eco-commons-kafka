@@ -18,13 +18,12 @@ package com.epam.eco.commons.kafka.config;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerPartitionAssignor;
-import org.apache.kafka.common.requests.IsolationLevel;
+import org.apache.kafka.common.IsolationLevel;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -55,28 +54,6 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
                 valueDeserializerByteArrayIfAbsent();
     }
 
-    public ConsumerConfigBuilder groupIdRandom() {
-        return groupId(UUID.randomUUID().toString());
-    }
-
-    public ConsumerConfigBuilder groupIdRandomIfAbsent() {
-        return propertyIfAbsent(
-                ConsumerConfig.GROUP_ID_CONFIG,
-                () -> UUID.randomUUID().toString());
-    }
-
-    public ConsumerConfigBuilder groupId(String groupId) {
-        return property(
-                ConsumerConfig.GROUP_ID_CONFIG,
-                groupId);
-    }
-
-    public ConsumerConfigBuilder groupInstanceId(String groupInstanceId) {
-        return property(
-                ConsumerConfig.GROUP_INSTANCE_ID_CONFIG,
-                groupInstanceId);
-    }
-
     public ConsumerConfigBuilder maxPollRecordsMin() {
         return maxPollRecords(1);
     }
@@ -89,24 +66,6 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
         return property(
                 ConsumerConfig.MAX_POLL_RECORDS_CONFIG,
                 maxPollRecords);
-    }
-
-    public ConsumerConfigBuilder maxPollIntervalMs(int maxPollIntervalMs) {
-        return property(
-                ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG,
-                maxPollIntervalMs);
-    }
-
-    public ConsumerConfigBuilder sessionTimeoutMs(int sessionTimeoutMs) {
-        return property(
-                ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG,
-                sessionTimeoutMs);
-    }
-
-    public ConsumerConfigBuilder heartbeatIntervalMs(int heartbeatIntervalMs) {
-        return property(
-                ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG,
-                heartbeatIntervalMs);
     }
 
     public ConsumerConfigBuilder enableAutoCommitDisabled() {
@@ -262,12 +221,6 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
         } else {
             return valueDeserializer(deserializerClass);
         }
-    }
-
-    public ConsumerConfigBuilder defaultApiTimeoutMs(int defaultApiTimeoutMs) {
-        return property(
-                ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG,
-                defaultApiTimeoutMs);
     }
 
     public <I extends ConsumerInterceptor<?, ?>> ConsumerConfigBuilder interceptorClasses(

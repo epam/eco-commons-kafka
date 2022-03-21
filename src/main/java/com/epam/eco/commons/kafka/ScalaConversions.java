@@ -39,6 +39,7 @@ import scala.collection.Seq;
 /**
  * @author Andrei_Tytsik
  */
+@SuppressWarnings("deprecation")
 public abstract class ScalaConversions {
 
     private ScalaConversions() {
@@ -98,6 +99,7 @@ public abstract class ScalaConversions {
         return new VerifiableProperties(propertiesTmp);
     }
 
+    @Deprecated
     public static kafka.security.auth.Resource asScalaResource(
             org.apache.kafka.common.resource.ResourceType resourceType,
             String resourceName) {
@@ -110,6 +112,7 @@ public abstract class ScalaConversions {
                 PatternType.LITERAL);
     }
 
+    @Deprecated
     public static kafka.security.auth.Resource asScalaResource(
             org.apache.kafka.common.resource.ResourceType resourceType,
             String resourceName,
@@ -124,6 +127,7 @@ public abstract class ScalaConversions {
                 patternType);
     }
 
+    @Deprecated
     public static kafka.security.auth.ResourceType asScalaResourceType(
             org.apache.kafka.common.resource.ResourceType resourceType) {
         Validate.notNull(resourceType, "Resource type is null");
