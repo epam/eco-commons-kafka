@@ -1184,19 +1184,21 @@ public abstract class AdminClientUtils {
             DescribeFunction<D> describeFunction) {
         label = StringUtils.isNotBlank(label) ? label : "resource";
 
-        int numClients = Runtime.getRuntime().availableProcessors();
+        List<List<String>> resourceNamePartitions = ListUtils.partition(
+                new ArrayList<>(resourceNames),
+                PARALLELISM_THRESHOLD);
 
-        LOGGER.info("Initiating parrallel description of {} {}s using {} clients", resourceNames.size(), label, numClients);
+        int numClients = Math.min(
+                Runtime.getRuntime().availableProcessors(),
+                resourceNamePartitions.size());
+
+        LOGGER.info("Initiating parallel description of {} {}s using {} clients", resourceNames.size(), label, numClients);
 
         List<AdminClient> clients = new ArrayList<>(numClients);
         try {
             for (int i = 0; i < numClients; i++) {
                 clients.add(initClient(clientConfig));
             }
-
-            List<List<String>> resourceNamePartitions = ListUtils.partition(
-                    new ArrayList<>(resourceNames),
-                    PARALLELISM_THRESHOLD);
 
             Map<String, KafkaFuture<D>> futures = new HashMap<>();
 
