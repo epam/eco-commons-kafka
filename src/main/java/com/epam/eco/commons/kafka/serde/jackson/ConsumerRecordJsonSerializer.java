@@ -87,7 +87,6 @@ public class ConsumerRecordJsonSerializer extends StdSerializer<ConsumerRecord> 
         return new BeanProperty.Std(PropertyName.NO_NAME, type, PropertyName.NO_NAME, null, null);
     }
 
-    @SuppressWarnings({"deprecation"})
     @Override
     public void serialize(
             ConsumerRecord value,
@@ -99,7 +98,6 @@ public class ConsumerRecordJsonSerializer extends StdSerializer<ConsumerRecord> 
         gen.writeNumberField(ConsumerRecordFields.OFFSET, value.offset());
         gen.writeNumberField(ConsumerRecordFields.TIMESTAMP, value.timestamp());
         gen.writeObjectField(ConsumerRecordFields.TIMESTAMP_TYPE, value.timestampType());
-        gen.writeNumberField(ConsumerRecordFields.CHECKSUM, value.checksum());
         gen.writeNumberField(ConsumerRecordFields.SERIALIZED_KEY_SIZE, value.serializedKeySize());
         gen.writeNumberField(ConsumerRecordFields.SERIALIZED_VALUE_SIZE, value.serializedValueSize());
 

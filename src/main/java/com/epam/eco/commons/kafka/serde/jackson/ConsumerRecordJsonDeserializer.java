@@ -16,9 +16,11 @@
 package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -106,18 +108,17 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
         String topic = null;
         Integer partition = null;
         Long offset = null;
-        Long timestamp = null;
-        TimestampType timestampType = null;
-        Long checksum = null;
-        Integer serializedKeySize = null;
-        Integer serializedValueSize = null;
+        Long timestamp = ConsumerRecord.NO_TIMESTAMP;
+        TimestampType timestampType = TimestampType.NO_TIMESTAMP_TYPE;
+        Integer serializedKeySize = ConsumerRecord.NULL_SIZE;
+        Integer serializedValueSize = ConsumerRecord.NULL_SIZE;
         JavaType keyClass = JAVA_OBJECT_TYPE;
         TreeNode keyNode = null;
         Object key = null;
         JavaType valueClass = JAVA_OBJECT_TYPE;
         TreeNode valueNode = null;
         Object value = null;
-        Headers headers = null;
+        Headers headers = new RecordHeaders();
 
         while (fieldName != null) {
             switch (fieldName) {
@@ -140,10 +141,6 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
                 case ConsumerRecordFields.TIMESTAMP_TYPE:
                     jsonParser.nextToken();
                     timestampType = jsonParser.readValueAs(TimestampType.class);
-                    break;
-                case ConsumerRecordFields.CHECKSUM:
-                    jsonParser.nextToken();
-                    checksum = _parseLongPrimitive(jsonParser, ctxt);
                     break;
                 case ConsumerRecordFields.SERIALIZED_KEY_SIZE:
                     jsonParser.nextToken();
@@ -184,9 +181,12 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
             fieldName = jsonParser.nextFieldName();
         }
 
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertNotNullValue(topic, ConsumerRecordFields.TOPIC, _valueClass, ctxt);
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(partition, ConsumerRecordFields.PARTITION, _valueClass, ctxt);
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(offset, ConsumerRecordFields.OFFSET, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertNotNullValue(
+                topic, ConsumerRecordFields.TOPIC, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(
+                partition, ConsumerRecordFields.PARTITION, _valueClass, ctxt);
+        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(
+                offset, ConsumerRecordFields.OFFSET, _valueClass, ctxt);
 
         ObjectCodec codec = jsonParser.getCodec();
         if (keyNode != null) {
@@ -205,47 +205,18 @@ public class ConsumerRecordJsonDeserializer extends StdDeserializer<ConsumerReco
             value = codec.readValue(valueNode.traverse(codec), targetType);
         }
 
-        if (
-                timestamp == null &&
-                timestampType == null &&
-                checksum == null &&
-                serializedKeySize == null &&
-                serializedValueSize == null &&
-                headers == null
-        ) {
-            return new ConsumerRecord<>(topic, partition, offset, key, value);
-        }
-
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(timestamp, ConsumerRecordFields.TIMESTAMP, _valueClass, ctxt);
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(checksum, ConsumerRecordFields.CHECKSUM, _valueClass, ctxt);
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(serializedKeySize, ConsumerRecordFields.SERIALIZED_KEY_SIZE, _valueClass, ctxt);
-        com.epam.eco.commons.json.JsonDeserializerUtils.assertRequiredField(serializedValueSize, ConsumerRecordFields.SERIALIZED_VALUE_SIZE, _valueClass, ctxt);
-
-        if (headers == null) {
-            return new ConsumerRecord<>(
-                    topic,
-                    partition,
-                    offset,
-                    timestamp,
-                    timestampType,
-                    checksum,
-                    serializedKeySize,
-                    serializedValueSize,
-                    key,
-                    value);
-        }
         return new ConsumerRecord<>(
                 topic,
                 partition,
                 offset,
                 timestamp,
                 timestampType,
-                checksum,
                 serializedKeySize,
                 serializedValueSize,
                 key,
                 value,
-                headers);
+                headers,
+                Optional.empty());
     }
 
 }

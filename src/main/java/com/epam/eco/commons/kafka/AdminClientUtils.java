@@ -1159,7 +1159,6 @@ public abstract class AdminClientUtils {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private static Config createDefaultConfig(ConfigResource.Type resourceType) {
         AbstractConfigDef configDef = getConfigDef(resourceType);
 
@@ -1169,10 +1168,7 @@ public abstract class AdminClientUtils {
         for (ConfigKey key : keys) {
             entries.add(new ConfigEntry(
                     key.name,
-                    configDef.defaultValueAsString(key.name),
-                    true,
-                    false,
-                    false));
+                    configDef.defaultValueAsString(key.name)));
         }
         return new Config(Collections.unmodifiableList(entries));
     }

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
@@ -64,7 +65,6 @@ public class ConsumerRecordJsonSerializerTest {
                         .addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer()));
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testSerialization1() throws Exception {
         long now = new Date().getTime();
@@ -75,24 +75,23 @@ public class ConsumerRecordJsonSerializerTest {
                 0,
                 now,
                 TimestampType.NO_TIMESTAMP_TYPE,
-                1L,
                 1,
                 1,
                 "1",
                 "2",
-                headers);
+                headers,
+                Optional.empty());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
         Assert.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals(13, jsonNode.size());
+        Assert.assertEquals(12, jsonNode.size());
         Assert.assertEquals(origin.topic(), jsonNode.get(ConsumerRecordFields.TOPIC).textValue());
         Assert.assertEquals(origin.partition(), jsonNode.get(ConsumerRecordFields.PARTITION).intValue());
         Assert.assertEquals(origin.offset(), jsonNode.get(ConsumerRecordFields.OFFSET).longValue());
         Assert.assertEquals(origin.timestamp(), jsonNode.get(ConsumerRecordFields.TIMESTAMP).longValue());
         Assert.assertEquals(origin.timestampType().name(), jsonNode.get(ConsumerRecordFields.TIMESTAMP_TYPE).textValue());
-        Assert.assertEquals(origin.checksum(), jsonNode.get(ConsumerRecordFields.CHECKSUM).longValue());
         Assert.assertEquals(origin.serializedKeySize(), jsonNode.get(ConsumerRecordFields.SERIALIZED_KEY_SIZE).intValue());
         Assert.assertEquals(origin.serializedValueSize(), jsonNode.get(ConsumerRecordFields.SERIALIZED_VALUE_SIZE).intValue());
         Assert.assertEquals(origin.key().getClass().getName(), jsonNode.get(ConsumerRecordFields.KEY_CLASS).textValue());
@@ -106,7 +105,6 @@ public class ConsumerRecordJsonSerializerTest {
         Assert.assertArrayEquals(header.value(), tempNode.get(RecordHeaderFields.VALUE).binaryValue());
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testSerialization2() throws Exception {
         SimpleEntity simpleEntity = new SimpleEntity();
@@ -123,12 +121,13 @@ public class ConsumerRecordJsonSerializerTest {
                 0,
                 now,
                 TimestampType.NO_TIMESTAMP_TYPE,
-                1L,
                 1,
                 1,
                 youngMan,
                 simpleEntity,
-                headers);
+                headers,
+                Optional.empty());
+
         EntityWithConsumerRecord origin = new EntityWithConsumerRecord();
         origin.id = 42;
         origin.name = "name";
@@ -143,13 +142,12 @@ public class ConsumerRecordJsonSerializerTest {
         Assert.assertEquals(origin.id, jsonNode.get("id").intValue());
         Assert.assertEquals(origin.name, jsonNode.get("name").textValue());
 
-        Assert.assertEquals(13, recordNode.size());
+        Assert.assertEquals(12, recordNode.size());
         Assert.assertEquals(record.topic(), recordNode.get(ConsumerRecordFields.TOPIC).textValue());
         Assert.assertEquals(record.partition(), recordNode.get(ConsumerRecordFields.PARTITION).intValue());
         Assert.assertEquals(record.offset(), recordNode.get(ConsumerRecordFields.OFFSET).longValue());
         Assert.assertEquals(record.timestamp(), recordNode.get(ConsumerRecordFields.TIMESTAMP).longValue());
         Assert.assertEquals(record.timestampType().name(), recordNode.get(ConsumerRecordFields.TIMESTAMP_TYPE).textValue());
-        Assert.assertEquals(record.checksum(), recordNode.get(ConsumerRecordFields.CHECKSUM).longValue());
         Assert.assertEquals(record.serializedKeySize(), recordNode.get(ConsumerRecordFields.SERIALIZED_KEY_SIZE).intValue());
         Assert.assertEquals(record.serializedValueSize(), recordNode.get(ConsumerRecordFields.SERIALIZED_VALUE_SIZE).intValue());
         Assert.assertEquals(
@@ -204,4 +202,5 @@ public class ConsumerRecordJsonSerializerTest {
         public int id;
         public String name;
     }
+
 }

@@ -17,6 +17,7 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Optional;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
@@ -36,7 +37,6 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
  */
 public class ConsumerRecordSerdeTest {
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testSerializedToJsonAndBack() throws Exception {
         Headers headers = new RecordHeaders(
@@ -48,12 +48,12 @@ public class ConsumerRecordSerdeTest {
                 0,
                 new Date().getTime(),
                 TimestampType.NO_TIMESTAMP_TYPE,
-                new Date().getTime(),
                 1,
                 1,
                 "1",
                 "2",
-                headers);
+                headers,
+                Optional.empty());
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
@@ -72,7 +72,6 @@ public class ConsumerRecordSerdeTest {
         Assert.assertEquals(origin.serializedValueSize(), deserialized.serializedValueSize());
         Assert.assertEquals(origin.offset(), deserialized.offset());
         Assert.assertEquals(origin.headers(), deserialized.headers());
-        Assert.assertEquals(origin.checksum(), deserialized.checksum());
         Assert.assertEquals(origin.key(), deserialized.key());
         Assert.assertEquals(origin.value(), deserialized.value());
     }

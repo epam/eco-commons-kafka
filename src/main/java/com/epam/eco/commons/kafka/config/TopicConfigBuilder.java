@@ -152,6 +152,7 @@ public class TopicConfigBuilder extends AbstractConfigBuilder<TopicConfigBuilder
         return property(TopicConfig.PREALLOCATE_CONFIG, preallocate);
     }
 
+    @Deprecated
     public TopicConfigBuilder messageFormatVersion(String messageFormatVersion) {
         return property(TopicConfig.MESSAGE_FORMAT_VERSION_CONFIG, messageFormatVersion);
     }

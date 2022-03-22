@@ -26,11 +26,9 @@ import java.util.Set;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.resource.PatternType;
 
 import kafka.coordinator.group.GroupState;
 import kafka.coordinator.group.GroupTopicPartition;
-import kafka.security.auth.Resource;
 import kafka.utils.VerifiableProperties;
 import scala.Option;
 import scala.collection.JavaConverters;
@@ -39,7 +37,6 @@ import scala.collection.Seq;
 /**
  * @author Andrei_Tytsik
  */
-@SuppressWarnings("deprecation")
 public abstract class ScalaConversions {
 
     private ScalaConversions() {
@@ -97,42 +94,6 @@ public abstract class ScalaConversions {
         propertiesTmp.putAll(properties);
 
         return new VerifiableProperties(propertiesTmp);
-    }
-
-    @Deprecated
-    public static kafka.security.auth.Resource asScalaResource(
-            org.apache.kafka.common.resource.ResourceType resourceType,
-            String resourceName) {
-        Validate.notNull(resourceType, "Resource type is null");
-        Validate.notBlank(resourceName, "Resource name is blank");
-
-        return new Resource(
-                asScalaResourceType(resourceType),
-                resourceName,
-                PatternType.LITERAL);
-    }
-
-    @Deprecated
-    public static kafka.security.auth.Resource asScalaResource(
-            org.apache.kafka.common.resource.ResourceType resourceType,
-            String resourceName,
-            PatternType patternType) {
-        Validate.notNull(resourceType, "Resource type is null");
-        Validate.notBlank(resourceName, "Resource name is blank");
-        Validate.notNull(patternType, "Pattern type is null");
-
-        return new Resource(
-                asScalaResourceType(resourceType),
-                resourceName,
-                patternType);
-    }
-
-    @Deprecated
-    public static kafka.security.auth.ResourceType asScalaResourceType(
-            org.apache.kafka.common.resource.ResourceType resourceType) {
-        Validate.notNull(resourceType, "Resource type is null");
-
-        return kafka.security.auth.ResourceType$.MODULE$.fromJava(resourceType);
     }
 
     public static ConsumerGroupState asJavaGroupState(GroupState groupState) {
