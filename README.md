@@ -19,7 +19,6 @@ The library can be obtained from the Maven by adding the following dependency in
 * Advanced consumer to handle long-running tasks
 * Bootstrap consumer to all records from topic
 * Helpers to perform various common tasks (for example count records in topic)
-* Transactional Producer to perform atomic consume-process-produce using [transactions](https://www.confluent.io/blog/transactions-apache-kafka/) while preserving possibility to work under automatic partitions rebalance
 * In-memory caches
 * Common implementations of Serializer/Deserializer 
 * [Jackson](https://github.com/FasterXML/jackson) module for serializing/deserializing Kafka types 
