@@ -72,7 +72,7 @@ public abstract class AbstractConfigBuilder<T extends AbstractConfigBuilder<T>> 
     }
 
     public final Map<String, Object> build() {
-        return properties;
+        return new HashMap<>(properties);
     }
 
     public final Map<String, String> buildStringified() {

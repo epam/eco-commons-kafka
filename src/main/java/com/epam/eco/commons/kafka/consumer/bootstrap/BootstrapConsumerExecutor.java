@@ -68,7 +68,7 @@ public class BootstrapConsumerExecutor<K, V, R> {
         }
     }
 
-    private List<BootstrapConsumerThread<K, V, R>> initThreads(
+    private static <K, V, R> List<BootstrapConsumerThread<K, V, R>> initThreads(
             BootstrapConsumer.Builder<K, V, R> builder,
             Supplier<RecordCollector<K, V, R>> recordCollectorSupplier,
             int instanceCount,

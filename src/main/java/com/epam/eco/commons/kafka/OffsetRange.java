@@ -93,15 +93,15 @@ public class OffsetRange {
         return toString;
     }
 
-    private long calculateSize() {
+    private final long calculateSize() {
         return largest + (largestInclusive ? 1 : 0) - smallest;
     }
 
-    private int calculateHashCode() {
+    private final int calculateHashCode() {
         return Objects.hash(smallest, largest, largestInclusive);
     }
 
-    private String calculateToString() {
+    private final String calculateToString() {
         return String.format("[%d..%d%s(%d)", smallest, largest, largestInclusive ? "]" : ")", size);
     }
 

@@ -70,7 +70,7 @@ class MapCacheConsumer<K, V> implements Closeable {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private BootstrapConsumerExecutor<?, ?, Map<K, V>> initExecutor(
+    private static <K, V> BootstrapConsumerExecutor<?, ?, Map<K, V>> initExecutor(
             String topicName,
             String bootstrapServers,
             long bootstrapTimeoutInMs,

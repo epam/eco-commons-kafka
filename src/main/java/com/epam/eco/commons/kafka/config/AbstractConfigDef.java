@@ -35,7 +35,7 @@ public abstract class AbstractConfigDef {
     public AbstractConfigDef(ConfigDef def) {
         Validate.notNull(def, "Config def is null");
 
-        this.def = def;
+        this.def = new ConfigDef(def);
     }
 
     public List<ConfigKey> keys() {

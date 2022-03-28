@@ -56,7 +56,7 @@ class CacheProducer<K, V> implements Closeable {
         producer.flush();
     }
 
-    private KafkaProducer<K, V> initProducer(
+    private static <K, V> KafkaProducer<K, V> initProducer(
             String bootstrapServers,
             Map<String, Object> producerConfig) {
         producerConfig = ProducerConfigBuilder.

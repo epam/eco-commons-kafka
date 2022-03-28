@@ -129,5 +129,33 @@
         <Method name="createContextual" />
         <Bug pattern="NP_NULL_ON_SOME_PATH" />
     </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.PartitionRecordFetchResult" />
+        <Method name="getRecords" />
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.RecordFetchResult" />
+        <Method name="getResults" />
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.cache.KafkaCache$Builder" />
+        <Or>
+            <Method name="consumerConfig" />
+            <Method name="producerConfig" />
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.cache.ProjectingKafkaCache$Builder" />
+        <Method name="consumerConfig" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumer$Builder" />
+        <Method name="consumerConfig" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
 
 </FindBugsFilter>

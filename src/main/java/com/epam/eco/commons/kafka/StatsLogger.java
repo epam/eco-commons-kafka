@@ -92,7 +92,7 @@ public class StatsLogger implements Closeable {
         logTask.close();
     }
 
-    private void validateLogInterval(long logInterval) {
+    private static void validateLogInterval(long logInterval) {
         if (logInterval < LOG_INTERVAL_MIN || logInterval > LOG_INTERVAL_MAX) {
             throw new IllegalArgumentException(
                     String.format(
