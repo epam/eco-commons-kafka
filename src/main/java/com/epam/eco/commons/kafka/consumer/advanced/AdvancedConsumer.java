@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
@@ -75,7 +76,7 @@ public final class AdvancedConsumer<K, V> extends Thread {
 
     private final Consumer<RecordBatchIterator<K, V>> handler;
     private final ExecutorService handlerTaskExecutor;
-    private RecordBatchHandlerTask handlerTask;
+    private HandlerTask handlerTask;
     private Future<Map<TopicPartition, Long>> handlerTaskFuture;
 
     private final KafkaConsumer<K, V> consumer;
@@ -133,11 +134,17 @@ public final class AdvancedConsumer<K, V> extends Thread {
                         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
                             LOGGER.debug("Group [{}]: partitions revoked = {}", groupId, partitions);
 
-                            completeHandlerTask();
+                            if (handlerTaskContainsAnyPartitions(partitions)) {
+                                forceCompleteHandlerTask();
+                            }
+
+                            consumer.pause(partitions);
                         }
                         @Override
                         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
                             LOGGER.debug("Group [{}]: partitions assigned = {}", groupId, partitions);
+
+                            consumer.pause(partitions);
                         }
                     });
 
@@ -145,15 +152,18 @@ public final class AdvancedConsumer<K, V> extends Thread {
                         continue;
                     }
 
-                    ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT);
-                    if (records.isEmpty()) {
-                        continue;
+                    if (handlerTaskExists()) {
+                        consumer.pause(consumer.assignment());
+                    } else {
+                        consumer.resume(consumer.assignment());
                     }
 
-                    submitNewHandlerTask(records);
-                    sendHeartbeatsUntilHandlerTaskDone();
+                    ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT);
+                    if (!records.isEmpty()) {
+                        submitNewHandlerTask(records);
+                    }
                 } finally {
-                    completeHandlerTask();
+                    completeHandlerTaskIfDone();
                 }
             }
         } catch (WakeupException wue) {
@@ -212,40 +222,52 @@ public final class AdvancedConsumer<K, V> extends Thread {
     }
 
     private void submitNewHandlerTask(ConsumerRecords<K, V> records) {
-        handlerTask = new RecordBatchHandlerTask(records);
+        if (handlerTask != null) {
+            throw new IllegalStateException("Handler task already exists");
+        }
+
+        handlerTask = new HandlerTask(records);
         handlerTaskFuture = handlerTaskExecutor.submit(handlerTask);
     }
 
-    private void sendHeartbeatsUntilHandlerTaskDone() {
-        consumer.pause(consumer.assignment());
-        try {
-            while (isHandlerTaskRunning()) {
-                consumer.poll(POLL_TIMEOUT);
-            }
-        } finally {
-            consumer.resume(consumer.assignment());
+    public boolean handlerTaskContainsAnyPartitions(Collection<TopicPartition> partitions) {
+        if (handlerTask == null) {
+            return false;
         }
+
+        return handlerTask.containsAnyPartitions(partitions);
     }
 
-    private boolean isHandlerTaskRunning() {
-        return handlerTaskFuture != null && !handlerTaskFuture.isDone();
+    private boolean handlerTaskExists() {
+        return handlerTask != null;
     }
 
-    private void completeHandlerTask() {
+    private void forceCompleteHandlerTask() {
         if (handlerTask == null) {
             return;
         }
 
-        handlerTask.complete();
+        handlerTask.interrupt();
 
-        commitOffsetsFromHandlerTask();
+        commitOffsetsFromHandlerTask(false);
 
         handlerTask = null;
         handlerTaskFuture = null;
     }
 
-    private void commitOffsetsFromHandlerTask() {
-        Map<TopicPartition, Long> offsets = getOffsetsFromHandlerTask();
+    private void completeHandlerTaskIfDone() {
+        if (handlerTaskFuture == null || !handlerTaskFuture.isDone()) {
+            return;
+        }
+
+        commitOffsetsFromHandlerTask(true);
+
+        handlerTask = null;
+        handlerTaskFuture = null;
+    }
+
+    private void commitOffsetsFromHandlerTask(boolean waitForComplete) {
+        Map<TopicPartition, Long> offsets = getOffsetsFromHandlerTask(waitForComplete);
         if (offsets.isEmpty()) {
             return;
         }
@@ -267,17 +289,21 @@ public final class AdvancedConsumer<K, V> extends Thread {
         }
     }
 
-    private Map<TopicPartition, Long> getOffsetsFromHandlerTask() {
-        if (handlerTaskFuture == null) {
+    private Map<TopicPartition, Long> getOffsetsFromHandlerTask(boolean waitForComplete) {
+        if (handlerTask == null) {
             return Collections.emptyMap();
         }
 
-        try {
-            return handlerTaskFuture.get();
-        } catch (InterruptedException ie) {
-            throw new RuntimeException("Handler task interrupted", ie);
-        } catch (ExecutionException ee) {
-            throw new RuntimeException("Handler task failed", ee.getCause());
+        if (waitForComplete) {
+            try {
+                return handlerTaskFuture.get();
+            } catch (InterruptedException ie) {
+                throw new RuntimeException("Handler task interrupted", ie);
+            } catch (ExecutionException ee) {
+                throw new RuntimeException("Handler task failed", ee.getCause());
+            }
+        } else {
+            return handlerTask.getCurrentOffsetsToCommit();
         }
     }
 
@@ -312,16 +338,28 @@ public final class AdvancedConsumer<K, V> extends Thread {
         return "AdvConsumer-" + THREAD_IDX.incrementAndGet();
     }
 
-    private class RecordBatchHandlerTask implements Callable<Map<TopicPartition, Long>> {
+    private class HandlerTask implements Callable<Map<TopicPartition, Long>> {
 
         private final DefaultRecordBatchIterator<K, V> iterator;
 
-        public RecordBatchHandlerTask(ConsumerRecords<K, V> records) {
+        public HandlerTask(ConsumerRecords<K, V> records) {
             iterator = new DefaultRecordBatchIterator<>(records);
         }
 
-        public void complete() {
+        public void interrupt() {
             iterator.interrupt();
+        }
+
+        public Map<TopicPartition, Long> getCurrentOffsetsToCommit() {
+            return iterator.buildOffsetsToCommit();
+        }
+
+        public boolean containsAnyPartitions(Collection<TopicPartition> partitions) {
+            if (partitions.isEmpty()) {
+                return false;
+            }
+
+            return CollectionUtils.containsAny(iterator.getRecords().partitions(), partitions);
         }
 
         @Override
