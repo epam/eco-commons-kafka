@@ -63,10 +63,15 @@ public class BootstrapConsumerExecutor<K, V, R> {
         }
     }
 
-    public void waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
+    public boolean waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        boolean result = true;
         for (BootstrapConsumerThread<K, V, R> thread : threads) {
-            thread.waitForBootstrap(timeout, timeUnit);
+            if (!thread.waitForBootstrap(timeout, timeUnit)) {
+                result = false;
+            }
         }
+
+        return result;
     }
 
     public void shutdown() throws InterruptedException {
