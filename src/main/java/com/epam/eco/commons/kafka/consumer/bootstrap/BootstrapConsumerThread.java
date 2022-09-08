@@ -70,13 +70,13 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
         }
     }
 
-    public void waitForBootstrap() throws InterruptedException {
-        bootstrapLatch.await(
+    public boolean waitForBootstrap() throws InterruptedException {
+        return bootstrapLatch.await(
                 (long)(consumer.getBootstrapTimeoutInMs() * 1.5), TimeUnit.MILLISECONDS);
     }
 
-    public void waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
-        bootstrapLatch.await(timeout, timeUnit);
+    public boolean waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        return bootstrapLatch.await(timeout, timeUnit);
     }
 
 }

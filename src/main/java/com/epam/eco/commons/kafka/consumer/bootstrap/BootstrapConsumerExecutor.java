@@ -17,6 +17,7 @@ package com.epam.eco.commons.kafka.consumer.bootstrap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -56,10 +57,24 @@ public class BootstrapConsumerExecutor<K, V, R> {
         }
     }
 
-    public void waitForBootstrap() throws InterruptedException {
+    public boolean waitForBootstrap() throws InterruptedException {
         for (BootstrapConsumerThread<K, V, R> thread : threads) {
-            thread.waitForBootstrap();
+            if (!thread.waitForBootstrap()) {
+                return false;
+            }
         }
+
+        return true;
+    }
+
+    public boolean waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        for (BootstrapConsumerThread<K, V, R> thread : threads) {
+            if (!thread.waitForBootstrap(timeout, timeUnit)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void shutdown() throws InterruptedException {
