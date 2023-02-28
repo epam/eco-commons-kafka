@@ -29,9 +29,10 @@ public class OffsetRangeTest {
 
     @Test
     public void testRangeHasExpectedValues() throws Exception {
-        OffsetRange range = OffsetRange.with(0, 0, false);
+        OffsetRange range = OffsetRange.with(0, false,0, false);
         Assert.assertNotNull(range);
-        Assert.assertEquals(false, range.isLargestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
         Assert.assertEquals(0, range.getSmallest());
         Assert.assertEquals(0, range.getLargest());
         Assert.assertEquals(0, range.getSize());
@@ -39,9 +40,10 @@ public class OffsetRangeTest {
         Assert.assertFalse(range.contains(0));
         Assert.assertFalse(range.contains(1));
 
-        range = OffsetRange.with(0, 0, true);
+        range = OffsetRange.with(0, true,0, false);
         Assert.assertNotNull(range);
-        Assert.assertEquals(true, range.isLargestInclusive());
+        Assert.assertTrue(range.isSmallestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
         Assert.assertEquals(0, range.getSmallest());
         Assert.assertEquals(0, range.getLargest());
         Assert.assertEquals(1, range.getSize());
@@ -49,9 +51,48 @@ public class OffsetRangeTest {
         Assert.assertTrue(range.contains(0));
         Assert.assertFalse(range.contains(1));
 
-        range = OffsetRange.with(0, 1, false);
+        range = OffsetRange.with(0, false,0, true);
         Assert.assertNotNull(range);
-        Assert.assertEquals(false, range.isLargestInclusive());
+        Assert.assertFalse(range.isSmallestInclusive());
+        Assert.assertTrue(range.isLargestInclusive());
+        Assert.assertEquals(0, range.getSmallest());
+        Assert.assertEquals(0, range.getLargest());
+        Assert.assertEquals(1, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertTrue(range.contains(0));
+        Assert.assertFalse(range.contains(1));
+
+
+        range = OffsetRange.with(0, true, 0, true);
+        Assert.assertNotNull(range);
+        Assert.assertTrue(range.isSmallestInclusive());
+        Assert.assertTrue(range.isLargestInclusive());
+        Assert.assertEquals(0, range.getSmallest());
+        Assert.assertEquals(0, range.getLargest());
+        Assert.assertEquals(1, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertTrue(range.contains(0));
+        Assert.assertFalse(range.contains(1));
+
+
+
+
+        range = OffsetRange.with(0, false, 1, false);
+        Assert.assertNotNull(range);
+        Assert.assertFalse(range.isSmallestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
+        Assert.assertEquals(0, range.getSmallest());
+        Assert.assertEquals(1, range.getLargest());
+        Assert.assertEquals(0, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertFalse(range.contains(0));
+        Assert.assertFalse(range.contains(1));
+
+
+        range = OffsetRange.with(0, true, 1, false);
+        Assert.assertNotNull(range);
+        Assert.assertTrue(range.isSmallestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
         Assert.assertEquals(0, range.getSmallest());
         Assert.assertEquals(1, range.getLargest());
         Assert.assertEquals(1, range.getSize());
@@ -59,9 +100,21 @@ public class OffsetRangeTest {
         Assert.assertTrue(range.contains(0));
         Assert.assertFalse(range.contains(1));
 
-        range = OffsetRange.with(0, 1, true);
+        range = OffsetRange.with(0, false, 1, true);
         Assert.assertNotNull(range);
-        Assert.assertEquals(true, range.isLargestInclusive());
+        Assert.assertFalse(range.isSmallestInclusive());
+        Assert.assertTrue(range.isLargestInclusive());
+        Assert.assertEquals(0, range.getSmallest());
+        Assert.assertEquals(1, range.getLargest());
+        Assert.assertEquals(1, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertFalse(range.contains(0));
+        Assert.assertTrue(range.contains(1));
+
+        range = OffsetRange.with(0, true, 1, true);
+        Assert.assertNotNull(range);
+        Assert.assertTrue(range.isSmallestInclusive());
+        Assert.assertTrue(range.isLargestInclusive());
         Assert.assertEquals(0, range.getSmallest());
         Assert.assertEquals(1, range.getLargest());
         Assert.assertEquals(2, range.getSize());
@@ -69,9 +122,13 @@ public class OffsetRangeTest {
         Assert.assertTrue(range.contains(0));
         Assert.assertTrue(range.contains(1));
 
-        range = OffsetRange.with(1, 1, false);
+
+
+
+        range = OffsetRange.with(1, false,1, false);
         Assert.assertNotNull(range);
-        Assert.assertEquals(false, range.isLargestInclusive());
+        Assert.assertFalse(range.isSmallestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
         Assert.assertEquals(1, range.getSmallest());
         Assert.assertEquals(1, range.getLargest());
         Assert.assertEquals(0, range.getSize());
@@ -80,9 +137,10 @@ public class OffsetRangeTest {
         Assert.assertFalse(range.contains(1));
         Assert.assertFalse(range.contains(2));
 
-        range = OffsetRange.with(1, 1, true);
+        range = OffsetRange.with(1, true,1, false);
         Assert.assertNotNull(range);
-        Assert.assertEquals(true, range.isLargestInclusive());
+        Assert.assertTrue(range.isSmallestInclusive());
+        Assert.assertFalse(range.isLargestInclusive());
         Assert.assertEquals(1, range.getSmallest());
         Assert.assertEquals(1, range.getLargest());
         Assert.assertEquals(1, range.getSize());
@@ -91,7 +149,44 @@ public class OffsetRangeTest {
         Assert.assertTrue(range.contains(1));
         Assert.assertFalse(range.contains(2));
 
-        range = OffsetRange.with(0, 10, false);
+        range = OffsetRange.with(1, false,1, true);
+        Assert.assertNotNull(range);
+        Assert.assertFalse(range.isSmallestInclusive());
+        Assert.assertTrue(range.isLargestInclusive());
+        Assert.assertEquals(1, range.getSmallest());
+        Assert.assertEquals(1, range.getLargest());
+        Assert.assertEquals(1, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertFalse(range.contains(0));
+        Assert.assertTrue(range.contains(1));
+        Assert.assertFalse(range.contains(2));
+
+        range = OffsetRange.with(1, true,1, true);
+        Assert.assertNotNull(range);
+        Assert.assertTrue(range.isLargestInclusive());
+        Assert.assertTrue(range.isLargestInclusive());
+        Assert.assertEquals(1, range.getSmallest());
+        Assert.assertEquals(1, range.getLargest());
+        Assert.assertEquals(1, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertFalse(range.contains(0));
+        Assert.assertTrue(range.contains(1));
+        Assert.assertFalse(range.contains(2));
+
+
+        range = OffsetRange.with(0, false, 10, false);
+        Assert.assertNotNull(range);
+        Assert.assertEquals(0, range.getSmallest());
+        Assert.assertEquals(10, range.getLargest());
+        Assert.assertEquals(9, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertFalse(range.contains(0));
+        Assert.assertTrue(range.contains(1));
+        Assert.assertTrue(range.contains(5));
+        Assert.assertFalse(range.contains(10));
+        Assert.assertFalse(range.contains(11));
+
+        range = OffsetRange.with(0, true, 10, false);
         Assert.assertNotNull(range);
         Assert.assertEquals(0, range.getSmallest());
         Assert.assertEquals(10, range.getLargest());
@@ -102,7 +197,19 @@ public class OffsetRangeTest {
         Assert.assertFalse(range.contains(10));
         Assert.assertFalse(range.contains(11));
 
-        range = OffsetRange.with(0, 10, true);
+        range = OffsetRange.with(0, false, 10, true);
+        Assert.assertNotNull(range);
+        Assert.assertEquals(0, range.getSmallest());
+        Assert.assertEquals(10, range.getLargest());
+        Assert.assertEquals(10, range.getSize());
+        Assert.assertFalse(range.contains(-1));
+        Assert.assertFalse(range.contains(0));
+        Assert.assertTrue(range.contains(1));
+        Assert.assertTrue(range.contains(5));
+        Assert.assertTrue(range.contains(10));
+        Assert.assertFalse(range.contains(11));
+
+        range = OffsetRange.with(0, true,10, true);
         Assert.assertNotNull(range);
         Assert.assertEquals(0, range.getSmallest());
         Assert.assertEquals(10, range.getLargest());

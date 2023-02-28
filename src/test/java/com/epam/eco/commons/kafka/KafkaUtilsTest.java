@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright 2022 EPAM Systems
+ *  Copyright 2023 EPAM Systems
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
  *  use this file except in compliance with the License.  You may obtain a copy
@@ -74,7 +74,7 @@ public class KafkaUtilsTest {
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, true), 20);
         Assert.assertEquals(1, lag);
 
-        lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 10, false), 0);
+        lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10,false,10, false), 0);
         Assert.assertEquals(0, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 10, true), 0);

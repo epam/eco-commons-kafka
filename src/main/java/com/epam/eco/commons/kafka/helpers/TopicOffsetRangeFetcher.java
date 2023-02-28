@@ -36,9 +36,9 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
  */
 public class TopicOffsetRangeFetcher {
 
-    private final Map<String, Object> consumerConfig;
+    protected final Map<String, Object> consumerConfig;
 
-    private TopicOffsetRangeFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
+    protected TopicOffsetRangeFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
         this.consumerConfig = ConsumerConfigBuilder.
                 with(consumerConfig).
                 bootstrapServers(bootstrapServers).
@@ -90,7 +90,7 @@ public class TopicOffsetRangeFetcher {
      * Offsets ranges might not be accurate as Kafka doesn't guarantee consecutive offsets (there might be
      * transaction markers which aren't consumable and look like gaps on client side).
      */
-    private static Map<TopicPartition, OffsetRange> doFetch(
+    protected static Map<TopicPartition, OffsetRange> doFetch(
             Consumer<?, ?> consumer,
             Collection<TopicPartition> partitions) {
         Map<TopicPartition, Long> beginningOffsets = consumer.beginningOffsets(partitions);
@@ -102,8 +102,9 @@ public class TopicOffsetRangeFetcher {
             long offsetAtEnd = endOffsets.get(partition);
             offsets.put(
                     partition,
-                    new OffsetRange(
+                    OffsetRange.with(
                             offsetAtBeginning,
+                            offsetAtEnd > offsetAtBeginning,
                             offsetAtEnd > offsetAtBeginning ? offsetAtEnd - 1 : offsetAtEnd,
                             offsetAtEnd > offsetAtBeginning));
         }

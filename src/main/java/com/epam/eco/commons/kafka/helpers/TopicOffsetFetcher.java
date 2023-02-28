@@ -96,6 +96,7 @@ public class TopicOffsetFetcher {
     private static Map<TopicPartition, OffsetRange> doFetch(
             Consumer<?, ?> consumer,
             Collection<TopicPartition> partitions) {
+        consumer.assign(partitions);
         Map<TopicPartition, Long> beginningOffsets = consumer.beginningOffsets(partitions);
         Map<TopicPartition, Long> endOffsets = consumer.endOffsets(partitions);
 
@@ -105,7 +106,7 @@ public class TopicOffsetFetcher {
             long offsetAtEnd = endOffsets.get(partition);
             offsets.put(
                     partition,
-                    new OffsetRange(
+                    OffsetRange.with(
                             offsetAtBeginning,
                             offsetAtEnd > offsetAtBeginning ? offsetAtEnd - 1 : offsetAtEnd,
                             offsetAtEnd > offsetAtBeginning));

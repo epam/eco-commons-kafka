@@ -29,6 +29,8 @@ public class OffsetRange {
 
     private final long smallest;
     private final long largest;
+
+    private final boolean smallestInclusive;
     private final boolean largestInclusive;
     private final long size;
 
@@ -37,14 +39,16 @@ public class OffsetRange {
 
     public OffsetRange(
             @JsonProperty("smallest") long smallest,
+            @JsonProperty("smallestInclusive") boolean smallestInclusive,
             @JsonProperty("largest") long largest,
             @JsonProperty("largestInclusive") boolean largestInclusive) {
-        Validate.isTrue(smallest >= 0, "Offset smallest value is invalid");
-        Validate.isTrue(largest >= smallest, "Offset largest value is invalid");
+        Validate.isTrue(smallest >= 0, "Offset smallest value ("+smallest+") is invalid");
+        Validate.isTrue(largest >= smallest, "Offset largest ("+ largest + ") value is invalid. (less then smallest (" + smallest + ") value)");
 
         this.smallest = smallest;
         this.largest = largest;
         this.largestInclusive = largestInclusive;
+        this.smallestInclusive = smallestInclusive;
         this.size = calculateSize();
 
         hashCode = calculateHashCode();
@@ -60,12 +64,17 @@ public class OffsetRange {
     public boolean isLargestInclusive() {
         return largestInclusive;
     }
+    public boolean isSmallestInclusive() {
+        return smallestInclusive;
+    }
     @JsonIgnore
     public long getSize() {
         return size;
     }
     public boolean contains(long value) {
-        return smallest <= value && (largestInclusive ? value <= largest : value < largest);
+        return  (smallest==largest && (smallestInclusive || largestInclusive) && smallest==value) ||
+                ((smallestInclusive ? smallest <= value : smallest < value) &&
+                (largestInclusive ? value <= largest : value < largest));
     }
 
     @Override
@@ -85,6 +94,7 @@ public class OffsetRange {
         return
                 Objects.equals(this.smallest, that.smallest) &&
                 Objects.equals(this.largest, that.largest) &&
+                Objects.equals(this.smallestInclusive, that.smallestInclusive) &&
                 Objects.equals(this.largestInclusive, that.largestInclusive);
     }
 
@@ -94,19 +104,33 @@ public class OffsetRange {
     }
 
     private final long calculateSize() {
-        return largest + (largestInclusive ? 1 : 0) - smallest;
+        if(largest == smallest) {
+            return (largestInclusive || smallestInclusive) ? 1 : 0;
+        } else if(largest == smallest + 1) {
+            if (largestInclusive && smallestInclusive) {
+                return 2;
+            } else if(largestInclusive || smallestInclusive) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        return largest + (largestInclusive ? 1 : 0) - (smallestInclusive ? 0 : 1) - smallest;
     }
 
     private final int calculateHashCode() {
-        return Objects.hash(smallest, largest, largestInclusive);
+        return Objects.hash(smallest, largest, smallestInclusive, largestInclusive);
     }
 
     private final String calculateToString() {
-        return String.format("[%d..%d%s(%d)", smallest, largest, largestInclusive ? "]" : ")", size);
+        return String.format("%s%d..%d%s(%d)", smallestInclusive ? "[" : "(", smallest, largest, largestInclusive ? "]" : ")", size);
     }
 
+    public static OffsetRange with(long smallest, boolean smallestInclusive, long largest, boolean largestInclusive) {
+        return new OffsetRange(smallest, smallestInclusive, largest, largestInclusive);
+    }
     public static OffsetRange with(long smallest, long largest, boolean largestInclusive) {
-        return new OffsetRange(smallest, largest, largestInclusive);
+        return new OffsetRange(smallest, true, largest, largestInclusive);
     }
 
 }
