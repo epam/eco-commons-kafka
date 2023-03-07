@@ -111,7 +111,6 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
 
     public static Optional<OffsetRange> getCacheValue(TopicPartition topicPartition) {
         Optional<OffsetRange> offsetRange = Optional.empty();
-        boolean isExpired = false;
         readLock.lock();
         try {
             OffsetRangeCacheRecord record = offsetRangeCache.get(topicPartition);
