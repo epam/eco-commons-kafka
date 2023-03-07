@@ -28,8 +28,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -52,9 +50,6 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
 
     private static final long EXPIRATION_TIME_MIN = 30L;
     private static final Map<TopicPartition, OffsetRangeCacheRecord> offsetRangeCache = new ConcurrentHashMap<>();
-    private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private static final Lock readLock = lock.readLock();
-    private static final Lock writeLock = lock.writeLock();
 
     private CachedTopicOffsetRangeFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
         super(bootstrapServers, consumerConfig);
@@ -89,8 +84,8 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
 
         try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
-            List<TopicPartition> partitions =
-                    KafkaUtils.getTopicPartitionsAsList(consumer, topicNames);
+            List<TopicPartition> partitions = KafkaUtils.getTopicPartitionsAsList(consumer,
+                                                                                  topicNames);
             return calculateIfAbsent(consumer, partitions);
         }
     }
@@ -113,36 +108,20 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
 
     public static Optional<OffsetRange> getCacheValue(TopicPartition topicPartition) {
         Optional<OffsetRange> offsetRange = Optional.empty();
-        readLock.lock();
-        try {
-            OffsetRangeCacheRecord record = offsetRangeCache.get(topicPartition);
-            if(nonNull(record) && OffsetDateTime.now().isBefore(record.getExpirationDate())) {
-                offsetRange = Optional.of(record.getOffsetRange());
-            }
-        } finally {
-            readLock.unlock();
+        OffsetRangeCacheRecord record = offsetRangeCache.get(topicPartition);
+        if(nonNull(record) && OffsetDateTime.now().isBefore(record.getExpirationDate())) {
+            offsetRange = Optional.of(record.getOffsetRange());
         }
         return offsetRange;
     }
 
     public static void putCacheValue(TopicPartition topicPartition, OffsetRange offsetRange) {
-        writeLock.lock();
-        try {
-            offsetRangeCache.put(topicPartition, new OffsetRangeCacheRecord(offsetRange));
-        }
-        finally {
-            writeLock.unlock();
-        }
+        offsetRangeCache.put(topicPartition, new OffsetRangeCacheRecord(offsetRange));
     }
 
     public static void removeRecords(Set<TopicPartition> partitionSet) {
-        if(!partitionSet.isEmpty()) {
-            writeLock.lock();
-            try {
-                partitionSet.forEach(offsetRangeCache::remove);
-            } finally {
-                writeLock.unlock();
-            }
+        if(! partitionSet.isEmpty()) {
+            partitionSet.forEach(offsetRangeCache::remove);
         }
     }
 
@@ -169,18 +148,22 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
 
     public static class TopicOffsetRangeCacheCleaner extends TimerTask {
         private static final String THREAD_NAME = "TopicOffsetRangeCacheCleaner";
+
         private TopicOffsetRangeCacheCleaner(Long logIntervalMin) {
             long logIntervalMs = logIntervalMin * 60 * 1000;
             new Timer().schedule(this, logIntervalMs, logIntervalMs);
         }
+
         public static TopicOffsetRangeCacheCleaner with(Long logIntervalMin) {
             return new TopicOffsetRangeCacheCleaner(logIntervalMin);
         }
+
         @Override
         public void run() {
             Thread.currentThread().setName(THREAD_NAME);
             clean();
         }
+
         private void clean() {
             Set<TopicPartition> partitionSet = new HashSet<>();
             offsetRangeCache.forEach((topicPartition, cacheRecord) -> {
