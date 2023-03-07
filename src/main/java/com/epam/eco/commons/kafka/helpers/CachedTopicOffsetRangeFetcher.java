@@ -44,6 +44,8 @@ import static java.util.Objects.nonNull;
 
 /**
  * @author Mikhail_Vershkov
+ * Be carefull with possible memory bloat issue, It is necessary to initiate
+ * TopicOffsetRangeCacheCleaner class to prevent memory overflow!
  */
 
 public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
