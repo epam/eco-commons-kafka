@@ -115,7 +115,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
             return RecordFetchResult.emptyResult();
         }
 
-        checkAndCorrectBounds(offsets, offsetRanges);
+        offsets = checkAndCorrectBounds(offsets, offsetRanges);
 
         Map<TopicPartition, BiDirectionalRecordCollector> collectors =
                 initBiDirectionalRecordCollectorsForPartitions(offsets.keySet(), filter, limit);
@@ -124,8 +124,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
 
         long fetchStart = System.currentTimeMillis();
 
-        Map<TopicPartition, OffsetRange> currentChunkOffsetRanges = 
-                getFirstChunkRanges(offsets, offsetRanges, collectors);
+        Map<TopicPartition, OffsetRange> currentChunkOffsetRanges = getFirstChunkRanges(offsets, offsetRanges, collectors);
 
         Map<TopicPartition, Long> consumedOffsets = new HashMap<>();
 

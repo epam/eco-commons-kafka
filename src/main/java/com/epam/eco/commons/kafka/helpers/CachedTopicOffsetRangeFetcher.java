@@ -16,49 +16,46 @@
 package com.epam.eco.commons.kafka.helpers;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.epam.eco.commons.kafka.KafkaUtils;
 import com.epam.eco.commons.kafka.OffsetRange;
 
 import static java.time.OffsetDateTime.now;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.Validate.notNull;
 
 /**
- * @author Andrei_Tytsik
+ * @author Mikhail_Vershkov
  */
+
 public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CachedTopicOffsetRangeFetcher.class);
-    private static final long EXPIRATION_TIME_MIN = 10L;
+    private static final long EXPIRATION_TIME_MIN = 30L;
     private static final Map<TopicPartition, OffsetRangeCacheRecord> offsetRangeCache = new ConcurrentHashMap<>();
-    private final static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final static Lock readLock = lock.readLock();
-    private final static Lock writeLock = lock.writeLock();
+    private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private static final Lock readLock = lock.readLock();
+    private static final Lock writeLock = lock.writeLock();
 
     private CachedTopicOffsetRangeFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
-        super(bootstrapServers,consumerConfig);
+        super(bootstrapServers, consumerConfig);
     }
 
     public static CachedTopicOffsetRangeFetcher with(Map<String, Object> consumerConfig) {
@@ -69,7 +66,7 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         return new CachedTopicOffsetRangeFetcher(bootstrapServers, null);
     }
 
-
+    @Override
     public Map<TopicPartition, OffsetRange> fetchForPartitions(Collection<TopicPartition> partitions) {
         Validate.notEmpty(partitions, "Collection of partitions is null or empty");
         Validate.noNullElements(partitions, "Collection of partitions contains null elements");
@@ -79,11 +76,12 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         }
     }
 
-    public Map<TopicPartition, OffsetRange> fetchForTopics(String ... topicNames) {
-        return fetchForTopics(
-                topicNames != null ? Arrays.asList(topicNames) : null);
+    @Override
+    public Map<TopicPartition, OffsetRange> fetchForTopics(String... topicNames) {
+        return fetchForTopics(topicNames != null ? Arrays.asList(topicNames) : null);
     }
 
+    @Override
     public Map<TopicPartition, OffsetRange> fetchForTopics(Collection<String> topicNames) {
         Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
         Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
@@ -95,17 +93,15 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         }
     }
 
-    Map<TopicPartition, OffsetRange> calculateIfAbsent(Consumer<?,?> consumer,
-                                                       Collection<TopicPartition> partitions) {
+    Map<TopicPartition, OffsetRange> calculateIfAbsent(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+        Map<TopicPartition, OffsetRange> results = new HashMap<>();
 
-        Map<TopicPartition, OffsetRange> results = partitions.stream()
-                .filter(topicPartition->nonNull(getCacheValue(topicPartition)))
-                .collect(Collectors.toMap( Function.identity(), CachedTopicOffsetRangeFetcher::getCacheValue));
-
-        List<TopicPartition> nonCachedPartitions = partitions.stream()
-                .filter(topicPartition->isNull(getCacheValue(topicPartition)))
-                .collect(Collectors.toList());
-
+        List<TopicPartition> nonCachedPartitions = new ArrayList<>();
+        for(TopicPartition partition : partitions) {
+            getCacheValue(partition).ifPresentOrElse(
+                    offsetRange -> results.put(partition, offsetRange),
+                    () -> nonCachedPartitions.add(partition));
+        }
         Map<TopicPartition, OffsetRange> calculatedValues = doFetch(consumer, nonCachedPartitions);
         calculatedValues.forEach(CachedTopicOffsetRangeFetcher::putCacheValue);
         results.putAll(calculatedValues);
@@ -113,17 +109,22 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         return results;
     }
 
-    public static OffsetRange getCacheValue(TopicPartition topicPartition) {
+    public static Optional<OffsetRange> getCacheValue(TopicPartition topicPartition) {
+        Optional<OffsetRange> offsetRange = Optional.empty();
+        boolean isExpired = false;
         readLock.lock();
-        OffsetRange offsetRange = null;
         try {
             OffsetRangeCacheRecord record = offsetRangeCache.get(topicPartition);
             if(nonNull(record) && OffsetDateTime.now().isBefore(record.getExpirationDate())) {
-                offsetRange=record.getOffsetRange();
+                offsetRange = Optional.of(record.getOffsetRange());
+            } else {
+                isExpired = true;
             }
-        }
-        finally {
+        } finally {
             readLock.unlock();
+        }
+        if(isExpired) {
+            removeRecord(topicPartition);
         }
         return offsetRange;
     }
@@ -138,10 +139,31 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         }
     }
 
+    private static void removeRecord(TopicPartition topicPartition) {
+        writeLock.lock();
+        try {
+            offsetRangeCache.remove(topicPartition);
+        }
+        finally {
+            writeLock.unlock();
+        }
+    }
+
+    public static void removeRecords(Set<TopicPartition> partitionSet) {
+        if(!partitionSet.isEmpty()) {
+            writeLock.lock();
+            try {
+                partitionSet.forEach(offsetRangeCache::remove);
+            } finally {
+                writeLock.unlock();
+            }
+        }
+    }
+
 
     static class OffsetRangeCacheRecord {
-        private OffsetDateTime expirationDate;
-        private OffsetRange offsetRange;
+        private final OffsetDateTime expirationDate;
+        private final OffsetRange offsetRange;
 
         public OffsetRangeCacheRecord(OffsetRange offsetRange) {
             this.expirationDate = OffsetDateTime.now().plusMinutes(EXPIRATION_TIME_MIN);
@@ -152,17 +174,10 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
             return expirationDate;
         }
 
-        public void setExpirationDate(OffsetDateTime expirationDate) {
-            this.expirationDate = expirationDate;
-        }
-
         public OffsetRange getOffsetRange() {
             return offsetRange;
         }
 
-        public void setOffsetRange(OffsetRange offsetRange) {
-            this.offsetRange = offsetRange;
-        }
     }
 
 
@@ -187,14 +202,8 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
                     partitionSet.add(topicPartition);
                 }
             });
-            if(! partitionSet.isEmpty()) {
-                writeLock.lock();
-                try {
-                    partitionSet.forEach(offsetRangeCache::remove);
-                } finally {
-                    writeLock.unlock();
-                }
-            }
+            removeRecords(partitionSet);
+
         }
     }
 

@@ -36,11 +36,15 @@ import org.apache.kafka.common.TopicPartition;
 
 import com.epam.eco.commons.kafka.KafkaUtils;
 import com.epam.eco.commons.kafka.OffsetRange;
+
 import static java.time.OffsetDateTime.now;
 import static java.util.Objects.isNull;
 
 /**
  * @author Mikhail_Vershkov
+ * CachedTopicRecordFetcher cached implenentation of a RecordFetcher,
+ * Pls, use it carefully because if possible high level oof resource consumption
+ * It good for a small or medium topics. If you have
  */
 public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetcher<K,V> implements RecordBiDirectionalFetcher<K,V> {
 
@@ -156,8 +160,9 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
 
     private void populateCacheForAllPartitions(Map<TopicPartition, Long> offsets, long timeoutInMs) {
         offsets.keySet().forEach(topicPartition -> {
-            PartitionRecordsCache<K,V> partitionRecordsCache = recordsCache.get(topicPartition);
-            if(isNull(partitionRecordsCache) || OffsetDateTime.now().isAfter(partitionRecordsCache.getExpirationTime())) {
+            PartitionRecordsCache<K, V> partitionRecordsCache = recordsCache.get(topicPartition);
+            if(isNull(partitionRecordsCache) || OffsetDateTime.now().isAfter(
+                    partitionRecordsCache.getExpirationTime())) {
                 recordsCache.remove(topicPartition);
                 populateCacheByPartition(topicPartition, timeoutInMs);
             }
@@ -167,9 +172,9 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
     private void populateCacheByPartition(TopicPartition topicPartition, long timeoutMs) {
         try {
             writeLock.lock();
-            recordsCache.put(topicPartition,
-                    new PartitionRecordsCache<>(OffsetDateTime.now().plusMinutes(expirationTimeMin),
-                            fetchAllByTopicPartition(topicPartition, timeoutMs)));
+            recordsCache.put(topicPartition, new PartitionRecordsCache<>(
+                    OffsetDateTime.now().plusMinutes(expirationTimeMin),
+                    fetchAllByTopicPartition(topicPartition, timeoutMs)));
         } finally {
             writeLock.unlock();
         }
@@ -196,7 +201,8 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
             ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT);
 
             if(records.count() > 0) {
-                Map<TopicPartition, Long> consumedOffsets = new HashMap<>(KafkaUtils.getConsumerPositions(consumer));
+                Map<TopicPartition, Long> consumedOffsets = new HashMap<>(
+                        KafkaUtils.getConsumerPositions(consumer));
                 consumerRecords.addAll(records.records(partition));
                 if(areAllOffsetsReachedEndOfRange(consumedOffsets, offsetRanges)) {
                     break;
@@ -210,35 +216,32 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
         return consumerRecords;
     }
 
-    protected boolean areAllOffsetsReachedEndOfRange(
-            Map<TopicPartition, Long> offsets,
-            Map<TopicPartition, OffsetRange> offsetRanges) {
-        for (Map.Entry<TopicPartition, Long> entry : offsets.entrySet()) {
+    protected boolean areAllOffsetsReachedEndOfRange(Map<TopicPartition, Long> offsets, Map<TopicPartition, OffsetRange> offsetRanges) {
+        for(Map.Entry<TopicPartition, Long> entry : offsets.entrySet()) {
             Long offset = entry.getValue();
             OffsetRange range = offsetRanges.get(entry.getKey());
-            if (offset < range.getLargest()) {
+            if(offset < range.getLargest()) {
                 return false;
             }
         }
         return true;
     }
 
-    protected static <K,V> void addRecordToCache(TopicPartition topicPartition,
-                                                 PartitionRecordsCache<K,V> recordCache) {
-         recordsCache.put(topicPartition, recordCache);
+    protected static <K, V> void addRecordToCache(TopicPartition topicPartition, PartitionRecordsCache<K, V> recordCache) {
+        recordsCache.put(topicPartition, recordCache);
     }
 
     static class PartitionRecordsCache<K, V> {
         private final OffsetDateTime expirationTime;
         private final List<ConsumerRecord<K, V>> records;
         private final long smallest;
-        private final  long largest;
+        private final long largest;
 
         public PartitionRecordsCache(OffsetDateTime expirationTime, List<ConsumerRecord<K, V>> records) {
             this.expirationTime = expirationTime;
             this.records = records;
-            this.smallest = records.size()>0 ? records.get(0).offset() : 0L;
-            this.largest = records.size()>0 ? records.get(records.size()-1).offset() : 0L;
+            this.smallest = records.size() > 0 ? records.get(0).offset() : 0L;
+            this.largest = records.size() > 0 ? records.get(records.size() - 1).offset() : 0L;
         }
 
         public OffsetDateTime getExpirationTime() {
@@ -275,7 +278,8 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
                     if(record.offset() < offset) {
                         count++;
                     }
-                    rangedRecords = records.subList(count - limit < 0 ? 0 : count - limit.intValue(), count);
+                    rangedRecords = records.subList(
+                            count - limit < 0 ? 0 : count - limit.intValue(), count);
                 }
             }
             return rangedRecords;
@@ -297,27 +301,33 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
                     if(record.timestamp() < timestamp) {
                         count++;
                     }
-                    rangedRecords = records.subList(count - limit < 0 ? 0 : count - (int) limit, count);
+                    rangedRecords = records.subList(count - limit < 0 ? 0 : count - (int) limit,
+                                                    count);
                 }
             }
             return rangedRecords;
         }
 
     }
+
     public static class TopicCacheCleaner extends TimerTask {
         private static final String THREAD_NAME = "TopicCacheCleaner";
+
         public TopicCacheCleaner(Long logIntervalMin) {
             long logIntervalMs = logIntervalMin * 60 * 1000;
             new Timer().schedule(this, logIntervalMs, logIntervalMs);
         }
+
         public static TopicCacheCleaner with(Long logIntervalMin) {
             return new TopicCacheCleaner(logIntervalMin);
         }
+
         @Override
         public void run() {
             Thread.currentThread().setName(THREAD_NAME);
             clean();
         }
+
         private void clean() {
             Set<TopicPartition> partitionSet = new HashSet<>();
             recordsCache.forEach((topicPartition, cache) -> {

@@ -240,7 +240,7 @@ public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
 
         Map<TopicPartition, OffsetRange> offsetRanges = fetchOffsetRanges(offsets.keySet());
 
-        checkAndCorrectBounds(offsets, offsetRanges);
+        offsets = checkAndCorrectBounds(offsets, offsetRanges);
 
         offsets = filterOutUselessOffsets(offsets, offsetRanges);
         if (offsets.isEmpty()) {
@@ -466,8 +466,9 @@ public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
         return builder.build();
     }
 
-    protected void checkAndCorrectBounds(Map<TopicPartition, Long> offsets,
+    protected Map<TopicPartition, Long> checkAndCorrectBounds(Map<TopicPartition, Long> offsets,
                                          Map<TopicPartition, OffsetRange> ranges ) {
+        Map<TopicPartition, Long> correctedOffsets = new HashMap<>();
         offsets.keySet().forEach( topicPartition -> {
             Long currentOffset = offsets.get(topicPartition);
             if(currentOffset<ranges.get(topicPartition).getSmallest()) {
@@ -477,9 +478,12 @@ public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
                 currentOffset = ranges.get(topicPartition).getLargest();
             }
             if(! currentOffset.equals(offsets.get(topicPartition))) {
-                offsets.put(topicPartition, currentOffset);
+                correctedOffsets.put(topicPartition, currentOffset);
+            } else {
+                correctedOffsets.put(topicPartition,offsets.get(topicPartition));
             }
         });
+        return correctedOffsets;
     }
 
 
