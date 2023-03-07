@@ -157,5 +157,9 @@
         <Method name="consumerConfig" />
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.CachedTopicOffsetRangeFetcher" />
+        <Bug pattern="PMB_POSSIBLE_MEMORY_BLOAT" />
+    </Match>
 
 </FindBugsFilter>

@@ -117,14 +117,9 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
             OffsetRangeCacheRecord record = offsetRangeCache.get(topicPartition);
             if(nonNull(record) && OffsetDateTime.now().isBefore(record.getExpirationDate())) {
                 offsetRange = Optional.of(record.getOffsetRange());
-            } else {
-                isExpired = true;
             }
         } finally {
             readLock.unlock();
-        }
-        if(isExpired) {
-            removeRecord(topicPartition);
         }
         return offsetRange;
     }
@@ -133,16 +128,6 @@ public class CachedTopicOffsetRangeFetcher extends TopicOffsetRangeFetcher {
         writeLock.lock();
         try {
             offsetRangeCache.put(topicPartition, new OffsetRangeCacheRecord(offsetRange));
-        }
-        finally {
-            writeLock.unlock();
-        }
-    }
-
-    private static void removeRecord(TopicPartition topicPartition) {
-        writeLock.lock();
-        try {
-            offsetRangeCache.remove(topicPartition);
         }
         finally {
             writeLock.unlock();
