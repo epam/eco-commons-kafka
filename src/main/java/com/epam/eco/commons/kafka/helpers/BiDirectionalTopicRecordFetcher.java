@@ -134,7 +134,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
             collectRecordsFromCurrentChunk(consumer, timeoutMs, collectors, fetchStart,
                                            currentChunkOffsetRanges, consumedOffsets);
 
-            getNextChunkRange(currentChunkOffsetRanges, offsetRanges, collectors);
+            calculateNextChunkRange(currentChunkOffsetRanges, offsetRanges, collectors);
 
             if( allCurrentChunksIsEmpty(currentChunkOffsetRanges) ||
                 areAllOffsetsReachedEndOfRange(consumedOffsets, offsetRanges) ||
@@ -222,7 +222,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
         return result;
     }
 
-    private void getNextChunkRange(Map<TopicPartition, OffsetRange> currentChunkOffsets,
+    private void calculateNextChunkRange(Map<TopicPartition, OffsetRange> currentChunkOffsets,
                                    Map<TopicPartition, OffsetRange> offsetRanges,
                                    Map<TopicPartition, BiDirectionalRecordCollector> collectors) {
         currentChunkOffsets.keySet().forEach(topicPartition -> {
