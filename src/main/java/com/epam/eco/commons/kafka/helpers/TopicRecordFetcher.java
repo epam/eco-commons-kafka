@@ -44,13 +44,13 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 /**
  * @author Andrei_Tytsik
  */
-public class TopicRecordFetcher<K, V> {
+public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
 
-    private static final Duration POLL_TIMEOUT = Duration.of(100, ChronoUnit.MILLIS);
+    protected static final Duration POLL_TIMEOUT = Duration.of(100, ChronoUnit.MILLIS);
 
-    private final Map<String, Object> consumerConfig;
+    protected final Map<String, Object> consumerConfig;
 
-    private TopicRecordFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
+    protected TopicRecordFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
         ConsumerConfigBuilder configBuilder = ConsumerConfigBuilder.
                 with(consumerConfig).
                 minRequiredConfigs().
@@ -228,7 +228,7 @@ public class TopicRecordFetcher<K, V> {
         }
     }
 
-    private RecordFetchResult<K, V> doFetchByOffsets(
+    protected RecordFetchResult<K, V> doFetchByOffsets(
             KafkaConsumer<K, V> consumer,
             Map<TopicPartition, Long> offsets,
             long limit,
@@ -240,10 +240,14 @@ public class TopicRecordFetcher<K, V> {
 
         Map<TopicPartition, OffsetRange> offsetRanges = fetchOffsetRanges(offsets.keySet());
 
+        offsets = checkAndCorrectBounds(offsets, offsetRanges);
+
         offsets = filterOutUselessOffsets(offsets, offsetRanges);
         if (offsets.isEmpty()) {
             return RecordFetchResult.emptyResult();
         }
+
+        List<TopicPartition> partitionsAtBeginning = partitionsAtBeginning(offsets, offsetRanges);
 
         Map<TopicPartition, RecordCollector> collectors = initRecordCollectorsForPartitions(
                 offsets.keySet(),
@@ -269,12 +273,49 @@ public class TopicRecordFetcher<K, V> {
                 }
             }
 
-            if (System.currentTimeMillis() - fetchStart > timeoutMs) {
+            if (isTimeExpired(fetchStart,timeoutMs)) {
                 break;
             }
         }
 
+        if(!partitionsAtBeginning.isEmpty()) {
+            correctSmallestBoundsOfOffsetRanges(partitionsAtBeginning, collectors, offsetRanges);
+        }
+
         return toFetchResult(collectors, offsetRanges);
+    }
+
+    protected boolean isTimeExpired(long fetchStart, long timeoutMs) {
+        return System.currentTimeMillis() - fetchStart > timeoutMs;
+    }
+
+
+    protected List<TopicPartition> partitionsAtBeginning(Map<TopicPartition, Long> offsets,
+                                        Map<TopicPartition, OffsetRange> offsetRanges) {
+        return offsetRanges.keySet().stream()
+                .filter(topicPartition -> offsetRanges.get(topicPartition).getSmallest() == offsets.get(topicPartition))
+                .collect(Collectors.toList());
+    }
+
+    protected void correctSmallestBoundsOfOffsetRanges(List<TopicPartition> partitions,
+                                                       Map<TopicPartition, RecordCollector> collectors,
+                                                       Map<TopicPartition, OffsetRange> offsetRanges) {
+        partitions.forEach(topicPartition -> {
+
+            long smallestOffset = collectors.get(topicPartition).getSmallestScannedOffset();
+            long smallestBound = offsetRanges.get(topicPartition).getSmallest();
+
+            if(smallestOffset >= 0 && smallestBound > smallestOffset) {
+                OffsetRange offsetRange = offsetRanges.get(topicPartition);
+                offsetRanges.put(topicPartition,
+                        new OffsetRange( smallestOffset,
+                            true,
+                                         offsetRange.getLargest(),
+                                         offsetRange.isLargestInclusive()
+                        ));
+                CachedTopicOffsetRangeFetcher.putCacheValue(topicPartition, offsetRange);
+            }
+        });
     }
 
     private RecordFetchResult<K, V> doFetchByTimestamps(
@@ -292,7 +333,7 @@ public class TopicRecordFetcher<K, V> {
         return doFetchByOffsets(consumer, offsets, limit, filter, timeoutMs);
     }
 
-    private void validateOffsets(Map<TopicPartition, Long> offsets) {
+    protected void validateOffsets(Map<TopicPartition, Long> offsets) {
         Validate.notNull(offsets, "Collection of partition offsets is null or empty");
         Validate.noNullElements(offsets.keySet(),
                 "Collection of partition offset keys contains null elements");
@@ -307,7 +348,7 @@ public class TopicRecordFetcher<K, V> {
         });
     }
 
-    private void validatePartitionTimestamps(Map<TopicPartition, Long> partitionTimestamps) {
+    protected void validatePartitionTimestamps(Map<TopicPartition, Long> partitionTimestamps) {
         Validate.notNull(partitionTimestamps, "Collection of partition timestamps is null or empty");
         Validate.noNullElements(partitionTimestamps.keySet(),
                 "Collection of partition timestamp keys contains null elements");
@@ -352,15 +393,14 @@ public class TopicRecordFetcher<K, V> {
         return partitions;
     }
 
-    private Map<TopicPartition, RecordCollector> initRecordCollectorsForPartitions(
-            Collection<TopicPartition> partitions,
-            Predicate<ConsumerRecord<K, V>> filter,
-            long limit) {
-        if (partitions.isEmpty()) {
-            return Collections.emptyMap();
+    protected Map<TopicPartition, Long> calculateLimitsByPartition(
+              Collection<TopicPartition> partitions,
+              long limit) {
+        if(partitions.isEmpty()) {
+            return new HashMap<>();
         }
 
-        Map<TopicPartition, RecordCollector> collectors = new TreeMap<>(TopicPartitionComparator.INSTANCE);
+        Map<TopicPartition, Long> limits = new TreeMap<>(TopicPartitionComparator.INSTANCE);
 
         long limitEven = limit / partitions.size();
         long limitOdd = limit % partitions.size();
@@ -374,10 +414,20 @@ public class TopicRecordFetcher<K, V> {
             if (limitPerPartition <= 0) {
                 break;
             }
-            collectors.put(
-                    partition,
-                    new RecordCollector(filter, limitPerPartition));
+            limits.put( partition, limitPerPartition);
         }
+        return limits;
+    }
+
+    protected Map<TopicPartition, RecordCollector> initRecordCollectorsForPartitions(Collection<TopicPartition> partitions, Predicate<ConsumerRecord<K, V>> filter, long limit) {
+        if(partitions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<TopicPartition, RecordCollector> collectors = new TreeMap<>(TopicPartitionComparator.INSTANCE);
+        Map<TopicPartition, Long> limitsPerPartition = calculateLimitsByPartition(partitions, limit);
+        limitsPerPartition.forEach((key, value) -> collectors.put(key, new RecordCollector(filter, value)));
+
         return collectors;
     }
 
@@ -388,11 +438,11 @@ public class TopicRecordFetcher<K, V> {
                         partition -> offset));
     }
 
-    private RecordFetchResult<K, V> toFetchResult(
-            Map<TopicPartition, RecordCollector> recordCollectors,
-            Map<TopicPartition, OffsetRange> offsetRanges) {
+    protected RecordFetchResult<K, V> toFetchResult(
+              Map<TopicPartition, ? extends RecordCollector> recordCollectors,
+              Map<TopicPartition, OffsetRange> offsetRanges) {
         RecordFetchResult.Builder<K, V> builder = RecordFetchResult.builder();
-        for (Entry<TopicPartition, RecordCollector> entry : recordCollectors.entrySet()) {
+        for (Entry<TopicPartition, ? extends RecordCollector> entry : recordCollectors.entrySet()) {
             TopicPartition partition = entry.getKey();
             RecordCollector recordCollector = entry.getValue();
 
@@ -406,8 +456,9 @@ public class TopicRecordFetcher<K, V> {
                         addRecords(recordCollector.getRecords()).
                         partitionOffsets(offsetRanges.get(partition)).
                         scannedOffsets(
-                                new OffsetRange(
+                                OffsetRange.with(
                                         recordCollector.getSmallestScannedOffset(),
+                                        true,
                                         recordCollector.getLargestScannedOffset(),
                                         true)).
                         build());
@@ -415,27 +466,40 @@ public class TopicRecordFetcher<K, V> {
         return builder.build();
     }
 
-    private Map<TopicPartition, Long> filterOutUselessOffsets(
-            Map<TopicPartition, Long> offsets,
-            Map<TopicPartition, OffsetRange> offsetRanges) {
-        return offsets.entrySet().stream().
-                filter(entry -> {
-                    OffsetRange range = offsetRanges.get(entry.getKey());
-                    Long offset = entry.getValue();
-                    return
-                            range != null && range.getSize() > 0 &&
-                            (offset < range.getSmallest() || range.contains(offset));
-                }).
-                collect(Collectors.toMap(
-                        Entry::getKey,
-                        Entry::getValue));
+    protected Map<TopicPartition, Long> checkAndCorrectBounds(Map<TopicPartition, Long> offsets,
+                                         Map<TopicPartition, OffsetRange> ranges ) {
+        Map<TopicPartition, Long> correctedOffsets = new HashMap<>();
+        offsets.keySet().forEach( topicPartition -> {
+            Long currentOffset = offsets.get(topicPartition);
+            if(currentOffset<ranges.get(topicPartition).getSmallest()) {
+                currentOffset = ranges.get(topicPartition).getSmallest();
+            }
+            if(currentOffset>ranges.get(topicPartition).getLargest()) {
+                currentOffset = ranges.get(topicPartition).getLargest();
+            }
+            if(! currentOffset.equals(offsets.get(topicPartition))) {
+                correctedOffsets.put(topicPartition, currentOffset);
+            } else {
+                correctedOffsets.put(topicPartition,offsets.get(topicPartition));
+            }
+        });
+        return correctedOffsets;
     }
 
-    private Map<TopicPartition, OffsetRange> fetchOffsetRanges(Collection<TopicPartition> partitions) {
-        return TopicOffsetRangeFetcher.with(consumerConfig).fetchForPartitions(partitions);
+
+    private Map<TopicPartition, Long> filterOutUselessOffsets(Map<TopicPartition, Long> offsets, Map<TopicPartition, OffsetRange> offsetRanges) {
+        return offsets.entrySet().stream().filter(entry -> {
+            OffsetRange range = offsetRanges.get(entry.getKey());
+            Long offset = entry.getValue();
+            return range != null && range.getSize() > 0 && range.contains(offset);
+        }).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
-    private boolean areAllCollectorsDone(Map<TopicPartition, RecordCollector> collectors) {
+    protected Map<TopicPartition, OffsetRange> fetchOffsetRanges(Collection<TopicPartition> partitions) {
+        return CachedTopicOffsetRangeFetcher.with(consumerConfig).fetchForPartitions(partitions);
+    }
+
+    protected boolean areAllCollectorsDone(Map<TopicPartition, ? extends RecordCollector> collectors) {
         for (RecordCollector collector : collectors.values()) {
             if (!collector.isLimitReached()) {
                 return false;
@@ -444,9 +508,12 @@ public class TopicRecordFetcher<K, V> {
         return true;
     }
 
-    private boolean areAllOffsetsReachedEndOfRange(
+    protected boolean areAllOffsetsReachedEndOfRange(
             Map<TopicPartition, Long> offsets,
             Map<TopicPartition, OffsetRange> offsetRanges) {
+        if(offsets.isEmpty()) {
+            return false;
+        }
         for (Map.Entry<TopicPartition, Long> entry : offsets.entrySet()) {
             Long offset = entry.getValue();
             OffsetRange range = offsetRanges.get(entry.getKey());
@@ -457,20 +524,24 @@ public class TopicRecordFetcher<K, V> {
         return true;
     }
 
-    private class RecordCollector {
+    protected class RecordCollector {
 
         private final Predicate<ConsumerRecord<K, V>> filter;
         private final long limit;
 
-        private final List<ConsumerRecord<K, V>> records;
+        protected final List<ConsumerRecord<K, V>> records;
 
-        private long smallestScannedOffset = -1;
-        private long largestScannedOffset = -1;
+        protected long smallestScannedOffset = - 1;
+        protected long largestScannedOffset = - 1;
 
         public RecordCollector(Predicate<ConsumerRecord<K, V>> filter, long limit) {
             this.filter = filter;
             this.limit = limit;
-            records = new ArrayList<>((int)limit);
+            records = new ArrayList<>((int) limit);
+        }
+
+        protected long getLimit() {
+            return limit;
         }
 
         public void add(ConsumerRecord<K, V> record) {
@@ -490,7 +561,7 @@ public class TopicRecordFetcher<K, V> {
         }
 
         public List<ConsumerRecord<K, V>> getRecords() {
-            return records;
+            return new ArrayList<>(records);
         }
         public long getSmallestScannedOffset() {
             return smallestScannedOffset;
@@ -502,7 +573,7 @@ public class TopicRecordFetcher<K, V> {
             return records.isEmpty();
         }
 
-        private boolean passesFilter(ConsumerRecord<K, V> record) {
+        protected boolean passesFilter(ConsumerRecord<K, V> record) {
             return filter == null || filter.test(record);
         }
 
