@@ -24,8 +24,8 @@ import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.common.internals.KafkaFutureImpl;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,7 +45,7 @@ public class AdminClientUtilsTest {
         when(listConsumerGroupsResult.all()).thenReturn(resultFuture);
 
         Map<String, ConsumerGroupDescription> result = AdminClientUtils.describeAllConsumerGroups(adminClient);
-        Assert.assertTrue(result.isEmpty());
+        Assertions.assertTrue(result.isEmpty());
     }
 
 }

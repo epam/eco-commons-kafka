@@ -28,7 +28,7 @@ import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLogin
 import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.Acks;
 import com.epam.eco.commons.kafka.SslProtocol;
@@ -39,7 +39,7 @@ import com.epam.eco.commons.kafka.SslProtocol;
 public class ProducerConfigBuilderTest {
 
     @Test
-    public void testConfigParsed() throws Exception {
+    public void testConfigParsed() {
         Map<String, Object> props = ProducerConfigBuilder.withEmpty().
                 // producer
                 acks(Acks.ALL).

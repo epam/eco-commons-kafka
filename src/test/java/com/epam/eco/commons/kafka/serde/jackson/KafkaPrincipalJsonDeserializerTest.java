@@ -16,10 +16,11 @@
 package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,7 +35,7 @@ public class KafkaPrincipalJsonDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -45,7 +46,7 @@ public class KafkaPrincipalJsonDeserializerTest {
     }
 
     @Test
-    public void testDeserialization() throws Exception {
+    public void testDeserialization() throws JsonProcessingException {
         KafkaPrincipal expected = new KafkaPrincipal("User", "John_Doe@acme.com");
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -53,10 +54,10 @@ public class KafkaPrincipalJsonDeserializerTest {
         objectNode.put(KafkaPrincipalFields.NAME, expected.getName());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         KafkaPrincipal actual = objectMapper.readValue(json, KafkaPrincipal.class);
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
 }

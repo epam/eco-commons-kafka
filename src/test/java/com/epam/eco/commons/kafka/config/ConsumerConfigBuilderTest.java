@@ -29,7 +29,7 @@ import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLogin
 import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.OffsetReset;
 import com.epam.eco.commons.kafka.SslProtocol;
@@ -40,7 +40,7 @@ import com.epam.eco.commons.kafka.SslProtocol;
 public class ConsumerConfigBuilderTest {
 
     @Test
-    public void testConfigParsed() throws Exception {
+    public void testConfigParsed() {
         Map<String, Object> props = ConsumerConfigBuilder.withEmpty().
                 // consumer
                 groupId("groupId").

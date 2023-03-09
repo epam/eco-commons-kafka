@@ -18,37 +18,39 @@ package com.epam.eco.commons.kafka.serde;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrei_Tytsik
  */
 public class JsonStringDeserializerTest {
 
-    private JsonStringDeserializer deserializer = new JsonStringDeserializer();
+    private final JsonStringDeserializer deserializer = new JsonStringDeserializer();
 
     @Test
-    public void testJsonStringIsDeserialized() throws Exception {
+    public void testJsonStringIsDeserialized() {
         String jsonOrig = "{\"a\":\"a\",\"b\":10,\"c\":{\"d\":1.0}}";
 
         byte[] bytes = jsonOrig.getBytes(StandardCharsets.UTF_8);
 
         String json = deserializer.deserialize(null, bytes);
 
-        Assert.assertEquals(jsonOrig, json);
+        Assertions.assertEquals(jsonOrig, json);
     }
 
     @Test
-    public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
+    public void testNullInputGivesNullOutput() {
+        Assertions.assertNull(deserializer.deserialize(null, null));
     }
 
     @SuppressWarnings("resource")
-    @Test(expected=Exception.class)
-    public void testFailsOnInvalidPrettyConfig() throws Exception {
-        new JsonStringDeserializer().configure(
-                Collections.singletonMap(JsonStringDeserializer.PRETTY, new Object()), true);
+    @Test
+    public void testFailsOnInvalidPrettyConfig() {
+        assertThrows(Exception.class, () -> new JsonStringDeserializer().configure(
+                Collections.singletonMap(JsonStringDeserializer.PRETTY, new Object()), true));
     }
 
 }

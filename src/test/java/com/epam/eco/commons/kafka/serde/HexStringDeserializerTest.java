@@ -17,28 +17,28 @@ package com.epam.eco.commons.kafka.serde;
 
 import java.math.BigInteger;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrei_Tytsik
  */
 public class HexStringDeserializerTest {
 
-    private HexStringDeserializer deserializer = new HexStringDeserializer();
+    private final HexStringDeserializer deserializer = new HexStringDeserializer();
 
     @Test
-    public void testHexStringIsDeserialized() throws Exception {
+    public void testHexStringIsDeserialized() {
         byte[] bytes = BigInteger.valueOf(65535).toByteArray();
 
         String hex = deserializer.deserialize(null, bytes);
 
-        Assert.assertEquals("00ffff", hex);
+        Assertions.assertEquals("00ffff", hex);
     }
 
     @Test
-    public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
+    public void testNullInputGivesNullOutput() {
+        Assertions.assertNull(deserializer.deserialize(null, null));
     }
 
 }

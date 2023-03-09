@@ -19,10 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -38,8 +39,8 @@ public class TopicPartitionKeyDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
@@ -49,7 +50,7 @@ public class TopicPartitionKeyDeserializerTest {
     }
 
     @Test
-    public void testKeyDeserialization() throws Exception {
+    public void testKeyDeserialization() throws JsonProcessingException {
         String partition0 = "topic-0";
         String partition1 = "topic-1";
         String partition2 = "topic-2";
@@ -64,11 +65,11 @@ public class TopicPartitionKeyDeserializerTest {
         objectNode.put(partition2, partition2);
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         Map<TopicPartition, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<Map<TopicPartition, String>>(){});
-        Assert.assertEquals(expected, actual);
+                new TypeReference<>(){});
+        Assertions.assertEquals(expected, actual);
     }
 }

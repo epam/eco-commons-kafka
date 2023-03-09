@@ -27,10 +27,11 @@ import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -47,7 +48,7 @@ public class ConsumerRecordJsonDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -76,7 +77,7 @@ public class ConsumerRecordJsonDeserializerTest {
     }
 
     @Test
-    public void testDeserialization1() throws Exception {
+    public void testDeserialization1() throws JsonProcessingException {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -112,17 +113,17 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertNotNull(actual);
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+                new TypeReference<>() {});
+        Assertions.assertNotNull(actual);
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @Test
-    public void testDeserialization2() throws Exception {
+    public void testDeserialization2() throws JsonProcessingException {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -156,18 +157,18 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertNotNull(actual);
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+                new TypeReference<>() {});
+        Assertions.assertNotNull(actual);
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @SuppressWarnings("rawtypes")
     @Test
-    public void testDeserialization3() throws Exception {
+    public void testDeserialization3() throws JsonProcessingException {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -201,16 +202,16 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord actual = objectMapper.readValue(
                 json,
                 ConsumerRecord.class);
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @Test
-    public void testDeserialization4() throws Exception {
+    public void testDeserialization4() throws JsonProcessingException {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -244,12 +245,12 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+                new TypeReference<>() {});
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
 }

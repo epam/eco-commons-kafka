@@ -15,11 +15,13 @@
  *******************************************************************************/
 package com.epam.eco.commons.kafka.serde.jackson;
 
+import java.io.IOException;
+
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +37,7 @@ public class RecordHeaderJsonSerializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -46,16 +48,16 @@ public class RecordHeaderJsonSerializerTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerialization() throws IOException {
         Header origin = new RecordHeader("1", "1".getBytes());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals(2, jsonNode.size());
-        Assert.assertEquals(origin.key(), jsonNode.get(RecordHeaderFields.KEY).textValue());
-        Assert.assertArrayEquals(origin.value(), jsonNode.get(RecordHeaderFields.VALUE).binaryValue());
+        Assertions.assertEquals(2, jsonNode.size());
+        Assertions.assertEquals(origin.key(), jsonNode.get(RecordHeaderFields.KEY).textValue());
+        Assertions.assertArrayEquals(origin.value(), jsonNode.get(RecordHeaderFields.VALUE).binaryValue());
     }
 
 }

@@ -20,45 +20,50 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrei_Tytsik
  */
 public class JsonSerdeTest {
 
-    private JsonSerializer serializer = new JsonSerializer();
-    private JsonDeserializer<Person> deserializer = new JsonDeserializer<>();
+    private final JsonSerializer serializer = new JsonSerializer();
+    private final JsonDeserializer<Person> deserializer = new JsonDeserializer<>();
     {
         deserializer.configure(
                 Collections.singletonMap(JsonDeserializer.KEY_TYPE, Person.class), true);
     }
 
     @Test
-    public void testDataTypeIsSerializedAndDeserialized() throws Exception {
+    public void testDataTypeIsSerializedAndDeserialized() {
         Person personOrig = createPerson();
 
         byte[] bytes = serializer.serialize(null, personOrig);
 
-        Assert.assertNotNull(bytes);
-        Assert.assertTrue(bytes.length > 0);
+        Assertions.assertNotNull(bytes);
+        Assertions.assertTrue(bytes.length > 0);
 
         Person person = deserializer.deserialize(null, bytes);
 
-        Assert.assertEquals(personOrig, person);
+        Assertions.assertEquals(personOrig, person);
     }
 
     @Test
-    public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
-        Assert.assertNull(serializer.serialize(null, null));
+    public void testNullInputGivesNullOutput() {
+        Assertions.assertNull(deserializer.deserialize(null, null));
+        Assertions.assertNull(serializer.serialize(null, null));
     }
 
     @SuppressWarnings("resource")
-    @Test(expected=Exception.class)
-    public void testFailsOnMissingTypeConfig() throws Exception {
-        new JsonDeserializer<Person>().configure(Collections.emptyMap(), true);
+    @Test
+    public void testFailsOnMissingTypeConfig() {
+        assertThrows(
+                Exception.class,
+                () -> new JsonDeserializer<Person>().configure(Collections.emptyMap(), true)
+        );
     }
 
     private Person createPerson() {
@@ -67,7 +72,7 @@ public class JsonSerdeTest {
         person.setAge(41);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(1912, 6, 23);
+        calendar.set(1912, Calendar.JULY, 23);
         person.setBirth(calendar.getTime());
 
         return person;

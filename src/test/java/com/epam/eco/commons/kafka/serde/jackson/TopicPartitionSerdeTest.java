@@ -19,9 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,23 +34,23 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class TopicPartitionSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws Exception {
+    public void testSerializedToJsonAndBack() throws JsonProcessingException {
         TopicPartition origin = new TopicPartition("topic", 1);
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         TopicPartition deserialized = mapper.readValue(
                 json,
                 TopicPartition.class);
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(deserialized, origin);
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(deserialized, origin);
     }
 
     @Test
-    public void testKeySerializedToJsonAndBack() throws Exception {
+    public void testKeySerializedToJsonAndBack() throws JsonProcessingException {
         Map<TopicPartition, String> origin = new HashMap<>();
         origin.put(new TopicPartition("topic", 0), "0");
         origin.put(new TopicPartition("topic", 1), "1");
@@ -58,13 +59,13 @@ public class TopicPartitionSerdeTest {
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         Map<TopicPartition, String> deserialized = mapper.readValue(
                 json,
-                new TypeReference<Map<TopicPartition, String>>(){});
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(deserialized, origin);
+                new TypeReference<>(){});
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(deserialized, origin);
     }
 
 }

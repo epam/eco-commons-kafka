@@ -20,9 +20,10 @@ import java.util.Arrays;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
@@ -33,7 +34,7 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class HeadersSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws Exception {
+    public void testSerializedToJsonAndBack() throws JsonProcessingException {
         Headers origin = new RecordHeaders(
                 Arrays.asList(
                         new RecordHeader("1", "1".getBytes()),
@@ -42,13 +43,13 @@ public class HeadersSerdeTest {
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         Headers deserialized = mapper.readValue(
                 json,
                 Headers.class);
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(deserialized, origin);
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(deserialized, origin);
     }
 
 }

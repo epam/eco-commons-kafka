@@ -16,8 +16,10 @@
 package com.epam.eco.commons.kafka;
 
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrei_Tytsik
@@ -25,76 +27,76 @@ import org.junit.Test;
 public class KafkaUtilsTest {
 
     @Test
-    public void testTopicPartitionIsParsedFromString() throws Exception {
+    public void testTopicPartitionIsParsedFromString() {
         TopicPartition partition = KafkaUtils.parseTopicPartition("topic-0");
-        Assert.assertNotNull(partition);
-        Assert.assertEquals("topic", partition.topic());
-        Assert.assertEquals(0, partition.partition());
+        Assertions.assertNotNull(partition);
+        Assertions.assertEquals("topic", partition.topic());
+        Assertions.assertEquals(0, partition.partition());
 
         partition = KafkaUtils.parseTopicPartition("topic-189-ddd_df1-78");
-        Assert.assertNotNull(partition);
-        Assert.assertEquals("topic-189-ddd_df1", partition.topic());
-        Assert.assertEquals(78, partition.partition());
-    }
-
-    @Test(expected=Exception.class)
-    public void testTopicPartitionParseFailsOnNullString() throws Exception {
-        KafkaUtils.parseTopicPartition(null);
-    }
-
-    @Test(expected=Exception.class)
-    public void testTopicPartitionParseFailsOnBlankString() throws Exception {
-        KafkaUtils.parseTopicPartition("   ");
-    }
-
-    @Test(expected=Exception.class)
-    public void testTopicPartitionParseFailsOnInvalidString1() throws Exception {
-        KafkaUtils.parseTopicPartition("topic");
-    }
-
-    @Test(expected=Exception.class)
-    public void testTopicPartitionParseFailsOnInvalidString2() throws Exception {
-        KafkaUtils.parseTopicPartition("topic_1");
+        Assertions.assertNotNull(partition);
+        Assertions.assertEquals("topic-189-ddd_df1", partition.topic());
+        Assertions.assertEquals(78, partition.partition());
     }
 
     @Test
-    public void testConsumerLagCalculated() throws Exception {
+    public void testTopicPartitionParseFailsOnNullString() {
+        assertThrows(Exception.class, () -> KafkaUtils.parseTopicPartition(null));
+    }
+
+    @Test
+    public void testTopicPartitionParseFailsOnBlankString() {
+        assertThrows(Exception.class, () -> KafkaUtils.parseTopicPartition("   "));
+    }
+
+    @Test
+    public void testTopicPartitionParseFailsOnInvalidString1() {
+        assertThrows(Exception.class, () -> KafkaUtils.parseTopicPartition("topic"));
+    }
+
+    @Test
+    public void testTopicPartitionParseFailsOnInvalidString2() {
+        assertThrows(Exception.class, () -> KafkaUtils.parseTopicPartition("topic_1"));
+    }
+
+    @Test
+    public void testConsumerLagCalculated() {
         long lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, false), 10);
-        Assert.assertEquals(10, lag);
+        Assertions.assertEquals(10, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, true), 15);
-        Assert.assertEquals(6, lag);
+        Assertions.assertEquals(6, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, true), 0);
-        Assert.assertEquals(11, lag);
+        Assertions.assertEquals(11, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, false), 20);
-        Assert.assertEquals(0, lag);
+        Assertions.assertEquals(0, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, true), 20);
-        Assert.assertEquals(1, lag);
+        Assertions.assertEquals(1, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10,false,10, false), 0);
-        Assert.assertEquals(0, lag);
+        Assertions.assertEquals(0, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 10, true), 0);
-        Assert.assertEquals(1, lag);
+        Assertions.assertEquals(1, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 10, true), 100);
-        Assert.assertEquals(-1, lag);
+        Assertions.assertEquals(-1, lag);
 
         lag = KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, false), 100);
-        Assert.assertEquals(-1, lag);
+        Assertions.assertEquals(-1, lag);
     }
 
-    @Test(expected=Exception.class)
-    public void testConsumerLagCalculationFailsOnIvalidInput1() throws Exception {
-        KafkaUtils.calculateConsumerLag(null, 10);
+    @Test
+    public void testConsumerLagCalculationFailsOnIvalidInput1() {
+        assertThrows(Exception.class, () -> KafkaUtils.calculateConsumerLag(null, 10));
     }
 
-    @Test(expected=Exception.class)
-    public void testConsumerLagCalculationFailsOnIvalidInput2() throws Exception {
-        KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, false), -1);
+    @Test
+    public void testConsumerLagCalculationFailsOnIvalidInput2() {
+        assertThrows(Exception.class, () -> KafkaUtils.calculateConsumerLag(OffsetRange.with(10, 20, false), -1));
     }
 
 }

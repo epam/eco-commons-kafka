@@ -21,10 +21,10 @@ import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.epam.eco.commons.kafka.OffsetRange;
 
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.spy;
  * @author Mikhail_Vershkov
  */
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class BiDirectionalTopicRecordFetcherTest {
     private final static long[] STARTING_OFFSETS = {5, 10, 10, 10, 10};
     private final static long[] REAL_POLL_BEGINNING_POSITION = {5, 4, 4, 5, 7};
@@ -93,9 +93,9 @@ public class BiDirectionalTopicRecordFetcherTest {
         RecordFetchResult<String, String> results = biDirectionalTopicRecordFetcherSpy
                 .doReverseFetchByOffsets(consumerMock.getConsumer(), offsets, LIMIT, null, TIMEOUT_MS);
 
-        Assert.assertEquals(EXPECTED_RESULT_SIZE, results.getRecords().size());
+        Assertions.assertEquals(EXPECTED_RESULT_SIZE, results.getRecords().size());
         results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
-                Assert.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS[topicPartition.partition()]).sorted().toArray(),
+                Assertions.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS[topicPartition.partition()]).sorted().toArray(),
                         partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).sorted().toArray()));
     }
 
@@ -120,9 +120,9 @@ public class BiDirectionalTopicRecordFetcherTest {
                                 consumerMock.getStartingOffsets()),
                         25, null, TIMEOUT_MS);
 
-        Assert.assertEquals(19, results.getRecords().size());
+        Assertions.assertEquals(19, results.getRecords().size());
         results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
-                Assert.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS_LESS[topicPartition.partition()]).sorted().toArray(),
+                Assertions.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS_LESS[topicPartition.partition()]).sorted().toArray(),
                         partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
     }
 
@@ -149,9 +149,9 @@ public class BiDirectionalTopicRecordFetcherTest {
                         ConfluentUtils.generateStartingOffsets(consumerMock.getTopicName(),consumerMock.getStartingOffsets()),
                         20, null, TIMEOUT_MS);
 
-        Assert.assertEquals(10, results.getRecords().size());
+        Assertions.assertEquals(10, results.getRecords().size());
         results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
-                Assert.assertArrayEquals(new long[]{121,122,123,124,125,126,127,128,129,130},
+                Assertions.assertArrayEquals(new long[]{121,122,123,124,125,126,127,128,129,130},
                         partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
     }
 }

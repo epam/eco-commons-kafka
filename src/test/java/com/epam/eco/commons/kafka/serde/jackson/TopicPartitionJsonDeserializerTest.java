@@ -16,10 +16,11 @@
 package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,7 +35,7 @@ public class TopicPartitionJsonDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper
@@ -46,7 +47,7 @@ public class TopicPartitionJsonDeserializerTest {
     }
 
     @Test
-    public void testDeserialization() throws Exception {
+    public void testDeserialization() throws JsonProcessingException {
         TopicPartition expected = new TopicPartition("topic", 2);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -54,9 +55,9 @@ public class TopicPartitionJsonDeserializerTest {
         objectNode.put(TopicPartitionFields.PARTITION, expected.partition());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         TopicPartition actual = objectMapper.readValue(json, TopicPartition.class);
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 }

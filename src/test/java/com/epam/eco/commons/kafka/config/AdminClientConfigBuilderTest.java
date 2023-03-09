@@ -21,10 +21,10 @@ import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.metrics.JmxReporter;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLoginCallbackHandler;
+import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.SslProtocol;
 
@@ -34,7 +34,7 @@ import com.epam.eco.commons.kafka.SslProtocol;
 public class AdminClientConfigBuilderTest {
 
     @Test
-    public void testConfigParsed() throws Exception {
+    public void testConfigParsed() {
         Map<String, Object> props = AdminClientConfigBuilder.withEmpty().
                 // admin
 

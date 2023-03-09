@@ -17,9 +17,10 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
@@ -30,19 +31,19 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class HeaderSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws Exception {
+    public void testSerializedToJsonAndBack() throws JsonProcessingException {
         Header origin = new RecordHeader("User", "John_Doe@acme.com".getBytes());
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         Header deserialized = mapper.readValue(
                 json,
                 Header.class);
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(deserialized, origin);
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(deserialized, origin);
     }
 
 }
