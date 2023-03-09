@@ -40,9 +40,7 @@ import static java.util.Objects.isNull;
 
 /**
  * @author Mikhail_Vershkov
- */
-
-/**
+ *
  * CachedTopicRecordFetcher class - cached implementation of a RecordFetcher,
  * Pls, use it carefully because if possible high level oof resource consumption
  * It good for a small or medium topics. If you use this implementation, pls, don't
@@ -115,40 +113,32 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
                                                               Long offset,
                                                               Long limit,
                                                               FetchDirection fetchDirection) {
-
-        PartitionRecordFetchResult<K, V> partitionRecordFetchResult;
-
         List<ConsumerRecord<K, V>> records = recordsCache.get(
                 topicPartition).getRecordsByOffsetAndLimit(offset, limit, fetchDirection);
         OffsetRange allRecordsOffsetRange = getAllRecordsOffsetRange(
                 recordsCache.get(topicPartition).getRecords());
-        partitionRecordFetchResult = new PartitionRecordFetchResult<>(topicPartition,
-                                                                      records,
-                                                                      allRecordsOffsetRange,
-                                                                      getFetchedRecordsOffsetRange(records,
-                                                                               getFetchedBound(fetchDirection, allRecordsOffsetRange)));
+        return new PartitionRecordFetchResult<>(topicPartition,
+                records,
+                allRecordsOffsetRange,
+                getFetchedRecordsOffsetRange(records,
+                        getFetchedBound(fetchDirection, allRecordsOffsetRange)));
 
-        return partitionRecordFetchResult;
     }
 
     private PartitionRecordFetchResult<K, V> buildFetchResultByTimestamp(TopicPartition topicPartition,
                                                                          Long timestamp,
                                                                          Long limit,
                                                                          FetchDirection fetchDirection) {
-        PartitionRecordFetchResult<K, V> partitionRecordFetchResult;
-
         List<ConsumerRecord<K, V>> records = recordsCache.get(topicPartition)
                                                          .getRecordsByTimestamp( timestamp, limit, fetchDirection);
 
         OffsetRange allRecordsOffsetRange = getAllRecordsOffsetRange(recordsCache.get(topicPartition).getRecords());
-        partitionRecordFetchResult = new PartitionRecordFetchResult<>(topicPartition, records,
-                                                                      allRecordsOffsetRange,
-                                                                      getFetchedRecordsOffsetRange(
-                                                                              records,
-                                                                              getFetchedBound(fetchDirection,
-                                                                                              allRecordsOffsetRange)));
-
-        return partitionRecordFetchResult;
+        return new PartitionRecordFetchResult<>(topicPartition, records,
+                allRecordsOffsetRange,
+                getFetchedRecordsOffsetRange(
+                        records,
+                        getFetchedBound(fetchDirection,
+                                allRecordsOffsetRange)));
     }
 
     private long getFetchedBound(FetchDirection direction, OffsetRange allRecordsOffsetRange) {
