@@ -3,7 +3,7 @@
 
     <groupId>com.epam.eco</groupId>
     <artifactId>commons-kafka</artifactId>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <name>Eco Commons Kafka</name>
     <url>https://github.com/epam/eco-commons-kafka</url>
