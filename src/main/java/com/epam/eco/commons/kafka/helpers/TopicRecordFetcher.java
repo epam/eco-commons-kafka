@@ -313,7 +313,6 @@ public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
                                          offsetRange.getLargest(),
                                          offsetRange.isLargestInclusive()
                         ));
-                CachedTopicOffsetRangeFetcher.putCacheValue(topicPartition, offsetRange);
             }
         });
     }
@@ -496,7 +495,7 @@ public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
     }
 
     protected Map<TopicPartition, OffsetRange> fetchOffsetRanges(Collection<TopicPartition> partitions) {
-        return CachedTopicOffsetRangeFetcher.with(consumerConfig).fetchForPartitions(partitions);
+        return TopicOffsetRangeFetcher.with(consumerConfig).fetchForPartitions(partitions);
     }
 
     protected boolean areAllCollectorsDone(Map<TopicPartition, ? extends RecordCollector> collectors) {
