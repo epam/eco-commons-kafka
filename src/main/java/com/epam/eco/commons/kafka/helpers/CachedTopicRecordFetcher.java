@@ -68,7 +68,7 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
     @Override
     public RecordFetchResult<K, V> fetchByOffsets(Map<TopicPartition, Long> offsets,
                                                   long limit,
-                                                  Predicate<ConsumerRecord<K, V>> filter,
+                                                  FilterClausePredicate<K,V> filter,
                                                   long timeoutInMs,
                                                   FetchDirection fetchDirection) {
 
@@ -91,7 +91,7 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
     @Override
     public RecordFetchResult<K, V> fetchByTimestamps(Map<TopicPartition, Long> timestamps,
                                                      long limit,
-                                                     Predicate<ConsumerRecord<K, V>> filter,
+                                                     FilterClausePredicate<K,V> filter,
                                                      long timeoutInMs,
                                                      FetchDirection direction) {
 
@@ -116,39 +116,30 @@ public class CachedTopicRecordFetcher<K, V> extends BiDirectionalTopicRecordFetc
                                                               Long limit,
                                                               FetchDirection fetchDirection) {
 
-        PartitionRecordFetchResult<K, V> partitionRecordFetchResult;
-
         List<ConsumerRecord<K, V>> records = recordsCache.get(
                 topicPartition).getRecordsByOffsetAndLimit(offset, limit, fetchDirection);
         OffsetRange allRecordsOffsetRange = getAllRecordsOffsetRange(
                 recordsCache.get(topicPartition).getRecords());
-        partitionRecordFetchResult = new PartitionRecordFetchResult<>(topicPartition,
-                                                                      records,
-                                                                      allRecordsOffsetRange,
-                                                                      getFetchedRecordsOffsetRange(records,
-                                                                               getFetchedBound(fetchDirection, allRecordsOffsetRange)));
+        return new PartitionRecordFetchResult<>(topicPartition, records,
+                                                allRecordsOffsetRange,
+                                                getFetchedRecordsOffsetRange(
+                                                        records, getFetchedBound(fetchDirection, allRecordsOffsetRange)));
 
-        return partitionRecordFetchResult;
     }
 
     private PartitionRecordFetchResult<K, V> buildFetchResultByTimestamp(TopicPartition topicPartition,
                                                                          Long timestamp,
                                                                          Long limit,
                                                                          FetchDirection fetchDirection) {
-        PartitionRecordFetchResult<K, V> partitionRecordFetchResult;
 
         List<ConsumerRecord<K, V>> records = recordsCache.get(topicPartition)
                                                          .getRecordsByTimestamp( timestamp, limit, fetchDirection);
 
         OffsetRange allRecordsOffsetRange = getAllRecordsOffsetRange(recordsCache.get(topicPartition).getRecords());
-        partitionRecordFetchResult = new PartitionRecordFetchResult<>(topicPartition, records,
-                                                                      allRecordsOffsetRange,
-                                                                      getFetchedRecordsOffsetRange(
-                                                                              records,
-                                                                              getFetchedBound(fetchDirection,
-                                                                                              allRecordsOffsetRange)));
 
-        return partitionRecordFetchResult;
+        return new PartitionRecordFetchResult<>(topicPartition, records, allRecordsOffsetRange,
+                                                getFetchedRecordsOffsetRange(
+                                                        records, getFetchedBound(fetchDirection, allRecordsOffsetRange)));
     }
 
     private long getFetchedBound(FetchDirection direction, OffsetRange allRecordsOffsetRange) {

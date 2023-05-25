@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
@@ -59,7 +59,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
     @Override
     public RecordFetchResult<K, V> fetchByOffsets(Map<TopicPartition, Long> offsets,
                                                   long limit,
-                                                  Predicate<ConsumerRecord<K, V>> filter,
+                                                  FilterClausePredicate<K, V> filter,
                                                   long timeoutInMs,
                                                   FetchDirection direction) {
         validateOffsets(offsets);
@@ -76,7 +76,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
     @Override
     public RecordFetchResult<K, V> fetchByTimestamps(Map<TopicPartition, Long> partitionTimestamps,
                                                      long limit,
-                                                     Predicate<ConsumerRecord<K, V>> filter,
+                                                     FilterClausePredicate<K, V> filter,
                                                      long timeoutInMs,
                                                      FetchDirection direction) {
         validatePartitionTimestamps(partitionTimestamps);
@@ -89,36 +89,46 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
     }
 
 
-    private RecordFetchResult<K, V> doFetchByTimestamps(KafkaConsumer<K, V> consumer, Map<TopicPartition, Long> partitionTimestamps, long limit, Predicate<ConsumerRecord<K, V>> filter, long timeoutMs, FetchDirection direction) {
+    private RecordFetchResult<K, V> doFetchByTimestamps(KafkaConsumer<K, V> consumer, Map<TopicPartition, Long> partitionTimestamps, long limit, FilterClausePredicate<K, V> filter, long timeoutMs, FetchDirection direction) {
         Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes = consumer.offsetsForTimes(partitionTimestamps);
 
-        Map<TopicPartition, Long> offsets = offsetsForTimes.entrySet().stream().filter(entry -> entry.getValue() != null).collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().offset()));
+        Map<TopicPartition, Long> offsets = offsetsForTimes.entrySet().stream().filter(
+                entry -> entry.getValue() != null).collect(
+                Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().offset()));
 
-        return direction == FetchDirection.FORWARD  ? doFetchByOffsets(consumer, offsets, limit, filter, timeoutMs) : doReverseFetchByOffsets(consumer, offsets, limit, filter, timeoutMs);
+        return direction == FetchDirection.FORWARD ?
+                         doFetchByOffsets(consumer, offsets, limit, filter, timeoutMs) :
+                         doReverseFetchByOffsets(consumer, offsets, limit, filter, timeoutMs);
     }
 
 
-
-    protected RecordFetchResult<K, V> doReverseFetchByOffsets(KafkaConsumer<K, V> consumer,
-                                                            Map<TopicPartition, Long> offsets,
-                                                            long limit,
-                                                            Predicate<ConsumerRecord<K, V>> filter,
-                                                            long timeoutMs) {
+    protected RecordFetchResult<K, V> doReverseFetchByOffsets(KafkaConsumer<K, V> consumer, Map<TopicPartition, Long> offsets, long limit, FilterClausePredicate<K, V> filter, long timeoutMs) {
         if(offsets.isEmpty()) {
             return RecordFetchResult.emptyResult();
         }
 
         Map<TopicPartition, OffsetRange> offsetRanges = fetchOffsetRanges(offsets.keySet());
 
-        offsets = filterOutUselessOffsetsReverseFetch(offsets, offsetRanges);
-        if (offsets.isEmpty()) {
+        Map<TopicPartition, Long> actualOffsets = filterActiveOffsetsReverseFetch(offsets, offsetRanges);
+        Map<TopicPartition, Long> exhaustedOffsets = offsets.keySet().stream().filter(
+                key -> ! actualOffsets.containsKey(key)).collect(Collectors.toMap(Function.identity(), offsets::get));
+        if(actualOffsets.isEmpty()) {
             return RecordFetchResult.emptyResult();
         }
 
-        offsets = checkAndCorrectBounds(offsets, offsetRanges);
+        Map<TopicPartition, BiDirectionalRecordCollector> collectors = populateCollectors(consumer, actualOffsets,
+                                                                                          limit, filter, timeoutMs,
+                                                                                          offsetRanges);
+        collectors.values().forEach(BiDirectionalRecordCollector::sortByOffsets);
 
-        Map<TopicPartition, BiDirectionalRecordCollector> collectors =
-                initBiDirectionalRecordCollectorsForPartitions(offsets.keySet(), filter, limit);
+        exhaustedOffsets.keySet().forEach(
+                topicPartition -> collectors.put(topicPartition, new BiDirectionalRecordCollector(filter, 0L)));
+        return toFetchResult(collectors, offsetRanges, OffsetRange::getSmallest);
+    }
+
+    private Map<TopicPartition, BiDirectionalRecordCollector> populateCollectors(KafkaConsumer<K, V> consumer, Map<TopicPartition, Long> offsets, long limit, FilterClausePredicate<K, V> filter, long timeoutMs, Map<TopicPartition, OffsetRange> offsetRanges) {
+        Map<TopicPartition, BiDirectionalRecordCollector> collectors = initBiDirectionalRecordCollectorsForPartitions(
+                offsets.keySet(), filter, limit);
 
         assignConsumerToPartitions(consumer, offsets);
 
@@ -144,9 +154,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
             }
 
         }
-        collectors.values().forEach(BiDirectionalRecordCollector::sortByOffsets);
-
-        return toFetchResult(collectors, offsetRanges);
+        return collectors;
     }
 
     private boolean allCurrentChunksIsEmpty(Map<TopicPartition,OffsetRange> currentChunkOffsetRanges) {
@@ -158,8 +166,8 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
         return true;
     }
 
-    protected Map<TopicPartition, Long> filterOutUselessOffsetsReverseFetch(Map<TopicPartition, Long> offsets,
-                                                                            Map<TopicPartition, OffsetRange> offsetRanges) {
+    protected Map<TopicPartition, Long> filterActiveOffsetsReverseFetch(Map<TopicPartition, Long> offsets,
+                                                                        Map<TopicPartition, OffsetRange> offsetRanges) {
         return offsets.entrySet().stream().filter(entry -> {
             OffsetRange range = offsetRanges.get(entry.getKey());
             Long offset = entry.getValue();
@@ -169,7 +177,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
 
     protected Map<TopicPartition, BiDirectionalRecordCollector> initBiDirectionalRecordCollectorsForPartitions(
                                                                     Collection<TopicPartition> partitions,
-                                                                    Predicate<ConsumerRecord<K, V>> filter,
+                                                                    FilterClausePredicate<K, V> filter,
                                                                     long limit) {
         if(partitions.isEmpty()) {
             return Collections.emptyMap();
@@ -188,13 +196,13 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
                                                 long fetchStart,
                                                 Map<TopicPartition, OffsetRange> currentChunkOffsets,
                                                 Map<TopicPartition, Long> consumedOffsets) {
+        consumedOffsets.putAll(KafkaUtils.getConsumerPositions(consumer));
         while(true) {
             ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT);
 
             if(records.count() > 0) {
 
                 collectLastLimitRecords(records, collectors, currentChunkOffsets);
-                consumedOffsets.putAll(KafkaUtils.getConsumerPositions(consumer));
 
                 if( areAllCollectorsDone(collectors) ||
                     areAllOffsetsReachedEndOfRange(consumedOffsets, currentChunkOffsets) ||
@@ -235,14 +243,14 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
             long smallestOffset = largestOffset - collectors.get(topicPartition).getLimit();
             if(smallestOffset < lowerBound) {
                 smallestOffset = lowerBound;
-                smallestOffsetInclusive=false;
+                smallestOffsetInclusive = false;
             }
 
             if(largestOffset <= offsetRanges.get(topicPartition).getSmallest()) {
                 largestOffset = offsetRanges.get(topicPartition).getSmallest();
                 largestOffsetInclusive = false;
                 smallestOffset = lowerBound;
-                smallestOffsetInclusive=false;
+                smallestOffsetInclusive = false;
             }
 
             currentChunkOffsets.put(topicPartition,
@@ -257,7 +265,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
 
     private void seekOffsetsOfCurrentChunkBeginning(KafkaConsumer<K, V> consumer,
                                                     Map<TopicPartition, OffsetRange> offsets) {
-        offsets.forEach((partition, offsetRange)-> consumer.seek(partition,offsetRange.getSmallest()));;
+        offsets.forEach((partition, offsetRange) -> consumer.seek(partition, offsetRange.getSmallest()));
     }
 
 
@@ -267,7 +275,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
         boolean anythingCollected = false;
         for(Map.Entry<TopicPartition, BiDirectionalRecordCollector> entry : collectors.entrySet()) {
             TopicPartition topicPartition = entry.getKey();
-            if(currentChunkOffsets.get(topicPartition).getSize()>0) {
+            if(currentChunkOffsets.get(topicPartition).getSize() > 0) {
                 BiDirectionalRecordCollector biDirectionalCollector = entry.getValue();
                 for(ConsumerRecord<K, V> record : reversedMessages(records.records(topicPartition))) {
                     if(record.offset() > currentChunkOffsets.get(topicPartition).getLargest() ||
@@ -286,16 +294,15 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
         return anythingCollected;
     }
 
-    protected boolean areAllOffsetsReachedEndOfRange(
-            Map<TopicPartition, Long> offsets,
-            Map<TopicPartition, OffsetRange> offsetRanges) {
+    protected boolean areAllOffsetsReachedEndOfRange(Map<TopicPartition, Long> offsets,
+                                                     Map<TopicPartition, OffsetRange> offsetRanges) {
         if(offsets.isEmpty()) {
             return false;
         }
         for (Map.Entry<TopicPartition, Long> entry : offsets.entrySet()) {
             Long offset = entry.getValue();
             OffsetRange range = offsetRanges.get(entry.getKey());
-            if (range.getSmallest()>range.getLargest() || range.contains(offset)) {
+            if (range.getSmallest() > range.getLargest() || offset > range.getSmallest()) {
                 return false;
             }
         }
@@ -314,7 +321,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
 
     class BiDirectionalRecordCollector extends RecordCollector {
 
-        public BiDirectionalRecordCollector(Predicate<ConsumerRecord<K, V>> filter, long limit) {
+        public BiDirectionalRecordCollector(FilterClausePredicate<K, V> filter, long limit) {
             super(filter, limit);
         }
         public void add(ConsumerRecord<K, V> record) {
@@ -325,7 +332,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
                 return;
             }
 
-            update(record);
+            updateScannedOffsets(record);
 
             if(passesFilter(record)) {
                 records.add(record);
@@ -337,27 +344,16 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
                     .anyMatch(testRecord -> testRecord.offset() == record.offset() &&
                             testRecord.partition() == record.partition());
         }
+
         protected void sortByOffsets() {
             records.sort(Comparator.comparingLong(ConsumerRecord::offset));
         }
 
-        private void update(ConsumerRecord<K, V> record) {
-            if(largestScannedOffset == - 1 ||
-               record.offset() > largestScannedOffset) {
+        private void updateScannedOffsets(ConsumerRecord<K, V> record) {
+            if(largestScannedOffset == - 1) {
                 largestScannedOffset = record.offset();
             }
             smallestScannedOffset = record.offset();
-        }
-        public long getSmallestScannedOffset() {
-            return records.stream().map(ConsumerRecord::offset)
-                    .min(Comparator.naturalOrder())
-                    .orElse(this.smallestScannedOffset);
-        }
-        public long getLargestScannedOffset() {
-            return records.stream().map(ConsumerRecord::offset)
-                    .max(Comparator.naturalOrder())
-                    .orElse(this.largestScannedOffset);
-
         }
 
     }

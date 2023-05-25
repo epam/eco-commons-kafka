@@ -18,6 +18,7 @@ package com.epam.eco.commons.kafka.helpers;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.LongStream;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
@@ -150,8 +151,81 @@ public class BiDirectionalTopicRecordFetcherTest {
                         20, null, TIMEOUT_MS);
 
         Assert.assertEquals(10, results.getRecords().size());
-        results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
-                Assert.assertArrayEquals(new long[]{121,122,123,124,125,126,127,128,129,130},
-                        partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
+        results.getResults().forEach((topicPartition, partitionRecordFetchResult) -> {
+                if(topicPartition.partition()==0) {
+                    Assert.assertTrue(partitionRecordFetchResult.getRecords().isEmpty());
+                } else {
+                    Assert.assertArrayEquals(
+                            new long[] {121, 122, 123, 124, 125, 126, 127, 128, 129, 130},
+                            partitionRecordFetchResult.getRecords().stream().mapToLong(
+                                    ConsumerRecord::offset).toArray());
+                }
+        });
+    }
+
+    @Test
+    public void doReverseFetchByOffsetsFilterTest() {
+
+        ConsumerMock consumerMock = ConsumerMock.builder()
+                                                .topicName(TOPIC_NAME)
+                                                .offsetRanges(new OffsetRange[]{
+                                                        new OffsetRange(100L, true, 200L, true)})
+                                                .realPollBeginningPosition(new long[]{110L})
+                                                .startingOffsets(new long[]{200L})
+                                                .build();
+
+        consumerMock.before();
+
+        doReturn(ConfluentUtils.generateOffsetRanges(consumerMock.getTopicName(),
+                                                     consumerMock.getStartingOffsets(),
+                                                     consumerMock.getOffsetRanges()))
+                .when(biDirectionalTopicRecordFetcherSpy).fetchOffsetRanges(anyCollection());
+
+        RecordFetchResult<String, String> results = biDirectionalTopicRecordFetcherSpy
+                .doReverseFetchByOffsets(consumerMock.getConsumer(),
+                                         ConfluentUtils.generateStartingOffsets(consumerMock.getTopicName(),
+                                                                                consumerMock.getStartingOffsets()),
+                                         100, consumerRecord -> consumerRecord.offset()<125, TIMEOUT_MS);
+
+        Assert.assertEquals(15, results.getRecords().size());
+        results.getResults().forEach((topicPartition, partitionRecordFetchResult) -> {
+        Assert.assertArrayEquals(LongStream.range(110, 125).toArray(),
+                                 partitionRecordFetchResult.getRecords().stream().mapToLong(
+                                    ConsumerRecord::offset).toArray());
+
+        });
+    }
+
+    @Test
+    public void doReverseFetchByOffsetsFilterInAMiddleTest() {
+
+        ConsumerMock consumerMock = ConsumerMock.builder()
+                                                .topicName(TOPIC_NAME)
+                                                .offsetRanges(new OffsetRange[]{
+                                                        new OffsetRange(100L, true, 200L, true)})
+                                                .realPollBeginningPosition(new long[]{110L})
+                                                .startingOffsets(new long[]{200L})
+                                                .build();
+
+        consumerMock.before();
+
+        doReturn(ConfluentUtils.generateOffsetRanges(consumerMock.getTopicName(),
+                                                     consumerMock.getStartingOffsets(),
+                                                     consumerMock.getOffsetRanges()))
+                .when(biDirectionalTopicRecordFetcherSpy).fetchOffsetRanges(anyCollection());
+
+        RecordFetchResult<String, String> results = biDirectionalTopicRecordFetcherSpy
+                .doReverseFetchByOffsets(consumerMock.getConsumer(),
+                                         ConfluentUtils.generateStartingOffsets(consumerMock.getTopicName(),
+                                                                                consumerMock.getStartingOffsets()),
+                                         100, consumerRecord -> consumerRecord.offset()<125 && consumerRecord.offset()>=115, TIMEOUT_MS);
+
+        Assert.assertEquals(10, results.getRecords().size());
+        results.getResults().forEach((topicPartition, partitionRecordFetchResult) -> {
+            Assert.assertArrayEquals(LongStream.range(115, 125).toArray(),
+                                     partitionRecordFetchResult.getRecords().stream().mapToLong(
+                                             ConsumerRecord::offset).toArray());
+
+        });
     }
 }

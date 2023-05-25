@@ -53,14 +53,14 @@ public class TopicRecordFetcherTest {
             {5, 6, 7, 8, 9},
             {11, 12, 13, 14, 15},
             {15, 16, 17}};
-    private final static long[][] EXPECTED_OFFSETS_LESS = {
-            {13, 14, 15},
-            {12, 13, 14, 15},
-            {5, 6, 7, 8, 9},
-            {11, 12, 13, 14, 15},
+    private final static long[][] EXPECTED_OFFSETS_FILTERED = {
+            {14, 15},
+            {14, 15},
+            {},
+            {14, 15, 16, 17},
             {15, 16, 17}};
     private final static int EXPECTED_RESULT_SIZE = 20;
-
+    private final static int EXPECTED_FILTERED_RESULT_SIZE = 11;
     private final static String TOPIC_NAME = "test-topic";
     private final static int LIMIT = 25;
     private final static long TIMEOUT_MS = 1000000L;
@@ -72,7 +72,7 @@ public class TopicRecordFetcherTest {
     private final Map<TopicPartition, Long> offsets = ConfluentUtils.generateStartingOffsets(TOPIC_NAME,STARTING_OFFSETS);
 
     @Test
-    public void doReverseFetchByOffsetsTest() {
+    public void doFetchByOffsetsTest() {
 
         ConsumerMock consumerMock = ConsumerMock.builder()
                 .topicName(TOPIC_NAME)
@@ -93,6 +93,31 @@ public class TopicRecordFetcherTest {
         results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
                 Assert.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS[topicPartition.partition()]).sorted().toArray(),
                         partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
+    }
+
+    @Test
+    public void doFetchByOffsetsWithFilterTest() {
+
+        ConsumerMock consumerMock = ConsumerMock.builder()
+                                                .topicName(TOPIC_NAME)
+                                                .offsetRanges(OFFSET_RANGES)
+                                                .realPollBeginningPosition(REAL_POLL_BEGINNING_POSITION)
+                                                .startingOffsets(STARTING_OFFSETS)
+                                                .build();
+        consumerMock.before();
+
+        doReturn(ConfluentUtils.generateOffsetRanges(consumerMock.getTopicName(),
+                                                     consumerMock.getStartingOffsets(),consumerMock.getOffsetRanges()))
+                .when(topicRecordFetcherSpy).fetchOffsetRanges(anyCollection());
+
+
+        RecordFetchResult<String, String> results = topicRecordFetcherSpy
+                .doFetchByOffsets(consumerMock.getConsumer(), offsets, LIMIT, consumerRecord -> consumerRecord.offset()>13, TIMEOUT_MS);
+        Assert.assertEquals(EXPECTED_FILTERED_RESULT_SIZE, results.getRecords().size());
+        results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
+                                             Assert.assertArrayEquals(Arrays.stream(
+                                                                              EXPECTED_OFFSETS_FILTERED[topicPartition.partition()]).sorted().toArray(),
+                                                                      partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
     }
 
 }
