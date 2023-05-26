@@ -66,7 +66,7 @@ public class ConsumerRecordJsonSerializerTest {
     }
 
     @Test
-    public void testSerialization1() throws Exception {
+    public void testSerialization1() throws IOException {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(Collections.singletonList(new RecordHeader("1", "1".getBytes())));
         ConsumerRecord<String, String> origin = new ConsumerRecord<>(
@@ -106,7 +106,7 @@ public class ConsumerRecordJsonSerializerTest {
     }
 
     @Test
-    public void testSerialization2() throws Exception {
+    public void testSerialization2() throws IOException {
         SimpleEntity simpleEntity = new SimpleEntity();
         simpleEntity.id = 420;
         simpleEntity.name = "It is time!";

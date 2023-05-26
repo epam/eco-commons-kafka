@@ -39,7 +39,7 @@ import com.epam.eco.commons.kafka.SslProtocol;
 public class ProducerConfigBuilderTest {
 
     @Test
-    public void testConfigParsed() throws Exception {
+    public void testConfigParsed() {
         Map<String, Object> props = ProducerConfigBuilder.withEmpty().
                 // producer
                 acks(Acks.ALL).

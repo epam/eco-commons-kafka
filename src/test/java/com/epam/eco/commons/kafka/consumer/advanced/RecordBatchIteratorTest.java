@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 public class RecordBatchIteratorTest {
 
     @Test
-    public void testOffsestBuiltFromCommitPosition() throws Exception {
+    public void testOffsestBuiltFromCommitPosition() {
         TopicPartition partition = new TopicPartition("topic", 0);
         List<ConsumerRecord<String, String>> partitionRecords = createTestRecords(partition, 100);
         ConsumerRecords<String, String> records =

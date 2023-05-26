@@ -40,7 +40,7 @@ import com.epam.eco.commons.kafka.SslProtocol;
 public class ConsumerConfigBuilderTest {
 
     @Test
-    public void testConfigParsed() throws Exception {
+    public void testConfigParsed() {
         Map<String, Object> props = ConsumerConfigBuilder.withEmpty().
                 // consumer
                 groupId("groupId").

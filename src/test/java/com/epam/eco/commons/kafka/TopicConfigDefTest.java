@@ -29,25 +29,25 @@ import com.epam.eco.commons.kafka.config.TopicConfigDef;
 public class TopicConfigDefTest {
 
     @Test
-    public void testKeyIsResolved() throws Exception {
+    public void testKeyIsResolved() {
         ConfigKey key = TopicConfigDef.INSTANCE.key("cleanup.policy");
         Validate.notNull(key);
     }
 
     @Test
-    public void testDocIsResolved() throws Exception {
+    public void testDocIsResolved() {
         String doc = TopicConfigDef.INSTANCE.doc("cleanup.policy");
         Validate.notNull(doc);
     }
 
     @Test
-    public void testImportanceIsResolved() throws Exception {
+    public void testImportanceIsResolved() {
         Importance importance = TopicConfigDef.INSTANCE.importance("cleanup.policy");
         Validate.notNull(importance);
     }
 
     @Test
-    public void testTypeIsResolved() throws Exception {
+    public void testTypeIsResolved() {
         Type type = TopicConfigDef.INSTANCE.type("cleanup.policy");
         Validate.notNull(type);
     }

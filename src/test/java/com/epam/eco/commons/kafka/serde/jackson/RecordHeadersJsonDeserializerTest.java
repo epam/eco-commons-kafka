@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -53,7 +54,7 @@ public class RecordHeadersJsonDeserializerTest {
     }
 
     @Test
-    public void testDeserialization() throws Exception {
+    public void testDeserialization() throws JsonProcessingException {
         String firstSample = "1";
         String secondSample = "2";
         Headers expected = new RecordHeaders(

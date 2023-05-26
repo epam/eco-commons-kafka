@@ -29,25 +29,25 @@ import com.epam.eco.commons.kafka.config.BrokerConfigDef;
 public class BrokerConfigDefTest {
 
     @Test
-    public void testKeyIsResolved() throws Exception {
+    public void testKeyIsResolved() {
         ConfigKey key = BrokerConfigDef.INSTANCE.key("zookeeper.connect");
         Validate.notNull(key);
     }
 
     @Test
-    public void testDocIsResolved() throws Exception {
+    public void testDocIsResolved() {
         String doc = BrokerConfigDef.INSTANCE.doc("zookeeper.connect");
         Validate.notNull(doc);
     }
 
     @Test
-    public void testImportanceIsResolved() throws Exception {
+    public void testImportanceIsResolved() {
         Importance importance = BrokerConfigDef.INSTANCE.importance("zookeeper.connect");
         Validate.notNull(importance);
     }
 
     @Test
-    public void testTypeIsResolved() throws Exception {
+    public void testTypeIsResolved() {
         Type type = BrokerConfigDef.INSTANCE.type("zookeeper.connect");
         Validate.notNull(type);
     }

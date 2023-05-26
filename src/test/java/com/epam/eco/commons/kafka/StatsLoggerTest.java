@@ -26,7 +26,7 @@ import com.epam.eco.commons.kafka.StatsLogger.Stats;
 public class StatsLoggerTest {
 
     @Test
-    public void testStatsResolved() throws Exception {
+    public void testStatsResolved() {
         try (StatsLogger logger = new StatsLogger()) {
             Stats stats = logger.getStats();
             Assertions.assertNotNull(stats);

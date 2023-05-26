@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -45,7 +46,7 @@ public class TopicPartitionJsonSerializerTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerialization() throws JsonProcessingException {
         TopicPartition origin = new TopicPartition("topic", 1);
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);

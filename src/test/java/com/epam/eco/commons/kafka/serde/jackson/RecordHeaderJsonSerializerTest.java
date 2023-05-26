@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.epam.eco.commons.kafka.serde.jackson;
 
+import java.io.IOException;
+
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
@@ -46,7 +48,7 @@ public class RecordHeaderJsonSerializerTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerialization() throws IOException {
         Header origin = new RecordHeader("1", "1".getBytes());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);

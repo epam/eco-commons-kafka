@@ -21,6 +21,12 @@
 
     <developers>
         <developer>
+            <name>Mikhail Vershkov</name>
+            <email>Mikhail_Vershkov@epam.com</email>
+            <organization>EPAM Systems</organization>
+            <organizationUrl>https://www.epam.com</organizationUrl>
+        </developer>
+        <developer>
             <name>Raman Babich</name>
             <email>Raman_Babich@epam.com</email>
             <organization>EPAM Systems</organization>

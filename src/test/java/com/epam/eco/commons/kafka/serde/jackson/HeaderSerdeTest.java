@@ -20,6 +20,7 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
@@ -30,7 +31,7 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class HeaderSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws Exception {
+    public void testSerializedToJsonAndBack() throws JsonProcessingException {
         Header origin = new RecordHeader("User", "John_Doe@acme.com".getBytes());
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;

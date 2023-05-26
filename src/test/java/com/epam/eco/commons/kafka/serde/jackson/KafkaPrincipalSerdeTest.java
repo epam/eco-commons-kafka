@@ -19,6 +19,7 @@ import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
@@ -29,7 +30,7 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class KafkaPrincipalSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws Exception {
+    public void testSerializedToJsonAndBack() throws JsonProcessingException {
         KafkaPrincipal origin = new KafkaPrincipal("User", "John_Doe@acme.com");
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
