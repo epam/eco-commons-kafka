@@ -16,8 +16,8 @@
 package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,13 +35,13 @@ public class KafkaPrincipalSerdeTest {
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         KafkaPrincipal deserialized = mapper.readValue(
                 json,
                 KafkaPrincipal.class);
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(deserialized, origin);
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(deserialized, origin);
     }
 
 }

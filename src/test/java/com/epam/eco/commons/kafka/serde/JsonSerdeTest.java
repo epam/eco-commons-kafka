@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrei_Tytsik
@@ -41,24 +41,26 @@ public class JsonSerdeTest {
 
         byte[] bytes = serializer.serialize(null, personOrig);
 
-        Assert.assertNotNull(bytes);
-        Assert.assertTrue(bytes.length > 0);
+        Assertions.assertNotNull(bytes);
+        Assertions.assertTrue(bytes.length > 0);
 
         Person person = deserializer.deserialize(null, bytes);
 
-        Assert.assertEquals(personOrig, person);
+        Assertions.assertEquals(personOrig, person);
     }
 
     @Test
     public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
-        Assert.assertNull(serializer.serialize(null, null));
+        Assertions.assertNull(deserializer.deserialize(null, null));
+        Assertions.assertNull(serializer.serialize(null, null));
     }
 
     @SuppressWarnings("resource")
-    @Test(expected=Exception.class)
+    @Test
     public void testFailsOnMissingTypeConfig() throws Exception {
-        new JsonDeserializer<Person>().configure(Collections.emptyMap(), true);
+        Assertions.assertThrows(Exception.class, () -> {
+            new JsonDeserializer<Person>().configure(Collections.emptyMap(), true);
+        });
     }
 
     private Person createPerson() {

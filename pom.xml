@@ -3,7 +3,7 @@
 
     <groupId>com.epam.eco</groupId>
     <artifactId>commons-kafka</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.2-SNAPSHOT</version>
 
     <name>Eco Commons Kafka</name>
     <url>https://github.com/epam/eco-commons-kafka</url>
@@ -44,27 +44,15 @@
         <connection>scm:git:git@github.com:epam/eco-commons-kafka.git</connection>
         <developerConnection>scm:git:git@github.com:epam/eco-commons-kafka.git</developerConnection>
         <url>https://github.com/epam/eco-commons-kafka</url>
-        <tag>HEAD</tag>
+        <tag>v3.0.1</tag>
     </scm>
-
-<!--    <distributionManagement>-->
-<!--        <repository>-->
-<!--            <id>artifactory</id>-->
-<!--            <url>https://artifactory.epam.com/artifactory/EPM-ECO/</url>-->
-<!--        </repository>-->
-<!--    </distributionManagement>-->
 
     <repositories>
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
         </repository>
-<!--        <repository>-->
-<!--            <id>artifactory</id>-->
-<!--            <url>https://artifactory.epam.com/artifactory/EPM-ECO/</url>-->
-<!--        </repository>-->
     </repositories>
-
 
     <distributionManagement>
         <snapshotRepository>
@@ -79,15 +67,16 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         
-        <eco-commons.version>0.1.1</eco-commons.version>
+        <eco-commons.version>1.0.0</eco-commons.version>
         <kafka.version>3.0.1</kafka.version>
-        <commons-lang3.version>3.4</commons-lang3.version>
+        <commons-lang3.version>3.9</commons-lang3.version>
         <commons-codec.version>1.9</commons-codec.version>
         <jackson.version>2.13.2</jackson.version>
-        <jackson-databind.version>2.13.4.1</jackson-databind.version>
-        <slf4j.version>1.7.6</slf4j.version>
+        <jackson-databind.version>2.13.4.2</jackson-databind.version>
+        <slf4j.version>1.7.32</slf4j.version>
+
 
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <maven-compiler-plugin.version>3.9.0</maven-compiler-plugin.version>
@@ -97,13 +86,13 @@
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.3</nexus-staging-maven-plugin.version>
         <maven-pmd-plugin.version>3.11.0</maven-pmd-plugin.version>
-        <spotbugs-maven-plugin.version>4.6.0.0</spotbugs-maven-plugin.version>
+        <spotbugs-maven-plugin.version>4.7.3.0</spotbugs-maven-plugin.version>
         <findsecbugs-plugin.version>1.11.0</findsecbugs-plugin.version>
         <fb-contrib.version>7.4.3.sb</fb-contrib.version>
+        <surefire.version>3.0.0-M9</surefire.version>
 
-        <junit.version>4.13.1</junit.version>
-        <mockito.version>2.23.4</mockito.version>
-        <awaitility.version>3.0.0</awaitility.version>
+        <junit5.version>5.7.2</junit5.version>
+        <mockito.version>4.11.0</mockito.version>
     </properties>
 
     <dependencies>
@@ -154,9 +143,9 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -166,10 +155,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-            <version>${awaitility.version}</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
+            <version>${mockito.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -209,6 +198,16 @@
                 <configuration>
                     <downloadSources>true</downloadSources>
                     <downloadJavadocs>true</downloadJavadocs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
                 </configuration>
             </plugin>
             <plugin>

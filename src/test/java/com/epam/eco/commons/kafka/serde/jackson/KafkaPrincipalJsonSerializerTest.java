@@ -16,9 +16,9 @@
 package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,7 @@ public class KafkaPrincipalJsonSerializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -49,12 +49,12 @@ public class KafkaPrincipalJsonSerializerTest {
         KafkaPrincipal origin = new KafkaPrincipal("User", "Raman_Babich@epam.com");
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals(2, jsonNode.size());
-        Assert.assertEquals(origin.getPrincipalType(), jsonNode.get(KafkaPrincipalFields.PRINCIPAL_TYPE).textValue());
-        Assert.assertEquals(origin.getName(), jsonNode.get(KafkaPrincipalFields.NAME).textValue());
+        Assertions.assertEquals(2, jsonNode.size());
+        Assertions.assertEquals(origin.getPrincipalType(), jsonNode.get(KafkaPrincipalFields.PRINCIPAL_TYPE).textValue());
+        Assertions.assertEquals(origin.getName(), jsonNode.get(KafkaPrincipalFields.NAME).textValue());
     }
 
 }

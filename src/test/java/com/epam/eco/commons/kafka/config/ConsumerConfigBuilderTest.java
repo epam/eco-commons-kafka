@@ -29,7 +29,7 @@ import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLogin
 import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.OffsetReset;
 import com.epam.eco.commons.kafka.SslProtocol;

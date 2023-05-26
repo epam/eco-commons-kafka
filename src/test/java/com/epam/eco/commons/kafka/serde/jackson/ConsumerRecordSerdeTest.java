@@ -24,8 +24,8 @@ import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,22 +58,22 @@ public class ConsumerRecordSerdeTest {
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> deserialized = mapper.readValue(
                 json,
                 new TypeReference<ConsumerRecord<String, String>>(){});
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(origin.topic(), deserialized.topic());
-        Assert.assertEquals(origin.partition(), deserialized.partition());
-        Assert.assertEquals(origin.timestampType(), deserialized.timestampType());
-        Assert.assertEquals(origin.timestamp(), deserialized.timestamp());
-        Assert.assertEquals(origin.serializedKeySize(), deserialized.serializedKeySize());
-        Assert.assertEquals(origin.serializedValueSize(), deserialized.serializedValueSize());
-        Assert.assertEquals(origin.offset(), deserialized.offset());
-        Assert.assertEquals(origin.headers(), deserialized.headers());
-        Assert.assertEquals(origin.key(), deserialized.key());
-        Assert.assertEquals(origin.value(), deserialized.value());
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(origin.topic(), deserialized.topic());
+        Assertions.assertEquals(origin.partition(), deserialized.partition());
+        Assertions.assertEquals(origin.timestampType(), deserialized.timestampType());
+        Assertions.assertEquals(origin.timestamp(), deserialized.timestamp());
+        Assertions.assertEquals(origin.serializedKeySize(), deserialized.serializedKeySize());
+        Assertions.assertEquals(origin.serializedValueSize(), deserialized.serializedValueSize());
+        Assertions.assertEquals(origin.offset(), deserialized.offset());
+        Assertions.assertEquals(origin.headers(), deserialized.headers());
+        Assertions.assertEquals(origin.key(), deserialized.key());
+        Assertions.assertEquals(origin.value(), deserialized.value());
     }
 
 }

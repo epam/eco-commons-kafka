@@ -24,7 +24,7 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.security.authenticator.DefaultLogin;
 import org.apache.kafka.common.security.authenticator.AbstractLogin.DefaultLoginCallbackHandler;
 import org.apache.kafka.common.security.kerberos.KerberosClientCallbackHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.SslProtocol;
 

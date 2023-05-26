@@ -27,9 +27,9 @@ import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +47,7 @@ public class ConsumerRecordJsonDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -112,13 +112,13 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
                 new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertNotNull(actual);
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+        Assertions.assertNotNull(actual);
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @Test
@@ -156,13 +156,13 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
                 new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertNotNull(actual);
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+        Assertions.assertNotNull(actual);
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @SuppressWarnings("rawtypes")
@@ -201,12 +201,12 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord actual = objectMapper.readValue(
                 json,
                 ConsumerRecord.class);
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @Test
@@ -244,12 +244,12 @@ public class ConsumerRecordJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, header.value());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
                 new TypeReference<ConsumerRecord<String, String>>() {});
-        Assert.assertTrue(consumerRecordEquals(expected, actual));
+        Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
 }

@@ -19,8 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrei_Tytsik
@@ -41,25 +41,25 @@ public class GenericJsonDeserializerTest {
 
         Map<String, Object> json = deserializer.deserialize(null, bytes);
 
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
-        Assert.assertTrue(json.containsKey("a"));
-        Assert.assertEquals("a", json.get("a"));
+        Assertions.assertTrue(json.containsKey("a"));
+        Assertions.assertEquals("a", json.get("a"));
 
-        Assert.assertTrue(json.containsKey("b"));
-        Assert.assertEquals(10, json.get("b"));
+        Assertions.assertTrue(json.containsKey("b"));
+        Assertions.assertEquals(10, json.get("b"));
 
-        Assert.assertTrue(json.containsKey("c"));
+        Assertions.assertTrue(json.containsKey("c"));
         Object jsonC = json.get("c");
-        Assert.assertNotNull(jsonC);
-        Assert.assertTrue(jsonC instanceof Map);
-        Assert.assertTrue(((Map<String, Object>)jsonC).containsKey("d"));
-        Assert.assertEquals(1.0, ((Map<String, Object>)jsonC).get("d"));
+        Assertions.assertNotNull(jsonC);
+        Assertions.assertTrue(jsonC instanceof Map);
+        Assertions.assertTrue(((Map<String, Object>)jsonC).containsKey("d"));
+        Assertions.assertEquals(1.0, ((Map<String, Object>)jsonC).get("d"));
     }
 
     @Test
     public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
+        Assertions.assertNull(deserializer.deserialize(null, null));
     }
 
 }

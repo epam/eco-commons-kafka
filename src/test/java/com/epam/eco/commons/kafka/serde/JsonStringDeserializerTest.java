@@ -18,8 +18,8 @@ package com.epam.eco.commons.kafka.serde;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrei_Tytsik
@@ -36,19 +36,19 @@ public class JsonStringDeserializerTest {
 
         String json = deserializer.deserialize(null, bytes);
 
-        Assert.assertEquals(jsonOrig, json);
+        Assertions.assertEquals(jsonOrig, json);
     }
 
     @Test
     public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
+        Assertions.assertNull(deserializer.deserialize(null, null));
     }
 
     @SuppressWarnings("resource")
-    @Test(expected=Exception.class)
+    @Test
     public void testFailsOnInvalidPrettyConfig() throws Exception {
-        new JsonStringDeserializer().configure(
-                Collections.singletonMap(JsonStringDeserializer.PRETTY, new Object()), true);
+        Assertions.assertThrows(Exception.class, () -> new JsonStringDeserializer().configure(
+                Collections.singletonMap(JsonStringDeserializer.PRETTY, new Object()), true));
     }
 
 }

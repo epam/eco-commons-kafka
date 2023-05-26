@@ -16,9 +16,9 @@
 package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,7 @@ public class TopicPartitionJsonSerializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -49,11 +49,11 @@ public class TopicPartitionJsonSerializerTest {
         TopicPartition origin = new TopicPartition("topic", 1);
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertEquals(2, jsonNode.size());
-        Assert.assertEquals(origin.topic(), jsonNode.get(TopicPartitionFields.TOPIC).textValue());
-        Assert.assertEquals(origin.partition(), jsonNode.get(TopicPartitionFields.PARTITION).intValue());
+        Assertions.assertEquals(2, jsonNode.size());
+        Assertions.assertEquals(origin.topic(), jsonNode.get(TopicPartitionFields.TOPIC).textValue());
+        Assertions.assertEquals(origin.partition(), jsonNode.get(TopicPartitionFields.PARTITION).intValue());
     }
 }

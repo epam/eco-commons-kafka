@@ -21,9 +21,9 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -39,7 +39,7 @@ public class RecordHeadersJsonDeserializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -70,10 +70,10 @@ public class RecordHeadersJsonDeserializerTest {
                 .put(RecordHeaderFields.VALUE, secondSample.getBytes());
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(arrayNode);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         Headers actual = objectMapper.readValue(json, Headers.class);
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(expected, actual);
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(expected, actual);
     }
 }

@@ -17,8 +17,8 @@ package com.epam.eco.commons.kafka.serde;
 
 import java.math.BigInteger;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrei_Tytsik
@@ -33,12 +33,12 @@ public class HexStringDeserializerTest {
 
         String hex = deserializer.deserialize(null, bytes);
 
-        Assert.assertEquals("00ffff", hex);
+        Assertions.assertEquals("00ffff", hex);
     }
 
     @Test
     public void testNullInputGivesNullOutput() throws Exception {
-        Assert.assertNull(deserializer.deserialize(null, null));
+        Assertions.assertNull(deserializer.deserialize(null, null));
     }
 
 }

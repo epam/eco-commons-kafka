@@ -17,9 +17,9 @@ package com.epam.eco.commons.kafka.serde.jackson;
 
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +35,7 @@ public class RecordHeadersJsonSerializerTest {
 
     private static ObjectMapper objectMapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
@@ -50,11 +50,11 @@ public class RecordHeadersJsonSerializerTest {
         Headers origin = new RecordHeaders();
 
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         JsonNode jsonNode = objectMapper.readTree(json);
-        Assert.assertTrue(jsonNode.isArray());
-        Assert.assertEquals(0, jsonNode.size());
+        Assertions.assertTrue(jsonNode.isArray());
+        Assertions.assertEquals(0, jsonNode.size());
     }
 
 }

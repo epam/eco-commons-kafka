@@ -22,8 +22,8 @@ import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,14 +43,14 @@ public class RecordFetchResultTest {
                 result(createTestPerPartitionResult("topic", 0, 0)).
                 build();
 
-        Assert.assertNotNull(result);
-        Assert.assertNotNull(result.getPartitions());
-        Assert.assertEquals(1, result.getPartitions().size());
-        Assert.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(0)));
-        Assert.assertEquals(1, result.getPerPartitionResults().size());
-        Assert.assertNotNull(result.getRecords());
-        Assert.assertEquals(0, result.count());
-        Assert.assertTrue(result.isEmpty());
+        Assertions.assertNotNull(result);
+        Assertions.assertNotNull(result.getPartitions());
+        Assertions.assertEquals(1, result.getPartitions().size());
+        Assertions.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(0)));
+        Assertions.assertEquals(1, result.getPerPartitionResults().size());
+        Assertions.assertNotNull(result.getRecords());
+        Assertions.assertEquals(0, result.count());
+        Assertions.assertTrue(result.isEmpty());
     }
 
     @Test
@@ -62,59 +62,63 @@ public class RecordFetchResultTest {
                 result(createTestPerPartitionResult("topic3", 2, 10)).
                 build();
 
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
 
-        Assert.assertNotNull(result.getPartitions());
-        Assert.assertEquals(3, result.getPartitions().size());
+        Assertions.assertNotNull(result.getPartitions());
+        Assertions.assertEquals(3, result.getPartitions().size());
 
-        Assert.assertEquals(3, result.getPerPartitionResults().size());
-        Assert.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(0)));
-        Assert.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(1)));
-        Assert.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(2)));
+        Assertions.assertEquals(3, result.getPerPartitionResults().size());
+        Assertions.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(0)));
+        Assertions.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(1)));
+        Assertions.assertNotNull(result.getPerPartitionResult(result.getPartitions().get(2)));
 
-        Assert.assertNotNull(result.getRecords());
-        Assert.assertEquals(30, result.getRecords().size());
+        Assertions.assertNotNull(result.getRecords());
+        Assertions.assertEquals(30, result.getRecords().size());
 
-        Assert.assertNotNull(result.getRecords("topic1"));
-        Assert.assertEquals(10, result.getRecords("topic1").size());
-        Assert.assertEquals(10, result.getRecords(result.getPartitions().get(0)).size());
+        Assertions.assertNotNull(result.getRecords("topic1"));
+        Assertions.assertEquals(10, result.getRecords("topic1").size());
+        Assertions.assertEquals(10, result.getRecords(result.getPartitions().get(0)).size());
 
-        Assert.assertNotNull(result.getRecords("topic2"));
-        Assert.assertEquals(10, result.getRecords("topic2").size());
-        Assert.assertEquals(10, result.getRecords(result.getPartitions().get(1)).size());
+        Assertions.assertNotNull(result.getRecords("topic2"));
+        Assertions.assertEquals(10, result.getRecords("topic2").size());
+        Assertions.assertEquals(10, result.getRecords(result.getPartitions().get(1)).size());
 
-        Assert.assertNotNull(result.getRecords("topic3"));
-        Assert.assertEquals(10, result.getRecords("topic3").size());
-        Assert.assertEquals(10, result.getRecords(result.getPartitions().get(2)).size());
+        Assertions.assertNotNull(result.getRecords("topic3"));
+        Assertions.assertEquals(10, result.getRecords("topic3").size());
+        Assertions.assertEquals(10, result.getRecords(result.getPartitions().get(2)).size());
 
-        Assert.assertEquals(30, result.count());
-        Assert.assertFalse(result.isEmpty());
+        Assertions.assertEquals(30, result.count());
+        Assertions.assertFalse(result.isEmpty());
 
         for (ConsumerRecord<String, String> record : result) {
-            Assert.assertNotNull(record);
+            Assertions.assertNotNull(record);
         }
         for (ConsumerRecord<String, String> record : result.getRecords()) {
-            Assert.assertNotNull(record);
+            Assertions.assertNotNull(record);
         }
     }
 
-    @Test(expected=Exception.class)
+    @Test
     public void testCreationFailsOnNullResultCollection() throws Exception {
-        new RecordFetchResult<>(null);
+        Assertions.assertThrows(Exception.class, () -> new RecordFetchResult<>(null));
     }
 
-    @Test(expected=Exception.class)
+    @Test
     public void testCreationFailsOnInvalidResultCollection1() throws Exception {
-        Map<TopicPartition, PartitionRecordFetchResult<String, String>> results = new HashMap<>();
-        results.put(null, createTestPerPartitionResult("topic", 0, 0));
-        new RecordFetchResult<>(results);
+        Assertions.assertThrows(Exception.class, () -> {
+            Map<TopicPartition, PartitionRecordFetchResult<String, String>> results = new HashMap<>();
+            results.put(null, createTestPerPartitionResult("topic", 0, 0));
+            new RecordFetchResult<>(results);
+        });
     }
 
-    @Test(expected=Exception.class)
+    @Test
     public void testCreationFailsOnInvalidResultCollection2() throws Exception {
-        Map<TopicPartition, PartitionRecordFetchResult<String, String>> results = new HashMap<>();
-        results.put(new TopicPartition("topic", 0), null);
-        new RecordFetchResult<>(results);
+        Assertions.assertThrows(Exception.class, () -> {
+            Map<TopicPartition, PartitionRecordFetchResult<String, String>> results = new HashMap<>();
+            results.put(new TopicPartition("topic", 0), null);
+            new RecordFetchResult<>(results);
+        });
     }
 
     @Test
@@ -127,13 +131,13 @@ public class RecordFetchResultTest {
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
 
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(origin);
-        Assert.assertNotNull(json);
+        Assertions.assertNotNull(json);
 
         RecordFetchResult<String, String> deserialized = mapper.readValue(
                 json,
                 new TypeReference<RecordFetchResult<String, String>>(){});
-        Assert.assertNotNull(deserialized);
-        Assert.assertEquals(deserialized, origin);
+        Assertions.assertNotNull(deserialized);
+        Assertions.assertEquals(deserialized, origin);
     }
 
     @SuppressWarnings("unused")

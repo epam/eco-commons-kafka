@@ -23,8 +23,8 @@ import java.util.Random;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrei_Tytsik
@@ -48,17 +48,17 @@ public class RecordBatchIteratorTest {
             }
         }
 
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 partitionRecords.indexOf(recordToCommitAfter) + 1,
                 iterator.countRecordsToCommit());
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 Collections.singletonMap(partition, recordToCommitAfter.offset() + 1),
                 iterator.buildOffsetsToCommit());
 
         iterator.resetCommitPosition();
 
-        Assert.assertEquals(0, iterator.countRecordsToCommit());
-        Assert.assertEquals(Collections.emptyMap(), iterator.buildOffsetsToCommit());
+        Assertions.assertEquals(0, iterator.countRecordsToCommit());
+        Assertions.assertEquals(Collections.emptyMap(), iterator.buildOffsetsToCommit());
     }
 
     private List<ConsumerRecord<String, String>> createTestRecords(

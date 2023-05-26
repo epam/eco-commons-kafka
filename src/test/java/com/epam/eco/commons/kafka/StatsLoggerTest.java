@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.epam.eco.commons.kafka;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.StatsLogger.Stats;
 
@@ -29,41 +29,41 @@ public class StatsLoggerTest {
     public void testStatsResolved() throws Exception {
         try (StatsLogger logger = new StatsLogger()) {
             Stats stats = logger.getStats();
-            Assert.assertNotNull(stats);
-            Assert.assertEquals(0, stats.getSuccessfulCount());
-            Assert.assertEquals(0, stats.getFailedCount());
-            Assert.assertEquals(0, stats.getTotalCount());
-            Assert.assertEquals(0, stats.getSuccessRate());
+            Assertions.assertNotNull(stats);
+            Assertions.assertEquals(0, stats.getSuccessfulCount());
+            Assertions.assertEquals(0, stats.getFailedCount());
+            Assertions.assertEquals(0, stats.getTotalCount());
+            Assertions.assertEquals(0, stats.getSuccessRate());
 
             logger.report(50, 0);
             stats = logger.getStats();
-            Assert.assertNotNull(stats);
-            Assert.assertEquals(50, stats.getSuccessfulCount());
-            Assert.assertEquals(0, stats.getFailedCount());
-            Assert.assertEquals(50, stats.getTotalCount());
-            Assert.assertEquals(100, stats.getSuccessRate());
+            Assertions.assertNotNull(stats);
+            Assertions.assertEquals(50, stats.getSuccessfulCount());
+            Assertions.assertEquals(0, stats.getFailedCount());
+            Assertions.assertEquals(50, stats.getTotalCount());
+            Assertions.assertEquals(100, stats.getSuccessRate());
 
             logger.report(0, 50);
             stats = logger.getStats();
-            Assert.assertNotNull(stats);
-            Assert.assertEquals(50, stats.getSuccessfulCount());
-            Assert.assertEquals(50, stats.getFailedCount());
-            Assert.assertEquals(100, stats.getTotalCount());
-            Assert.assertEquals(50, stats.getSuccessRate());
+            Assertions.assertNotNull(stats);
+            Assertions.assertEquals(50, stats.getSuccessfulCount());
+            Assertions.assertEquals(50, stats.getFailedCount());
+            Assertions.assertEquals(100, stats.getTotalCount());
+            Assertions.assertEquals(50, stats.getSuccessRate());
 
             logger.incSuccessful();
             stats = logger.getStats();
-            Assert.assertNotNull(stats);
-            Assert.assertEquals(51, stats.getSuccessfulCount());
-            Assert.assertEquals(50, stats.getFailedCount());
-            Assert.assertEquals(101, stats.getTotalCount());
+            Assertions.assertNotNull(stats);
+            Assertions.assertEquals(51, stats.getSuccessfulCount());
+            Assertions.assertEquals(50, stats.getFailedCount());
+            Assertions.assertEquals(101, stats.getTotalCount());
 
             logger.incFailed();
             stats = logger.getStats();
-            Assert.assertNotNull(stats);
-            Assert.assertEquals(51, stats.getSuccessfulCount());
-            Assert.assertEquals(51, stats.getFailedCount());
-            Assert.assertEquals(102, stats.getTotalCount());
+            Assertions.assertNotNull(stats);
+            Assertions.assertEquals(51, stats.getSuccessfulCount());
+            Assertions.assertEquals(51, stats.getFailedCount());
+            Assertions.assertEquals(102, stats.getTotalCount());
         }
     }
 

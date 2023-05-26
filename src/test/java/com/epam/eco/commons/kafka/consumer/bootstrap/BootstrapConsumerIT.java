@@ -18,7 +18,7 @@ package com.epam.eco.commons.kafka.consumer.bootstrap;
 import java.util.List;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,7 @@ public class BootstrapConsumerIT {
                         build();
 
         List<ConsumerRecord<byte[], byte[]>> result = consumer.fetch();
-        Assert.assertFalse(result.isEmpty());
+        Assertions.assertFalse(result.isEmpty());
 
         consumer.close();
     }

@@ -23,9 +23,9 @@ import java.util.stream.IntStream;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Mikhail_Vershkov
@@ -42,7 +42,7 @@ public class CachedTopicRecordFetcherTest {
     private final RecordBiDirectionalFetcher<String,String> cachedTopicRecordFetcher =
             CachedTopicRecordFetcher.with(new HashMap<>());
 
-    @Before
+    @BeforeEach
     public void before() {
         populateCache();
     }
@@ -53,15 +53,15 @@ public class CachedTopicRecordFetcherTest {
         RecordFetchResult<String, String> result = cachedTopicRecordFetcher.fetchByOffsets(
                 offsets, LIMIT,null, 100L,
                 BiDirectionalTopicRecordFetcher.FetchDirection.FORWARD);
-        Assert.assertEquals(LIMIT,result.count());
+        Assertions.assertEquals(LIMIT,result.count());
         offsets.forEach((key, value) -> {
-            Assert.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getSmallest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getSmallest(),
                     value + 1);
-            Assert.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getLargest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getLargest(),
                     value + LIMIT/RECORDS_IN_PARTITION);
-            Assert.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getSmallest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getSmallest(),
                     key.partition()*RECORDS_IN_PARTITION);
-            Assert.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getLargest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getLargest(),
                     (long) (key.partition() + 1) *RECORDS_IN_PARTITION-1);
         });
     }
@@ -72,14 +72,14 @@ public class CachedTopicRecordFetcherTest {
         RecordFetchResult<String, String> result = cachedTopicRecordFetcher.fetchByOffsets(
                 offsets, LIMIT,null, 100L,
                 BiDirectionalTopicRecordFetcher.FetchDirection.BACKWARD);
-        Assert.assertEquals(LIMIT,result.count());
+        Assertions.assertEquals(LIMIT,result.count());
         offsets.forEach((key, value) -> {
-            Assert.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getSmallest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getSmallest(),
                     value - LIMIT/RECORDS_IN_PARTITION);
-            Assert.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getLargest(), value - 1 );
-            Assert.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getSmallest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getLargest(), value - 1 );
+            Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getSmallest(),
                     key.partition()*RECORDS_IN_PARTITION);
-            Assert.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getLargest(),
+            Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getLargest(),
                     (long) (key.partition() + 1) *RECORDS_IN_PARTITION-1);
         });
     }

@@ -21,10 +21,12 @@ import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.epam.eco.commons.kafka.OffsetRange;
 
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.spy;
  * @author Mikhail_Vershkov
  */
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TopicRecordFetcherTest {
     private final static long[] STARTING_OFFSETS = {13, 12, 5, 11, 15};
     private final static long[] REAL_POLL_BEGINNING_POSITION = {13, 12, 5, 11, 15};
@@ -89,9 +91,9 @@ public class TopicRecordFetcherTest {
 
         RecordFetchResult<String, String> results = topicRecordFetcherSpy
                 .doFetchByOffsets(consumerMock.getConsumer(), offsets, LIMIT, null, TIMEOUT_MS);
-        Assert.assertEquals(EXPECTED_RESULT_SIZE, results.getRecords().size());
+        Assertions.assertEquals(EXPECTED_RESULT_SIZE, results.getRecords().size());
         results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
-                Assert.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS[topicPartition.partition()]).sorted().toArray(),
+                Assertions.assertArrayEquals(Arrays.stream(EXPECTED_OFFSETS[topicPartition.partition()]).sorted().toArray(),
                         partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
     }
 
@@ -113,9 +115,9 @@ public class TopicRecordFetcherTest {
 
         RecordFetchResult<String, String> results = topicRecordFetcherSpy
                 .doFetchByOffsets(consumerMock.getConsumer(), offsets, LIMIT, consumerRecord -> consumerRecord.offset()>13, TIMEOUT_MS);
-        Assert.assertEquals(EXPECTED_FILTERED_RESULT_SIZE, results.getRecords().size());
+        Assertions.assertEquals(EXPECTED_FILTERED_RESULT_SIZE, results.getRecords().size());
         results.getResults().forEach((topicPartition, partitionRecordFetchResult) ->
-                                             Assert.assertArrayEquals(Arrays.stream(
+                                             Assertions.assertArrayEquals(Arrays.stream(
                                                                               EXPECTED_OFFSETS_FILTERED[topicPartition.partition()]).sorted().toArray(),
                                                                       partitionRecordFetchResult.getRecords().stream().mapToLong(ConsumerRecord::offset).toArray()));
     }
