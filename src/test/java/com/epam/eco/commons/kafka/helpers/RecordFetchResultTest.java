@@ -25,14 +25,11 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.OffsetRange;
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrei_Tytsik
@@ -40,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class RecordFetchResultTest {
 
     @Test
-    public void testEmptyResultHasExpectedValues() {
+    public void testEmptyResultHasExpectedValues() throws Exception {
         RecordFetchResult<String, String> result =
                 RecordFetchResult.<String, String>builder().
                 result(createTestPerPartitionResult("topic", 0, 0)).
@@ -57,7 +54,7 @@ public class RecordFetchResultTest {
     }
 
     @Test
-    public void testNonEmptyResultHasExpectedValuesAndIsIterable() {
+    public void testNonEmptyResultHasExpectedValuesAndIsIterable() throws Exception {
         RecordFetchResult<String, String> result =
                 RecordFetchResult.<String, String>builder().
                 result(createTestPerPartitionResult("topic1", 0, 10)).
@@ -102,13 +99,13 @@ public class RecordFetchResultTest {
     }
 
     @Test
-    public void testCreationFailsOnNullResultCollection() {
-        assertThrows(Exception.class, () -> new RecordFetchResult<>(null));
+    public void testCreationFailsOnNullResultCollection() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> new RecordFetchResult<>(null));
     }
 
     @Test
-    public void testCreationFailsOnInvalidResultCollection1() {
-        assertThrows(Exception.class, () -> {
+    public void testCreationFailsOnInvalidResultCollection1() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
             Map<TopicPartition, PartitionRecordFetchResult<String, String>> results = new HashMap<>();
             results.put(null, createTestPerPartitionResult("topic", 0, 0));
             new RecordFetchResult<>(results);
@@ -116,8 +113,8 @@ public class RecordFetchResultTest {
     }
 
     @Test
-    public void testCreationFailsOnInvalidResultCollection2() {
-        assertThrows(Exception.class, () -> {
+    public void testCreationFailsOnInvalidResultCollection2() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
             Map<TopicPartition, PartitionRecordFetchResult<String, String>> results = new HashMap<>();
             results.put(new TopicPartition("topic", 0), null);
             new RecordFetchResult<>(results);
@@ -125,7 +122,7 @@ public class RecordFetchResultTest {
     }
 
     @Test
-    public void testSerializedToJsonAndBack() throws JsonProcessingException {
+    public void testSerializedToJsonAndBack() throws Exception {
         RecordFetchResult<String, String> origin =
                 RecordFetchResult.<String, String>builder().
                         result(createTestPerPartitionResult("topic", 0, 0)).
@@ -138,7 +135,7 @@ public class RecordFetchResultTest {
 
         RecordFetchResult<String, String> deserialized = mapper.readValue(
                 json,
-                new TypeReference<>(){});
+                new TypeReference<RecordFetchResult<String, String>>(){});
         Assertions.assertNotNull(deserialized);
         Assertions.assertEquals(deserialized, origin);
     }

@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -40,7 +39,7 @@ public class TopicPartitionKeyDeserializerTest {
     private static ObjectMapper objectMapper;
 
     @BeforeAll
-    public static void setUp() {
+    public static void setUp() throws Exception {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
@@ -50,7 +49,7 @@ public class TopicPartitionKeyDeserializerTest {
     }
 
     @Test
-    public void testKeyDeserialization() throws JsonProcessingException {
+    public void testKeyDeserialization() throws Exception {
         String partition0 = "topic-0";
         String partition1 = "topic-1";
         String partition2 = "topic-2";
@@ -69,7 +68,7 @@ public class TopicPartitionKeyDeserializerTest {
 
         Map<TopicPartition, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<>(){});
+                new TypeReference<Map<TopicPartition, String>>(){});
         Assertions.assertEquals(expected, actual);
     }
 }

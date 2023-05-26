@@ -27,14 +27,14 @@ import org.junit.jupiter.api.Test;
  */
 public class GenericJsonDeserializerTest {
 
-    private final GenericJsonDeserializer deserializer = new GenericJsonDeserializer();
+    private GenericJsonDeserializer deserializer = new GenericJsonDeserializer();
     {
         deserializer.configure(Collections.emptyMap(), true);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testGenericJsonIsDeserialized() {
+    public void testGenericJsonIsDeserialized() throws Exception {
         String jsonOrig = "{\"a\":\"a\",\"b\":10,\"c\":{\"d\":1.0}}";
 
         byte[] bytes = jsonOrig.getBytes(StandardCharsets.UTF_8);
@@ -58,7 +58,7 @@ public class GenericJsonDeserializerTest {
     }
 
     @Test
-    public void testNullInputGivesNullOutput() {
+    public void testNullInputGivesNullOutput() throws Exception {
         Assertions.assertNull(deserializer.deserialize(null, null));
     }
 

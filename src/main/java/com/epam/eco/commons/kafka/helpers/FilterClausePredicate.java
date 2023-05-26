@@ -15,27 +15,13 @@
  *******************************************************************************/
 package com.epam.eco.commons.kafka.helpers;
 
-import java.util.Map;
 import java.util.function.Predicate;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.TopicPartition;
 
-import com.epam.eco.commons.kafka.helpers.BiDirectionalTopicRecordFetcher.FetchDirection;
+/**
+ * @author Mikhail_Vershkov
+ */
 
-public interface RecordBiDirectionalFetcher<K,V> {
-    RecordFetchResult<K, V> fetchByOffsets(
-            Map<TopicPartition, Long> offsets,
-            long limit,
-            FilterClausePredicate<K,V> filter,
-            long timeoutInMs,
-            FetchDirection direction );
-
-    RecordFetchResult<K, V> fetchByTimestamps(
-            Map<TopicPartition, Long> timestamps,
-            long limit,
-            FilterClausePredicate<K,V> filter,
-            long timeoutInMs,
-            FetchDirection direction );
-
+public interface FilterClausePredicate<K,V> extends Predicate<ConsumerRecord<K,V>> {
 }

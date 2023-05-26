@@ -26,10 +26,10 @@ import org.junit.jupiter.api.Test;
 public class AbstractConfigDefTest {
 
     @Test
-    public void testDefaultValueResolved() {
+    public void testDefaultValueResolved() throws Exception {
         AbstractConfigDef configDef = BrokerConfigDef.INSTANCE;
 
-        Assertions.assertNull(configDef.defaultValue("inter.broker.listener.name"));
+        Assertions.assertEquals(null, configDef.defaultValue("inter.broker.listener.name"));
         Assertions.assertEquals("null", configDef.defaultValueAsString("inter.broker.listener.name"));
 
         Assertions.assertEquals(true, configDef.defaultValue("auto.leader.rebalance.enable"));
@@ -43,7 +43,7 @@ public class AbstractConfigDefTest {
     }
 
     @Test
-    public void testDefaultValueCompared() {
+    public void testDefaultValueCompared() throws Exception {
         AbstractConfigDef configDef = BrokerConfigDef.INSTANCE;
 
         Assertions.assertTrue(configDef.isDefaultValue("inter.broker.listener.name", null));

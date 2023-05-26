@@ -23,22 +23,20 @@ import java.util.Objects;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 /**
  * @author Andrei_Tytsik
  */
 public class JsonSerdeTest {
 
-    private final JsonSerializer serializer = new JsonSerializer();
-    private final JsonDeserializer<Person> deserializer = new JsonDeserializer<>();
+    private JsonSerializer serializer = new JsonSerializer();
+    private JsonDeserializer<Person> deserializer = new JsonDeserializer<>();
     {
         deserializer.configure(
                 Collections.singletonMap(JsonDeserializer.KEY_TYPE, Person.class), true);
     }
 
     @Test
-    public void testDataTypeIsSerializedAndDeserialized() {
+    public void testDataTypeIsSerializedAndDeserialized() throws Exception {
         Person personOrig = createPerson();
 
         byte[] bytes = serializer.serialize(null, personOrig);
@@ -52,18 +50,17 @@ public class JsonSerdeTest {
     }
 
     @Test
-    public void testNullInputGivesNullOutput() {
+    public void testNullInputGivesNullOutput() throws Exception {
         Assertions.assertNull(deserializer.deserialize(null, null));
         Assertions.assertNull(serializer.serialize(null, null));
     }
 
     @SuppressWarnings("resource")
     @Test
-    public void testFailsOnMissingTypeConfig() {
-        assertThrows(
-                Exception.class,
-                () -> new JsonDeserializer<Person>().configure(Collections.emptyMap(), true)
-        );
+    public void testFailsOnMissingTypeConfig() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            new JsonDeserializer<Person>().configure(Collections.emptyMap(), true);
+        });
     }
 
     private Person createPerson() {
@@ -72,7 +69,7 @@ public class JsonSerdeTest {
         person.setAge(41);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(1912, Calendar.JULY, 23);
+        calendar.set(1912, 6, 23);
         person.setBirth(calendar.getTime());
 
         return person;

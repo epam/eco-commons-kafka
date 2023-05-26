@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -77,7 +76,7 @@ public class ConsumerRecordJsonDeserializerTest {
     }
 
     @Test
-    public void testDeserialization1() throws JsonProcessingException {
+    public void testDeserialization1() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -117,13 +116,13 @@ public class ConsumerRecordJsonDeserializerTest {
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<>() {});
+                new TypeReference<ConsumerRecord<String, String>>() {});
         Assertions.assertNotNull(actual);
         Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @Test
-    public void testDeserialization2() throws JsonProcessingException {
+    public void testDeserialization2() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -161,14 +160,14 @@ public class ConsumerRecordJsonDeserializerTest {
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<>() {});
+                new TypeReference<ConsumerRecord<String, String>>() {});
         Assertions.assertNotNull(actual);
         Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 
     @SuppressWarnings("rawtypes")
     @Test
-    public void testDeserialization3() throws JsonProcessingException {
+    public void testDeserialization3() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -211,7 +210,7 @@ public class ConsumerRecordJsonDeserializerTest {
     }
 
     @Test
-    public void testDeserialization4() throws JsonProcessingException {
+    public void testDeserialization4() throws Exception {
         long now = new Date().getTime();
         Headers headers = new RecordHeaders(
                 Collections.singletonList(new RecordHeader("1", "1".getBytes())));
@@ -249,7 +248,7 @@ public class ConsumerRecordJsonDeserializerTest {
 
         ConsumerRecord<String, String> actual = objectMapper.readValue(
                 json,
-                new TypeReference<>() {});
+                new TypeReference<ConsumerRecord<String, String>>() {});
         Assertions.assertTrue(consumerRecordEquals(expected, actual));
     }
 

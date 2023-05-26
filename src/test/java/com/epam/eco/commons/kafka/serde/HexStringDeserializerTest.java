@@ -25,10 +25,10 @@ import org.junit.jupiter.api.Test;
  */
 public class HexStringDeserializerTest {
 
-    private final HexStringDeserializer deserializer = new HexStringDeserializer();
+    private HexStringDeserializer deserializer = new HexStringDeserializer();
 
     @Test
-    public void testHexStringIsDeserialized() {
+    public void testHexStringIsDeserialized() throws Exception {
         byte[] bytes = BigInteger.valueOf(65535).toByteArray();
 
         String hex = deserializer.deserialize(null, bytes);
@@ -37,7 +37,7 @@ public class HexStringDeserializerTest {
     }
 
     @Test
-    public void testNullInputGivesNullOutput() {
+    public void testNullInputGivesNullOutput() throws Exception {
         Assertions.assertNull(deserializer.deserialize(null, null));
     }
 

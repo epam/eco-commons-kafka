@@ -23,14 +23,11 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.OffsetRange;
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrei_Tytsik
@@ -38,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class PartitionRecordFetchResultTest {
 
     @Test
-    public void testEmptyResultHasExpectedValues() {
+    public void testEmptyResultHasExpectedValues() throws Exception {
         PartitionRecordFetchResult<String, String> result =
                 PartitionRecordFetchResult.<String, String>builder().
                 partition(new TopicPartition("topic", 0)).
@@ -55,7 +52,7 @@ public class PartitionRecordFetchResultTest {
     }
 
     @Test
-    public void testNonEmptyResultHasExpectedValuesAndIsIterable() {
+    public void testNonEmptyResultHasExpectedValuesAndIsIterable() throws Exception {
         PartitionRecordFetchResult<String, String> result =
                 PartitionRecordFetchResult.<String, String>builder().
                 partition(new TopicPartition("topic", 0)).
@@ -84,41 +81,40 @@ public class PartitionRecordFetchResultTest {
     }
 
     @Test
-    public void testCreationFailsOnMissingArguments1() {
-        assertThrows(Exception.class, () -> PartitionRecordFetchResult.<String, String>builder().build());
-    }
-
-    @Test
-    public void testCreationFailsOnMissingArguments2() {
-        assertThrows(Exception.class, () -> PartitionRecordFetchResult.<String, String>builder().
-                partition(new TopicPartition("topic", 0)).
-                build());
-    }
-
-    @Test
-    public void testCreationFailsOnMissingArguments3() {
-        assertThrows(Exception.class, () -> PartitionRecordFetchResult.<String, String>builder().
-                partition(new TopicPartition("topic", 0)).
-                partitionOffsets(OffsetRange.with(0, 0, false)).
-                build());
-    }
-
-    @Test
-    public void testCreationFailsOnInvalidRecordCollection() {
-        assertThrows(Exception.class, () -> {
-            List<ConsumerRecord<String, String>> records = createTestRecords(1);
-            records.add(null);
-            PartitionRecordFetchResult.<String, String>builder().
-                    partition(new TopicPartition("topic", 0)).
-                    partitionOffsets(OffsetRange.with(0, 0, false)).
-                    scannedOffsets(OffsetRange.with(0, 0, false)).
-                    addRecords(records).
-                    build();
+    public void testCreationFailsOnMissingArguments1() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            PartitionRecordFetchResult.<String, String> builder().build();
         });
     }
 
     @Test
-    public void testSerializedToJsonAndBack() throws JsonProcessingException {
+    public void testCreationFailsOnMissingArguments2() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            PartitionRecordFetchResult.<String, String> builder().partition(new TopicPartition("topic", 0)).build();
+        });
+    }
+
+    @Test
+    public void testCreationFailsOnMissingArguments3() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            PartitionRecordFetchResult.<String, String> builder().partition(
+                    new TopicPartition("topic", 0)).partitionOffsets(OffsetRange.with(0, 0, false)).build();
+        });
+    }
+
+    @Test
+    public void testCreationFailsOnInvalidRecordCollection() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            List<ConsumerRecord<String, String>> records = createTestRecords(1);
+            records.add(null);
+            PartitionRecordFetchResult.<String, String> builder().partition(
+                    new TopicPartition("topic", 0)).partitionOffsets(OffsetRange.with(0, 0, false)).scannedOffsets(
+                    OffsetRange.with(0, 0, false)).addRecords(records).build();
+        });
+    }
+
+    @Test
+    public void testSerializedToJsonAndBack() throws Exception {
         PartitionRecordFetchResult<String, String> origin =
                 PartitionRecordFetchResult.<String, String>builder().
                         partition(new TopicPartition("topic", 0)).
@@ -134,7 +130,7 @@ public class PartitionRecordFetchResultTest {
 
         PartitionRecordFetchResult<String, String> deserialized = mapper.readValue(
                 json,
-                new TypeReference<>(){});
+                new TypeReference<PartitionRecordFetchResult<String, String>>(){});
         Assertions.assertNotNull(deserialized);
         Assertions.assertEquals(deserialized, origin);
     }

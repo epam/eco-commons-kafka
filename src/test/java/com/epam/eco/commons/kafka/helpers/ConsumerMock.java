@@ -43,6 +43,8 @@ import static org.mockito.Mockito.mock;
  */
 
 public class ConsumerMock<K,V> {
+
+    private final static int MAX_POLLED_MESSAGES = 2000;
     private String topicName;
     private long[] startingOffsets;
     private long[] currentPollingPosition;
@@ -96,7 +98,7 @@ public class ConsumerMock<K,V> {
                 ConfluentUtils.generateTopicPartitions(topicName,startingOffsets).stream()
                         .collect(Collectors.toMap(
                                 topicPartition -> topicPartition,
-                                topicPartition -> IntStream.range(0,10)
+                                topicPartition -> IntStream.range(0,MAX_POLLED_MESSAGES)
                                         .mapToObj(ii->generateNextConsumerRecord(topicPartition))
                                         .flatMap(Collection::stream)
                                         .collect(Collectors.toList())

@@ -60,7 +60,7 @@ public class CachedTopicRecordFetcherTest {
             Assertions.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getLargest(),
                     value + LIMIT/RECORDS_IN_PARTITION);
             Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getSmallest(),
-                    (long) key.partition() * RECORDS_IN_PARTITION);
+                    key.partition()*RECORDS_IN_PARTITION);
             Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getLargest(),
                     (long) (key.partition() + 1) *RECORDS_IN_PARTITION-1);
         });
@@ -78,7 +78,7 @@ public class CachedTopicRecordFetcherTest {
                     value - LIMIT/RECORDS_IN_PARTITION);
             Assertions.assertEquals(result.getPerPartitionResult(key).getScannedOffsets().getLargest(), value - 1 );
             Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getSmallest(),
-                    (long) key.partition() * RECORDS_IN_PARTITION);
+                    key.partition()*RECORDS_IN_PARTITION);
             Assertions.assertEquals(result.getPerPartitionResult(key).getPartitionOffsets().getLargest(),
                     (long) (key.partition() + 1) *RECORDS_IN_PARTITION-1);
         });

@@ -21,17 +21,15 @@ import java.util.Collections;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 /**
  * @author Andrei_Tytsik
  */
 public class JsonStringDeserializerTest {
 
-    private final JsonStringDeserializer deserializer = new JsonStringDeserializer();
+    private JsonStringDeserializer deserializer = new JsonStringDeserializer();
 
     @Test
-    public void testJsonStringIsDeserialized() {
+    public void testJsonStringIsDeserialized() throws Exception {
         String jsonOrig = "{\"a\":\"a\",\"b\":10,\"c\":{\"d\":1.0}}";
 
         byte[] bytes = jsonOrig.getBytes(StandardCharsets.UTF_8);
@@ -42,14 +40,14 @@ public class JsonStringDeserializerTest {
     }
 
     @Test
-    public void testNullInputGivesNullOutput() {
+    public void testNullInputGivesNullOutput() throws Exception {
         Assertions.assertNull(deserializer.deserialize(null, null));
     }
 
     @SuppressWarnings("resource")
     @Test
-    public void testFailsOnInvalidPrettyConfig() {
-        assertThrows(Exception.class, () -> new JsonStringDeserializer().configure(
+    public void testFailsOnInvalidPrettyConfig() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> new JsonStringDeserializer().configure(
                 Collections.singletonMap(JsonStringDeserializer.PRETTY, new Object()), true));
     }
 

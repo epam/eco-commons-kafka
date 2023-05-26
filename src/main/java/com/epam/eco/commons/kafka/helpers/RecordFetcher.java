@@ -40,14 +40,14 @@ public interface RecordFetcher<K,V> {
             Collection<String> topicNames,
             long offset,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
     @Deprecated
     RecordFetchResult<K, V> fetch(
             String[] topicNames,
             long offset,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
     @Deprecated
     RecordFetchResult<K, V> fetch(
@@ -58,7 +58,7 @@ public interface RecordFetcher<K,V> {
     RecordFetchResult<K, V> fetch(
             Map<TopicPartition, Long> offsets,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
 
 
@@ -77,13 +77,13 @@ public interface RecordFetcher<K,V> {
             Collection<String> topicNames,
             long offset,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
     RecordFetchResult<K, V> fetchByOffsets(
             String[] topicNames,
             long offset,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
     RecordFetchResult<K, V> fetchByOffsets(
             Map<TopicPartition, Long> offsets,
@@ -92,7 +92,7 @@ public interface RecordFetcher<K,V> {
     RecordFetchResult<K, V> fetchByOffsets(
             Map<TopicPartition, Long> offsets,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
 
     RecordFetchResult<K, V> fetchByTimestamps(
@@ -102,6 +102,6 @@ public interface RecordFetcher<K,V> {
     RecordFetchResult<K, V> fetchByTimestamps(
             Map<TopicPartition, Long> partitionTimestamps,
             long limit,
-            Predicate<ConsumerRecord<K, V>> filter,
+            FilterClausePredicate<K,V> filter,
             long timeoutInMs);
 }

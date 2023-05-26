@@ -18,12 +18,9 @@ package com.epam.eco.commons.kafka;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Andrei_Tytsik
@@ -31,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class OffsetRangeTest {
 
     @Test
-    public void testRangeHasExpectedValues() {
+    public void testRangeHasExpectedValues() throws Exception {
         OffsetRange range = OffsetRange.with(0, false,0, false);
         Assertions.assertNotNull(range);
         Assertions.assertFalse(range.isLargestInclusive());
@@ -225,17 +222,17 @@ public class OffsetRangeTest {
     }
 
     @Test
-    public void testCreaetionFailsOnInvalidArguments1() {
-        assertThrows(Exception.class, () -> OffsetRange.with(-1, 1, true));
+    public void testCreaetionFailsOnInvalidArguments1() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> OffsetRange.with(-1, 1, true));
     }
 
     @Test
-    public void testCreaetionFailsOnInvalidArguments2() {
-        assertThrows(Exception.class, () -> OffsetRange.with(1, 0, true));
+    public void testCreaetionFailsOnInvalidArguments2() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> OffsetRange.with(1, 0, true));
     }
 
     @Test
-    public void testSerializedToJsonAndBack() throws JsonProcessingException {
+    public void testSerializedToJsonAndBack() throws Exception {
         OffsetRange origin = OffsetRange.with(0, 1, true);
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;

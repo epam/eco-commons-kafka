@@ -27,7 +27,6 @@ import org.apache.kafka.common.record.TimestampType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,7 +38,7 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class ConsumerRecordSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws JsonProcessingException {
+    public void testSerializedToJsonAndBack() throws Exception {
         Headers headers = new RecordHeaders(
                 Arrays.asList(new RecordHeader("1", "1".getBytes()), new RecordHeader("2", "2".getBytes())));
 
@@ -63,7 +62,7 @@ public class ConsumerRecordSerdeTest {
 
         ConsumerRecord<String, String> deserialized = mapper.readValue(
                 json,
-                new TypeReference<>(){});
+                new TypeReference<ConsumerRecord<String, String>>(){});
         Assertions.assertNotNull(deserialized);
         Assertions.assertEquals(origin.topic(), deserialized.topic());
         Assertions.assertEquals(origin.partition(), deserialized.partition());

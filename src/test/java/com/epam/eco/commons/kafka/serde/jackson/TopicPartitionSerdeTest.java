@@ -22,7 +22,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,7 +33,7 @@ import com.epam.eco.commons.kafka.util.TestObjectMapperSingleton;
 public class TopicPartitionSerdeTest {
 
     @Test
-    public void testSerializedToJsonAndBack() throws JsonProcessingException {
+    public void testSerializedToJsonAndBack() throws Exception {
         TopicPartition origin = new TopicPartition("topic", 1);
 
         ObjectMapper mapper = TestObjectMapperSingleton.INSTANCE;
@@ -50,7 +49,7 @@ public class TopicPartitionSerdeTest {
     }
 
     @Test
-    public void testKeySerializedToJsonAndBack() throws JsonProcessingException {
+    public void testKeySerializedToJsonAndBack() throws Exception {
         Map<TopicPartition, String> origin = new HashMap<>();
         origin.put(new TopicPartition("topic", 0), "0");
         origin.put(new TopicPartition("topic", 1), "1");
@@ -63,7 +62,7 @@ public class TopicPartitionSerdeTest {
 
         Map<TopicPartition, String> deserialized = mapper.readValue(
                 json,
-                new TypeReference<>(){});
+                new TypeReference<Map<TopicPartition, String>>(){});
         Assertions.assertNotNull(deserialized);
         Assertions.assertEquals(deserialized, origin);
     }
