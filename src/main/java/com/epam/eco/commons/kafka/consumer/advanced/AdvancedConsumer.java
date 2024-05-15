@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.AuthenticationException;
+import org.apache.kafka.common.errors.AuthorizationException;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +74,7 @@ public final class AdvancedConsumer<K, V> extends Thread {
 
     private final Map<String, Object> consumerConfig;
     private final String groupId;
+    private Duration authExceptionRetryInterval;
 
     private final String threadName;
 
@@ -101,7 +105,16 @@ public final class AdvancedConsumer<K, V> extends Thread {
             Collection<String> topicNames,
             Map<String, Object> consumerConfig,
             Consumer<RecordBatchIterator<K, V>> handler) {
+        this(topicNames, consumerConfig, handler, KafkaConsumer::new);
+    }
+
+    public AdvancedConsumer(
+            Collection<String> topicNames,
+            Map<String, Object> consumerConfig,
+            Consumer<RecordBatchIterator<K, V>> handler,
+            Function<Map<String, Object>, KafkaConsumer<K, V>> consumerFactory) {
         Validate.notNull(handler, "Handler is null");
+        Validate.notNull(consumerFactory, "Consumer factory is null");
 
         subscribe(topicNames);
 
@@ -113,11 +126,16 @@ public final class AdvancedConsumer<K, V> extends Thread {
         this.groupId = (String)this.consumerConfig.get(ConsumerConfig.GROUP_ID_CONFIG);
         this.handler = handler;
 
+        var authExceptionRetryIntervalMs = (Long) this.consumerConfig.get(ConsumerConfigBuilder.AUTH_EXCEPTION_RETRY_INTERVAL_MS);
+        if (authExceptionRetryIntervalMs != null) {
+            this.authExceptionRetryInterval = Duration.ofMillis(authExceptionRetryIntervalMs);
+        }
+
         threadName = buildThreadName();
 
         handlerTaskExecutor = initHandlerTaskExecutor();
 
-        consumer = new KafkaConsumer<>(this.consumerConfig);
+        consumer = consumerFactory.apply(this.consumerConfig);
 
         LOGGER.info("Initialized");
     }
@@ -161,6 +179,16 @@ public final class AdvancedConsumer<K, V> extends Thread {
                     ConsumerRecords<K, V> records = consumer.poll(POLL_TIMEOUT);
                     if (!records.isEmpty()) {
                         submitNewHandlerTask(records);
+                    }
+                } catch (AuthorizationException ae) {
+                    if (authExceptionRetryInterval == null) {
+                        LOGGER.error(String.format("Group [%s]: consumer failed due to Authorization Exception. " +
+                                "No authExceptionRetryInterval, will not retry.", groupId), ae);
+                        throw ae;
+                    } else {
+                        LOGGER.error(String.format("Group [%s]: consumer failed due to Authorization Exception. " +
+                                "Will retry in %s ms", groupId, authExceptionRetryInterval.toMillis()), ae);
+                        sleepFor(authExceptionRetryInterval);
                     }
                 } finally {
                     completeHandlerTaskIfDone();
@@ -332,6 +360,15 @@ public final class AdvancedConsumer<K, V> extends Thread {
 
     private void destroyHandlerTaskExecutor() {
         handlerTaskExecutor.shutdown();
+    }
+
+    private void sleepFor(Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException ie) {
+            LOGGER.warn("Group [{}]: interrupted while sleeping", groupId);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static String buildThreadName() {

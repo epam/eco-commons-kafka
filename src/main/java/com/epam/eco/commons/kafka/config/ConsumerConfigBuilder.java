@@ -35,6 +35,8 @@ import com.epam.eco.commons.kafka.OffsetReset;
  */
 public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerConfigBuilder> {
 
+    public static final String AUTH_EXCEPTION_RETRY_INTERVAL_MS = "authExceptionRetryIntervalMs";
+
     private ConsumerConfigBuilder(Map<String, Object> properties) {
         super(properties);
     }
@@ -296,6 +298,19 @@ public class ConsumerConfigBuilder extends AbstractClientConfigBuilder<ConsumerC
         return property(
                 ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG,
                 allowAutoCreateTopic);
+    }
+
+    /**
+     * Set the interval between retries after {@link org.apache.kafka.common.errors.AuthorizationException AuthorizationException} is thrown by consumer.
+     * By default, the field is null and retries are disabled,
+     * in such case {@link org.apache.kafka.common.errors.AuthorizationException AuthorizationException} is treated as fatal and the consumer is stopped.
+     *
+     * @param authExceptionRetryIntervalMs the duration between retries
+     */
+    public ConsumerConfigBuilder authExceptionRetryIntervalMs(long authExceptionRetryIntervalMs) {
+        return property(
+                AUTH_EXCEPTION_RETRY_INTERVAL_MS,
+                authExceptionRetryIntervalMs);
     }
 
 }
