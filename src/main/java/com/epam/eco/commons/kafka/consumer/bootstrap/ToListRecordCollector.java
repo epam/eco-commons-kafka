@@ -52,7 +52,7 @@ public class ToListRecordCollector<K, V> implements RecordCollector<K, V, List<C
                         record.value())));
     }
 
-    private List<ConsumerRecord<K, V>> getDataList() {
+    protected List<ConsumerRecord<K, V>> getDataList() {
         if (dataList == null) {
             dataList = new ArrayList<>();
         }
