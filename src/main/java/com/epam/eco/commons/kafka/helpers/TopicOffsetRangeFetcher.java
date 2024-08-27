@@ -37,6 +37,7 @@ import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
 public class TopicOffsetRangeFetcher {
 
     protected final Map<String, Object> consumerConfig;
+    protected final KafkaConsumer<?,?> consumer;
 
     protected TopicOffsetRangeFetcher(String bootstrapServers, Map<String, Object> consumerConfig) {
         this.consumerConfig = ConsumerConfigBuilder.
@@ -46,6 +47,12 @@ public class TopicOffsetRangeFetcher {
                 enableAutoCommitDisabled().
                 clientIdRandom().
                 build();
+        this.consumer = null;
+    }
+
+    protected TopicOffsetRangeFetcher(KafkaConsumer<?,?> consumer) {
+        this.consumerConfig = null;
+        this.consumer = consumer;
     }
 
     public static TopicOffsetRangeFetcher with(Map<String, Object> consumerConfig) {
@@ -54,6 +61,10 @@ public class TopicOffsetRangeFetcher {
 
     public static TopicOffsetRangeFetcher with(String bootstrapServers) {
         return new TopicOffsetRangeFetcher(bootstrapServers, null);
+    }
+
+    public static TopicOffsetRangeFetcher with(KafkaConsumer<?,?> consumer) {
+        return new TopicOffsetRangeFetcher(consumer);
     }
 
     public Map<TopicPartition, OffsetRange> fetchForPartitions(TopicPartition ... partitions) {
@@ -65,8 +76,12 @@ public class TopicOffsetRangeFetcher {
         Validate.notEmpty(partitions, "Collection of partitions is null or empty");
         Validate.noNullElements(partitions, "Collection of partitions contains null elements");
 
-        try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
+        if (consumer != null) {
             return doFetch(consumer, partitions);
+        } else {
+            try (KafkaConsumer<?, ?> localConsumer = new KafkaConsumer<>(consumerConfig)) {
+                return doFetch(localConsumer, partitions);
+            }
         }
     }
 
@@ -79,11 +94,22 @@ public class TopicOffsetRangeFetcher {
         Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
         Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
 
-        try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(consumerConfig)) {
-            List<TopicPartition> partitions =
-                    KafkaUtils.getTopicPartitionsAsList(consumer, topicNames);
-            return doFetch(consumer, partitions);
+        if (consumer != null) {
+            return doFetchForTopics(consumer, topicNames);
+        } else {
+            try (KafkaConsumer<?, ?> localConsumer = new KafkaConsumer<>(consumerConfig)) {
+                return doFetchForTopics(localConsumer, topicNames);
+            }
         }
+    }
+
+    private Map<TopicPartition, OffsetRange> doFetchForTopics(
+            KafkaConsumer<?, ?> consumer,
+            Collection<String> topicNames
+    ) {
+        List<TopicPartition> partitions =
+                KafkaUtils.getTopicPartitionsAsList(consumer, topicNames);
+        return doFetch(consumer, partitions);
     }
 
     /**

@@ -34,9 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.epam.eco.commons.kafka.KafkaUtils;
-import com.epam.eco.commons.kafka.OffsetRange;
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
-import com.epam.eco.commons.kafka.helpers.TopicOffsetRangeFetcher;
 
 /**
  * @author Andrei_Tytsik
@@ -46,6 +44,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(BootstrapConsumer.class);
 
     private static final OffsetInitializer DEFAULT_OFFSET_INITIALIZER = BeginningOffsetInitializer.INSTANCE;
+    private static final OffsetThresholdProvider DEFAULT_OFFSET_THRESHOLD_PROVIDER = EndOffsetThresholdProvider.INSTANCE;
     private static final long DEFAULT_BOOTSTRAP_TIMEOUT_MS = 1 * 60 * 1000;
 
     private static final Duration BOOTSTRAP_POLL_TIMEOUT = Duration.of(100, ChronoUnit.MILLIS);
@@ -60,6 +59,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
 
     private final KafkaConsumer<K, V> consumer;
     private final OffsetInitializer offsetInitializer;
+    private final OffsetThresholdProvider offsetThresholdProvider;
 
     private Set<TopicPartition> partitions;
 
@@ -69,12 +69,14 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
             String topicName,
             Map<String, Object> consumerConfig,
             OffsetInitializer offsetInitializer,
+            OffsetThresholdProvider offsetThresholdProvider,
             long bootstrapTimeoutInMs,
             RecordCollector<K, V, R> recordCollector,
             int instanceCount,
             int instanceIndex) {
         Validate.notBlank(topicName, "Topic name is blank");
         Validate.notNull(offsetInitializer, "Offset Initializer is null");
+        Validate.notNull(offsetThresholdProvider, "Offset threshold provider is null");
         Validate.isTrue(bootstrapTimeoutInMs > 0, "Bootstrap timeout is invalid");
         Validate.notNull(recordCollector, "Record Collector is null");
         Validate.isTrue(instanceCount > 0, "Instance count is invalid");
@@ -90,6 +92,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
                 autoOffsetResetEarliest().
                 build();
         this.offsetInitializer = offsetInitializer;
+        this.offsetThresholdProvider = offsetThresholdProvider;
         this.bootstrapTimeoutInMs = bootstrapTimeoutInMs;
         this.recordCollector = recordCollector;
         this.instanceCount = instanceCount;
@@ -137,8 +140,11 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         LOGGER.info("Topic [{}]: starting bootstrap", topicName);
 
         try {
-            Map<TopicPartition, Long> latestOffsets = fetchLatestReadableOffsets();
-            if (latestOffsets.isEmpty()) {
+            Map<TopicPartition, Long> endOffsets = offsetThresholdProvider.getOffsetThreshold(
+                    consumer,
+                    partitions
+            );
+            if (endOffsets.isEmpty()) {
                 LOGGER.info("Topic [{}]: finishing bootstrap, no records to fetch", topicName);
             } else {
                 Map<TopicPartition, Long> consumedOffsets = new HashMap<>();
@@ -163,7 +169,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
 
                         consumedOffsets.putAll(KafkaUtils.getConsumerPositions(consumer));
 
-                        if (compareOffsetsGreaterOrEqual(consumedOffsets, latestOffsets)) {
+                        if (compareOffsetsGreaterOrEqual(consumedOffsets, endOffsets)) {
                             LOGGER.info(
                                     "Topic [{}]: finishing bootstrap, received offsets have met expected threshold",
                                     topicName);
@@ -235,16 +241,6 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         offsetInitializer.init(consumer, partitions);
     }
 
-    private Map<TopicPartition, Long> fetchLatestReadableOffsets() {
-        Map<TopicPartition, OffsetRange> offsets = TopicOffsetRangeFetcher.
-                with(consumerConfig).
-                fetchForPartitions(partitions);
-        return offsets.entrySet().stream().
-                filter(e -> e.getValue().getSize() > 0).
-                filter(e -> e.getValue().contains(consumer.position(e.getKey()))).
-                collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getLargest()));
-    }
-
     private boolean compareOffsetsGreaterOrEqual(
             Map<TopicPartition, Long> topicOffsets1,
             Map<TopicPartition, Long> topicOffsets2) {
@@ -273,6 +269,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         private Map<String, Object> consumerConfig;
         private ConsumerConfigBuilder consumerConfigBuilder;
         private OffsetInitializer offsetInitializer = DEFAULT_OFFSET_INITIALIZER;
+        private OffsetThresholdProvider offsetThresholdProvider = DEFAULT_OFFSET_THRESHOLD_PROVIDER;
         private long bootstrapTimeoutInMs = DEFAULT_BOOTSTRAP_TIMEOUT_MS;
         private RecordCollector<K, V, R> recordCollector;
         private int instanceCount = 1;
@@ -292,6 +289,10 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         }
         public Builder<K, V, R> offsetInitializer(OffsetInitializer offsetInitializer) {
             this.offsetInitializer = offsetInitializer;
+            return this;
+        }
+        public Builder<K, V, R> offsetThresholdProvider(OffsetThresholdProvider offsetThresholdProvider) {
+            this.offsetThresholdProvider = offsetThresholdProvider;
             return this;
         }
         public Builder<K, V, R> bootstrapTimeoutInMs(long bootstrapTimeoutInMs) {
@@ -316,6 +317,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
                     topicName,
                     consumerConfigBuilder != null ? consumerConfigBuilder.build() : consumerConfig,
                     offsetInitializer,
+                    offsetThresholdProvider,
                     bootstrapTimeoutInMs,
                     recordCollector,
                     instanceCount,
