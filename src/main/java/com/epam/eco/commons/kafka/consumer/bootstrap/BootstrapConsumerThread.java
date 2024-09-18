@@ -18,16 +18,21 @@ package com.epam.eco.commons.kafka.consumer.bootstrap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrei_Tytsik
  */
 class BootstrapConsumerThread<K, V, R> extends Thread {
 
-    private final static long SHUTDOWN_TIMEOUT_SECONDS = 30;
+    private static final Logger log = LoggerFactory.getLogger(BootstrapConsumerThread.class);
+
+    private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
 
     private final BootstrapConsumer<K, V, R> consumer;
     private final Consumer<R> handler;
@@ -36,6 +41,8 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
 
     private final AtomicBoolean running = new AtomicBoolean(true);
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
+
+    private final AtomicReference<RuntimeException> exception = new AtomicReference<>();
 
     public BootstrapConsumerThread(BootstrapConsumer<K, V, R> consumer, Consumer<R> handler) {
         Validate.notNull(consumer, "Bootstrap Consumer is null");
@@ -52,6 +59,10 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
                 handler.accept(consumer.fetch());
                 bootstrapLatch.countDown();
             }
+        } catch (Exception e) {
+            String msg = "Error occurred while bootstrapping";
+            log.error(msg, e);
+            exception.set(new RuntimeException(msg, e));
         } finally {
             running.set(false);
             shutdownLatch.countDown();
@@ -70,13 +81,16 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
         }
     }
 
-    public boolean waitForBootstrap() throws InterruptedException {
-        return bootstrapLatch.await(
-                (long)(consumer.getBootstrapTimeoutInMs() * 1.5), TimeUnit.MILLISECONDS);
+    public boolean waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        boolean result = bootstrapLatch.await(timeout, timeUnit);
+        if (exception.get() != null) {
+            throw exception.get();
+        }
+        return result;
     }
 
-    public boolean waitForBootstrap(long timeout, TimeUnit timeUnit) throws InterruptedException {
-        return bootstrapLatch.await(timeout, timeUnit);
+    public boolean waitForBootstrap() throws InterruptedException {
+        return waitForBootstrap((long)(consumer.getBootstrapTimeoutInMs() * 1.5), TimeUnit.MILLISECONDS);
     }
 
 }
