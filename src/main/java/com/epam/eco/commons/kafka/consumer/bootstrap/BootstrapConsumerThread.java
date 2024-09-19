@@ -61,6 +61,7 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
             bootstrapLatch.countDown();
         } finally {
             running.set(false);
+            consumer.close();
             shutdownLatch.countDown();
         }
     }
@@ -73,7 +74,6 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
         if (running.compareAndSet(true, false)) {
             consumer.wakeup();
             shutdownLatch.await(timeout, timeUnit);
-            consumer.close();
         }
     }
 
