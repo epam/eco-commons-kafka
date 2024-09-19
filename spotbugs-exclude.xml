@@ -161,5 +161,10 @@
         <Class name="com.epam.eco.commons.kafka.helpers.CachedTopicOffsetRangeFetcher" />
         <Bug pattern="PMB_POSSIBLE_MEMORY_BLOAT" />
     </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumer" />
+        <Method name="fetchBootstrap" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
 
 </FindBugsFilter>
