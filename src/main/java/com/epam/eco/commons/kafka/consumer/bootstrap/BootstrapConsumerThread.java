@@ -22,15 +22,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrei_Tytsik
  */
 class BootstrapConsumerThread<K, V, R> extends Thread {
-
-    private static final Logger log = LoggerFactory.getLogger(BootstrapConsumerThread.class);
 
     private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
 
@@ -60,9 +56,9 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
                 bootstrapLatch.countDown();
             }
         } catch (Exception e) {
-            String msg = "Error occurred while bootstrapping";
-            log.error(msg, e);
-            exception.set(new RuntimeException(msg, e));
+            exception.set(toBootstrapException(e));
+            // Trigger latch to rethrow exception immediately
+            bootstrapLatch.countDown();
         } finally {
             running.set(false);
             shutdownLatch.countDown();
@@ -91,6 +87,14 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
 
     public boolean waitForBootstrap() throws InterruptedException {
         return waitForBootstrap((long)(consumer.getBootstrapTimeoutInMs() * 1.5), TimeUnit.MILLISECONDS);
+    }
+
+    private BootstrapException toBootstrapException(Exception e) {
+        if (e instanceof BootstrapException) {
+            return (BootstrapException) e;
+        } else {
+            return new BootstrapException("Error occurred while bootstrapping the data", e);
+        }
     }
 
 }
