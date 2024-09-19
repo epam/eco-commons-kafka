@@ -1,6 +1,7 @@
 package com.epam.eco.commons.kafka.consumer.bootstrap;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +10,15 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.epam.eco.commons.kafka.AdminClientUtils;
 import com.epam.eco.commons.kafka.KafkaUtils;
+import com.epam.eco.commons.kafka.OffsetRange;
+import com.epam.eco.commons.kafka.helpers.TopicOffsetRangeFetcher;
 
 /**
  * {@link OffsetThresholdProvider} implementation that fetches threshold offsets for specific consumer
@@ -52,8 +56,8 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
      * Returns consumer group offsets for specific partitions of configured topic.
      * If provided partitions are not part of the topic, then exception is thrown.
      * <br>
-     * When consumer group does not exist or some partition does not yet have offset
-     * for the configured consumer group, then 0 is returned as threshold.
+     * When some partition does not yet have offset for the configured consumer group
+     * or partition is empty, then it is ignored. I.e. empty map is returned for not existing consumer group.
      *
      * @param consumer consumer
      * @param partitions partitions to get thresholds for
@@ -68,9 +72,9 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
         fetchOffsetsIfNeeded(consumer);
 
         partitions.forEach(partition -> {
-            if (!offsets.containsKey(partition)) {
+            if (!topic.equals(partition.topic())) {
                 throw new IllegalArgumentException(
-                        "Offsets for topic '%s' partition '%s' could not be found.".formatted(
+                        "Partition '%s' is not part of topic '%s'.".formatted(
                                 topic,
                                 partition
                         )
@@ -89,17 +93,31 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
         List<TopicPartition> partitions = KafkaUtils.getTopicPartitionsAsList(consumer, topic);
 
         if (AdminClientUtils.consumerGroupExists(adminClientProperties, consumerGroup)) {
-            Map<TopicPartition, Long> result = new HashMap<>();
-
-            AdminClientUtils.listConsumerGroupOffsets(
+            Map<TopicPartition, OffsetRange> partitionRanges = TopicOffsetRangeFetcher.
+                    with(consumer).
+                    fetchForPartitions(partitions);
+            Map<TopicPartition, OffsetAndMetadata> partitionOffsets = AdminClientUtils.listConsumerGroupOffsets(
                     adminClientProperties,
                     consumerGroup,
                     partitions.toArray(new TopicPartition[0])
-            ).forEach((partition, meta) -> {
+            );
+
+            Map<TopicPartition, Long> result = new HashMap<>();
+            // Filter out obsolete offsets and offsets for empty partitions
+            partitionOffsets.forEach((partition, meta) -> {
                 if (meta != null) {
-                    result.put(partition, meta.offset());
-                } else {
-                    result.put(partition, 0L);
+                    OffsetRange range = partitionRanges.get(partition);
+                    if (range != null && range.getSize() > 0 && range.contains(meta.offset())) {
+                        result.put(partition, meta.offset());
+                    } else {
+                        log.debug(
+                                "Consumer group offset '{}' for partition '{}' does not fit " +
+                                        "partition range '{}'. Offset is ignored",
+                                meta.offset(),
+                                partition,
+                                range
+                        );
+                    }
                 }
             });
 
@@ -111,9 +129,8 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
             );
             offsets = result;
         } else {
-            log.info("Consumer group '{}' does not exist. Setting thresholds to 0", consumerGroup);
-            offsets = partitions.stream()
-                    .collect(Collectors.toMap(Function.identity(), partition -> 0L));
+            log.info("Consumer group '{}' does not exist. Thresholds are empty.", consumerGroup);
+            offsets = Collections.emptyMap();
         }
     }
 
