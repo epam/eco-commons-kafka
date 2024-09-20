@@ -96,8 +96,8 @@ class BootstrapConsumerThread<K, V, R> extends Thread {
     }
 
     private BootstrapException toBootstrapException(Exception e) {
-        if (e instanceof BootstrapException bootstrapException) {
-            return bootstrapException;
+        if (e instanceof BootstrapException) {
+            return (BootstrapException) e;
         } else {
             return new BootstrapException("Error occurred while bootstrapping the data", e);
         }
