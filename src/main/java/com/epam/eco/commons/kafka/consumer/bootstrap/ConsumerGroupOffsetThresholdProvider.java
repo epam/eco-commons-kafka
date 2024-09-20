@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -71,6 +69,7 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
     ) {
         fetchOffsetsIfNeeded(consumer);
 
+        Map<TopicPartition, Long> result = new HashMap<>();
         partitions.forEach(partition -> {
             if (!topic.equals(partition.topic())) {
                 throw new IllegalArgumentException(
@@ -80,19 +79,23 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
                         )
                 );
             }
+
+            Long offset = offsets.get(partition);
+            if (offset != null) {
+                result.put(partition, offset);
+            }
         });
 
-        return partitions.stream()
-                .collect(Collectors.toMap(Function.identity(), offsets::get));
+        return result;
     }
 
     private void fetchOffsetsIfNeeded(KafkaConsumer<?, ?> consumer) {
         if (offsets != null) {
             return;
         }
-        List<TopicPartition> partitions = KafkaUtils.getTopicPartitionsAsList(consumer, topic);
 
         if (AdminClientUtils.consumerGroupExists(adminClientProperties, consumerGroup)) {
+            List<TopicPartition> partitions = KafkaUtils.getTopicPartitionsAsList(consumer, topic);
             Map<TopicPartition, OffsetRange> partitionRanges = TopicOffsetRangeFetcher.
                     with(consumer).
                     fetchForPartitions(partitions);
@@ -103,12 +106,15 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
             );
 
             Map<TopicPartition, Long> result = new HashMap<>();
-            // Filter out obsolete offsets and offsets for empty partitions
+            // Fix obsolete offsets (out of range) and filter out empty partitions
             partitionOffsets.forEach((partition, meta) -> {
-                if (meta != null) {
-                    OffsetRange range = partitionRanges.get(partition);
-                    if (range != null && range.getSize() > 0 && range.contains(meta.offset())) {
-                        result.put(partition, meta.offset());
+                OffsetRange range = partitionRanges.get(partition);
+                if (meta != null && range != null) {
+                    if (range.getSize() > 0) {
+                        long offset = fixOffsetBoundaries(meta, range);
+                        if (offset != -1) {
+                            result.put(partition, offset);
+                        }
                     } else {
                         log.debug(
                                 "Consumer group offset '{}' for partition '{}' does not fit " +
@@ -132,6 +138,21 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
             log.info("Consumer group '{}' does not exist. Thresholds are empty.", consumerGroup);
             offsets = Collections.emptyMap();
         }
+    }
+
+    private long fixOffsetBoundaries(OffsetAndMetadata meta, OffsetRange range) {
+        if (meta.offset() < range.getSmallest()) {
+            return -1;
+        }
+
+        long largestConsumerOffset = range.isLargestInclusive() ?
+                        range.getLargest() + 1 :
+                        range.getLargest();
+        if (meta.offset() > largestConsumerOffset) {
+            return largestConsumerOffset;
+        }
+
+        return meta.offset();
     }
 
 }

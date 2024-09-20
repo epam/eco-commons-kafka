@@ -58,19 +58,24 @@ public class OffsetRange {
     public long getSmallest() {
         return smallest;
     }
+
     public long getLargest() {
         return largest;
     }
+
     public boolean isLargestInclusive() {
         return largestInclusive;
     }
+
     public boolean isSmallestInclusive() {
         return smallestInclusive;
     }
+
     @JsonIgnore
     public long getSize() {
         return size;
     }
+
     public boolean contains(long value) {
         return  (smallest==largest && (smallestInclusive || largestInclusive) && smallest==value) ||
                 ((smallestInclusive ? smallest <= value : smallest < value) &&
