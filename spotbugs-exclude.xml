@@ -18,6 +18,11 @@
         <Bug pattern="RV_RETURN_VALUE_IGNORED" />
     </Match>
     <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumerThread" />
+        <Method name="run" />
+        <Bug pattern="LO_STUTTERED_MESSAGE" />
+    </Match>
+    <Match>
         <Class name="com.epam.eco.commons.kafka.AdminClientUtils" />
         <Method name="completeAndGet" />
         <Or>
