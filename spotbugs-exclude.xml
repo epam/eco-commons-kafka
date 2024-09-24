@@ -18,6 +18,16 @@
         <Bug pattern="RV_RETURN_VALUE_IGNORED" />
     </Match>
     <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumerThread" />
+        <Method name="run" />
+        <Bug pattern="LO_STUTTERED_MESSAGE" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumerThread" />
+        <Method name="toBootstrapException" />
+        <Bug pattern="USBR_UNNECESSARY_STORE_BEFORE_RETURN" />
+    </Match>
+    <Match>
         <Class name="com.epam.eco.commons.kafka.AdminClientUtils" />
         <Method name="completeAndGet" />
         <Or>
@@ -160,6 +170,11 @@
     <Match>
         <Class name="com.epam.eco.commons.kafka.helpers.CachedTopicOffsetRangeFetcher" />
         <Bug pattern="PMB_POSSIBLE_MEMORY_BLOAT" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.consumer.bootstrap.BootstrapConsumer" />
+        <Method name="fetchBootstrap" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
     </Match>
 
 </FindBugsFilter>

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
@@ -56,6 +57,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
     private final RecordCollector<K, V, R> recordCollector;
     private final int instanceCount;
     private final int instanceIndex;
+    private final boolean failOnTimeout;
 
     private final KafkaConsumer<K, V> consumer;
     private final OffsetInitializer offsetInitializer;
@@ -73,7 +75,9 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
             long bootstrapTimeoutInMs,
             RecordCollector<K, V, R> recordCollector,
             int instanceCount,
-            int instanceIndex) {
+            int instanceIndex,
+            boolean failOnTimeout
+    ) {
         Validate.notBlank(topicName, "Topic name is blank");
         Validate.notNull(offsetInitializer, "Offset Initializer is null");
         Validate.notNull(offsetThresholdProvider, "Offset threshold provider is null");
@@ -97,6 +101,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         this.recordCollector = recordCollector;
         this.instanceCount = instanceCount;
         this.instanceIndex = instanceIndex;
+        this.failOnTimeout = failOnTimeout;
 
         consumer = new KafkaConsumer<>(this.consumerConfig);
 
@@ -178,6 +183,12 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
                     }
 
                     if (System.currentTimeMillis() - bootstrapStartTs > bootstrapTimeoutInMs) {
+                        if (failOnTimeout) {
+                            throw new TimeoutException(
+                                    "Topic [%s]: bootstrap timeout has exceeded".formatted(topicName)
+                            );
+                        }
+
                         LOGGER.info(
                                 "Topic [{}]: finishing bootstrap, timeout has exceeded", topicName);
                         break;
@@ -187,8 +198,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         } catch (WakeupException wue) {
             LOGGER.warn("Topic [{}]: bootstrap aborted (woken up)", topicName);
         } catch (Exception ex) {
-            LOGGER.error(String.format("Topic [%s]: bootstrap failed", topicName), ex);
-            throw ex;
+            throw new BootstrapException("Topic [%s]: bootstrap failed".formatted(topicName), ex);
         } finally {
             setBootstrapDone();
         }
@@ -274,41 +284,55 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         private RecordCollector<K, V, R> recordCollector;
         private int instanceCount = 1;
         private int instanceIndex = 0;
+        private boolean failOnTimeout = false;
 
         public Builder<K, V, R> topicName(String topicName) {
             this.topicName = topicName;
             return this;
         }
+
         public Builder<K, V, R> consumerConfig(Map<String, Object> consumerConfig) {
             this.consumerConfig = consumerConfig;
             return this;
         }
+
         public Builder<K, V, R> consumerConfigBuilder(ConsumerConfigBuilder consumerConfigBuilder) {
             this.consumerConfigBuilder = consumerConfigBuilder;
             return this;
         }
+
         public Builder<K, V, R> offsetInitializer(OffsetInitializer offsetInitializer) {
             this.offsetInitializer = offsetInitializer;
             return this;
         }
+
         public Builder<K, V, R> offsetThresholdProvider(OffsetThresholdProvider offsetThresholdProvider) {
             this.offsetThresholdProvider = offsetThresholdProvider;
             return this;
         }
+
         public Builder<K, V, R> bootstrapTimeoutInMs(long bootstrapTimeoutInMs) {
             this.bootstrapTimeoutInMs = bootstrapTimeoutInMs;
             return this;
         }
+
         public Builder<K, V, R> recordCollector(RecordCollector<K, V, R> recordCollector) {
             this.recordCollector = recordCollector;
             return this;
         }
+
         public Builder<K, V, R> instanceCount(int instanceCount) {
             this.instanceCount = instanceCount;
             return this;
         }
+
         public Builder<K, V, R> instanceIndex(int instanceIndex) {
             this.instanceIndex = instanceIndex;
+            return this;
+        }
+
+        public Builder<K, V, R> failOnTimeout(boolean failOnTimeout) {
+            this.failOnTimeout = failOnTimeout;
             return this;
         }
 
@@ -321,7 +345,9 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
                     bootstrapTimeoutInMs,
                     recordCollector,
                     instanceCount,
-                    instanceIndex);
+                    instanceIndex,
+                    failOnTimeout
+            );
         }
 
     }
