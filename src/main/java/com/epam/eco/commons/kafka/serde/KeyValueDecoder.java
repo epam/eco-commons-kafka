@@ -15,10 +15,16 @@
  *******************************************************************************/
 package com.epam.eco.commons.kafka.serde;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 /**
  * @author Andrei_Tytsik
  */
 public interface KeyValueDecoder<K, V> {
     K decodeKey(byte[] keyBytes);
     V decodeValue(K key, byte[] valueBytes);
+
+    default V decodeRecord(ConsumerRecord<byte[], byte[]> consumerRecord) {
+        return decodeValue(decodeKey(consumerRecord.key()), consumerRecord.value());
+    }
 }

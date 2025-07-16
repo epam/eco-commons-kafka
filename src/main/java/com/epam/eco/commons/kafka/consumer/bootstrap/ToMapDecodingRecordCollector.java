@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import com.epam.eco.commons.kafka.serde.KeyValueDecoder;
@@ -30,7 +31,7 @@ public class ToMapDecodingRecordCollector<K, V> implements RecordCollector<byte[
 
     private final KeyValueDecoder<K, V> decoder;
 
-    private volatile Map<Object, Object> dataMap;
+    private Map<K, V> dataMap;
 
     public ToMapDecodingRecordCollector(KeyValueDecoder<K, V> decoder) {
         Validate.notNull(decoder, "Decoder is null");
@@ -43,35 +44,29 @@ public class ToMapDecodingRecordCollector<K, V> implements RecordCollector<byte[
         collectToMapAsDecodedKeyRawValuePairs(records);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Map<K, V> result() {
         try {
-            decodeValues();
-            return (Map<K, V>)getDataMap();
+            return getDataMap();
         } finally {
             resetDataMap();
         }
     }
 
     private void collectToMapAsDecodedKeyRawValuePairs(ConsumerRecords<byte[], byte[]> records) {
-        records.forEach(record -> getDataMap().put(decodeKey(record.key()), record.value()));
+        records.forEach(consumerRecord -> getDataMap().put(decodeKey(consumerRecord.key()),
+                decodeValue(consumerRecord)));
     }
 
-    @SuppressWarnings("unchecked")
-    private void decodeValues() {
-        getDataMap().replaceAll((key, value) -> decodeValue((K)key, (byte[])value));
-    }
-
-    private Object decodeKey(byte[] keyBytes) {
+    private K decodeKey(byte[] keyBytes) {
         return decoder.decodeKey(keyBytes);
     }
 
-    private Object decodeValue(K key, byte[] valueBytes) {
-        return decoder.decodeValue(key, valueBytes);
+    private V decodeValue(ConsumerRecord<byte[], byte[]> consumerRecord) {
+        return decoder.decodeRecord(consumerRecord);
     }
 
-    private Map<Object, Object> getDataMap() {
+    private Map<K, V> getDataMap() {
         if (dataMap == null) {
             dataMap = new HashMap<>();
         }
