@@ -54,7 +54,8 @@ public class ToMapDecodingRecordCollector<K, V> implements RecordCollector<byte[
     }
 
     private void collectToMapAsDecodedKeyRawValuePairs(ConsumerRecords<byte[], byte[]> records) {
-        records.forEach(consumerRecord -> getDataMap().put(decodeKey(consumerRecord.key()),
+        records.forEach(consumerRecord -> getDataMap().put(decodeKey(
+                consumerRecord.key()),
                 decodeValue(consumerRecord)));
     }
 
