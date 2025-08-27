@@ -257,7 +257,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         for (Map.Entry<TopicPartition, Long> entry : topicOffsets2.entrySet()) {
             Long offset1 = topicOffsets1.get(entry.getKey());
             Long offset2 = entry.getValue();
-            if (offset1 == null || offset1 < offset2) {
+            if (offset1 == null || offset1 <= offset2) {
                 return false;
             }
         }

@@ -177,4 +177,10 @@
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
     </Match>
 
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.helpers.KafkaTestHelper" />
+        <Method name="unchecked" />
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+
 </FindBugsFilter>
