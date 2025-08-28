@@ -76,7 +76,7 @@
         <java.version>17</java.version>
         
         <eco-commons.version>1.0.0</eco-commons.version>
-        <kafka.version>3.0.1</kafka.version>
+        <kafka.version>6.0.0-ccs</kafka.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <commons-codec.version>1.9</commons-codec.version>
         <jackson.version>2.13.2</jackson.version>
