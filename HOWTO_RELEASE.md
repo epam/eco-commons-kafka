@@ -21,3 +21,28 @@
 ### Notes
 
 [SNAPSHOT deployments repository](https://central.sonatype.org/publish/publish-portal-snapshots/)
+
+
+### publish via rest
+printf "username:pwd" | base64
+
+-- check if published
+curl --request GET \
+--header 'Authorization: Bearer #{base64}' \
+'https://central.sonatype.com/api/v1/publisher/published?namespace=com.epam.eco&name=commons-kafka&version=3.0.8'
+
+
+-- publish by deployment id (get from mvn release)
+curl --request POST \
+--verbose \
+--header 'Authorization: Bearer #{base64}' \
+'https://central.sonatype.com/api/v1/publisher/deployment/4de791fd-2952-4e56-a561-e4fef48d0638'
+
+
+-- check publishing status by deployment id (get from mvn release)
+curl --request POST \
+--header 'Authorization: Bearer #{base64}' \
+'https://central.sonatype.com/api/v1/publisher/status?id=4de791fd-2952-4e56-a561-e4fef48d0638'
+
+-- check artifact exists in mvn central
+wget https://repo1.maven.org/maven2/com/epam/eco/commons-kafka/3.0.8/commons-kafka-3.0.8.jar
