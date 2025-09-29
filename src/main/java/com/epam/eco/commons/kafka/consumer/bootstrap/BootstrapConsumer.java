@@ -58,6 +58,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
     private final int instanceCount;
     private final int instanceIndex;
     private final boolean failOnTimeout;
+    private Duration fetchPollTimeout;
 
     private final KafkaConsumer<K, V> consumer;
     private final OffsetInitializer offsetInitializer;
@@ -76,12 +77,16 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
             RecordCollector<K, V, R> recordCollector,
             int instanceCount,
             int instanceIndex,
-            boolean failOnTimeout
+            boolean failOnTimeout,
+            Duration fetchPollTimeout
     ) {
         Validate.notBlank(topicName, "Topic name is blank");
         Validate.notNull(offsetInitializer, "Offset Initializer is null");
         Validate.notNull(offsetThresholdProvider, "Offset threshold provider is null");
         Validate.isTrue(bootstrapTimeoutInMs > 0, "Bootstrap timeout is invalid");
+        Validate.notNull(fetchPollTimeout, "fetchPollTimeout is null");
+        Validate.isTrue(!(fetchPollTimeout.isZero() || fetchPollTimeout.isNegative()),
+                "fetchPollTimeout is invalid");
         Validate.notNull(recordCollector, "Record Collector is null");
         Validate.isTrue(instanceCount > 0, "Instance count is invalid");
         Validate.isTrue(
@@ -102,6 +107,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         this.instanceCount = instanceCount;
         this.instanceIndex = instanceIndex;
         this.failOnTimeout = failOnTimeout;
+        this.fetchPollTimeout = fetchPollTimeout;
 
         consumer = new KafkaConsumer<>(this.consumerConfig);
 
@@ -214,7 +220,7 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
 
     private R fetchUpdates() {
         try {
-            ConsumerRecords<K,V> records = consumer.poll(FETCH_POLL_TIMEOUT);
+            ConsumerRecords<K,V> records = consumer.poll(fetchPollTimeout);
 
             LOGGER.debug("Topic [{}]: {} update records fetched", topicName, records.count());
 
@@ -285,6 +291,12 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
         private int instanceCount = 1;
         private int instanceIndex = 0;
         private boolean failOnTimeout = false;
+        private Duration fetchPollTimeout = FETCH_POLL_TIMEOUT;
+
+        public Builder<K, V, R> fetchPollTimeout(Duration fetchPollTimeout) {
+            this.fetchPollTimeout = fetchPollTimeout;
+            return this;
+        }
 
         public Builder<K, V, R> topicName(String topicName) {
             this.topicName = topicName;
@@ -346,7 +358,8 @@ public final class BootstrapConsumer<K, V, R> implements Closeable {
                     recordCollector,
                     instanceCount,
                     instanceIndex,
-                    failOnTimeout
+                    failOnTimeout,
+                    fetchPollTimeout
             );
         }
 

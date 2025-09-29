@@ -101,8 +101,7 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
                     fetchForPartitions(partitions);
             Map<TopicPartition, OffsetAndMetadata> partitionOffsets = AdminClientUtils.listConsumerGroupOffsets(
                     adminClientProperties,
-                    consumerGroup,
-                    partitions.toArray(new TopicPartition[0])
+                    consumerGroup
             );
 
             Map<TopicPartition, Long> result = new HashMap<>();

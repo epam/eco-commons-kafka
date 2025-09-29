@@ -152,21 +152,12 @@ public class TopicConfigBuilder extends AbstractConfigBuilder<TopicConfigBuilder
         return property(TopicConfig.PREALLOCATE_CONFIG, preallocate);
     }
 
-    @Deprecated
-    public TopicConfigBuilder messageFormatVersion(String messageFormatVersion) {
-        return property(TopicConfig.MESSAGE_FORMAT_VERSION_CONFIG, messageFormatVersion);
-    }
-
     public TopicConfigBuilder messageTimestampType(TimestampType messageTimestampType) {
         return messageTimestampType(messageTimestampType.name);
     }
 
     public TopicConfigBuilder messageTimestampType(String messageTimestampType) {
         return property(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG, messageTimestampType);
-    }
-
-    public TopicConfigBuilder messageTimestampDifferenceMaxMs(long messageTimestampDifferenceMaxMs) {
-        return property(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG, messageTimestampDifferenceMaxMs);
     }
 
     public TopicConfigBuilder messageDownconversionEnabled() {

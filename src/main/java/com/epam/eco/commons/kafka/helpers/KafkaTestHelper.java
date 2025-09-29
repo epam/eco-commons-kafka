@@ -12,6 +12,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.ClassicGroupState;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.TopicConfig;
@@ -180,7 +181,8 @@ public final class KafkaTestHelper {
     }
 
     public Map<Integer, PartitionOffsets> resolveTopicOffsets(String topicName) {
-        Map<String, TopicDescription> topicDescription = unchecked(() -> adminClient.describeTopics(singleton(topicName)).all().get());
+        Map<String, TopicDescription> topicDescription =
+                unchecked(() -> adminClient.describeTopics(singleton(topicName)).allTopicNames().get());
 
         Map<Integer, Long> earliestOffsets = unchecked(() -> resolveTopicOffsets(topicDescription, new OffsetSpec.EarliestSpec()));
         Map<Integer, Long> latestOffsets = unchecked(() -> resolveTopicOffsets(topicDescription, new OffsetSpec.LatestSpec()));

@@ -19,7 +19,12 @@ import org.apache.commons.lang3.Validate;
 import org.apache.kafka.common.config.ConfigDef.ConfigKey;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
+import org.apache.kafka.common.config.ConfigException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import com.epam.eco.commons.kafka.config.TopicConfigDef;
 
@@ -50,6 +55,42 @@ public class TopicConfigDefTest {
     public void testTypeIsResolved() {
         Type type = TopicConfigDef.INSTANCE.type("cleanup.policy");
         Validate.notNull(type);
+    }
+
+    @Test
+    public void testValidationSucceedsOnValidValues() {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("cleanup.policy", "compact");
+        properties.put("compression.type", "snappy");
+        properties.put("delete.retention.ms", "1000");
+        properties.put("min.in.sync.replicas", "2");
+        properties.put("min.cleanable.dirty.ratio", "0.6");
+
+        Assertions.assertDoesNotThrow(() -> TopicConfigDef.INSTANCE.validate(properties));
+    }
+
+    @Test
+    public void testValidationFailsOnInvalidValues() {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("cleanup.policy", "invalid");
+        Assertions.assertThrows(ConfigException.class,
+                () -> TopicConfigDef.INSTANCE.validate(properties));
+
+        properties.clear();
+        properties.put("compression.type", "invalid");
+        Assertions.assertThrows(ConfigException.class, () -> TopicConfigDef.INSTANCE.validate(properties));
+
+        properties.clear();
+        properties.put("delete.retention.ms", "-1");
+        Assertions.assertThrows(ConfigException.class, () -> TopicConfigDef.INSTANCE.validate(properties));
+
+        properties.clear();
+        properties.put("min.insync.replicas", "0");
+        Assertions.assertThrows(ConfigException.class, () -> TopicConfigDef.INSTANCE.validate(properties));
+
+        properties.clear();
+        properties.put("min.cleanable.dirty.ratio", "1.1");
+        Assertions.assertThrows(ConfigException.class, () -> TopicConfigDef.INSTANCE.validate(properties));
     }
 
 }

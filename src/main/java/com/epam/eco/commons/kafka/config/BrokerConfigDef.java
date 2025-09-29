@@ -22,6 +22,9 @@ import org.apache.kafka.common.config.ConfigDef;
 
 import kafka.server.KafkaConfig;
 
+import static org.apache.kafka.server.config.KRaftConfigs.NODE_ID_CONFIG;
+import static org.apache.kafka.server.config.KRaftConfigs.PROCESS_ROLES_CONFIG;
+
 /**
  * @author Andrei_Tytsik
  */
@@ -35,8 +38,10 @@ public class BrokerConfigDef extends AbstractConfigDef {
 
     private static ConfigDef readDef() {
         Properties props = new Properties();
-        props.put("zookeeper.connect", "");
+        props.put(PROCESS_ROLES_CONFIG, "");
+        props.put(NODE_ID_CONFIG, "0");
         KafkaConfig kafkaConfig = KafkaConfig.fromProps(props, false);
+
         try {
             return (ConfigDef)FieldUtils.readField(kafkaConfig, "definition", true);
         } catch (IllegalAccessException iae) {

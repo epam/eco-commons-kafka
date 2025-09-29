@@ -40,6 +40,7 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.GroupListing;
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsOptions;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewPartitions;
@@ -306,7 +307,7 @@ public abstract class AdminClientUtils {
         Validate.notEmpty(topicNames, "Collection of topic names is null or empty");
         Validate.noNullElements(topicNames, "Collection of topic names contains null elements");
 
-        return completeAndGet(client.describeTopics(topicNames).all());
+        return completeAndGet(client.describeTopics(topicNames).allTopicNames());
     }
 
     public static Map<String, TopicDescription> describeTopicsInParallel(
@@ -324,7 +325,7 @@ public abstract class AdminClientUtils {
                 clientConfig,
                 "topic",
                 topicNames,
-                (client, names) -> client.describeTopics(names).values());
+                (client, names) -> client.describeTopics(names).topicNameValues());
     }
 
     public static ConfigEntry describeTopicConfigEntry(
@@ -800,45 +801,20 @@ public abstract class AdminClientUtils {
 
     public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
             Map<String, Object> clientConfig,
-            String groupName,
-            TopicPartition ... topicPartitions) {
+            String groupName) {
         try (AdminClient client = initClient(clientConfig)) {
-            return listConsumerGroupOffsets(client, groupName, topicPartitions);
+            return listConsumerGroupOffsets(client, groupName);
         }
     }
 
     public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
             AdminClient client,
-            String groupName,
-            TopicPartition ... topicPartitions) {
-        return listConsumerGroupOffsets(
-                client,
-                groupName,
-                topicPartitions != null ? Arrays.asList(topicPartitions) : null);
-    }
-
-    public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
-            Map<String, Object> clientConfig,
-            String groupName,
-            List<TopicPartition> topicPartitions) {
-        try (AdminClient client = initClient(clientConfig)) {
-            return listConsumerGroupOffsets(client, groupName, topicPartitions);
-        }
-    }
-
-    public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
-            AdminClient client,
-            String groupName,
-            List<TopicPartition> topicPartitions) {
+            String groupName) {
         Validate.notNull(client, "Admin client is null");
         Validate.notNull(groupName, "Group name is null"); // should be notBlank(...) but Kafka for some reason allows blank group ids...
-        if (!CollectionUtils.isEmpty(topicPartitions)) {
-            Validate.noNullElements(topicPartitions, "Collection of topic partitions contains null elements");
-        }
 
         ListConsumerGroupOffsetsOptions options = new ListConsumerGroupOffsetsOptions();
-        options.topicPartitions(
-                !CollectionUtils.isEmpty(topicPartitions) ? topicPartitions : null);
+        options.requireStable(true);
 
         return completeAndGet(
                 client.listConsumerGroupOffsets(groupName, options).partitionsToOffsetAndMetadata());

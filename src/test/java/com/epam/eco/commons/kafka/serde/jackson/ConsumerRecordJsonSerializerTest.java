@@ -60,6 +60,7 @@ public class ConsumerRecordJsonSerializerTest {
                 .registerModule(new SimpleModule()
                         .addSerializer(new ConsumerRecordJsonSerializer())
                         .addSerializer(new RecordHeaderJsonSerializer())
+                        .addSerializer(new RecordHeadersJsonSerializer())
                         .addDeserializer(Headers.class, new RecordHeadersJsonDeserializer())
                         .addDeserializer(Header.class, new RecordHeaderJsonDeserializer())
                         .addDeserializer(ConsumerRecord.class, new ConsumerRecordJsonDeserializer()));

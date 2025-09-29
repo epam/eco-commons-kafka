@@ -43,7 +43,7 @@ public class NonClosableMockProducer<K, V> extends MockProducer<K, V> {
             Serializer<K> keySerializer,
             Serializer<V> valueSerializer
     ) {
-        super(autoComplete, keySerializer, valueSerializer);
+        super(Cluster.empty(), autoComplete, null, keySerializer, valueSerializer);
     }
 
     public NonClosableMockProducer(

@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 
 import com.epam.eco.commons.kafka.config.BrokerConfigDef;
 
+import static org.apache.kafka.server.config.KRaftConfigs.NODE_ID_CONFIG;
+
 /**
  * @author Andrei_Tytsik
  */
@@ -30,25 +32,25 @@ public class BrokerConfigDefTest {
 
     @Test
     public void testKeyIsResolved() {
-        ConfigKey key = BrokerConfigDef.INSTANCE.key("zookeeper.connect");
+        ConfigKey key = BrokerConfigDef.INSTANCE.key(NODE_ID_CONFIG);
         Validate.notNull(key);
     }
 
     @Test
     public void testDocIsResolved() {
-        String doc = BrokerConfigDef.INSTANCE.doc("zookeeper.connect");
+        String doc = BrokerConfigDef.INSTANCE.doc(NODE_ID_CONFIG);
         Validate.notNull(doc);
     }
 
     @Test
     public void testImportanceIsResolved() {
-        Importance importance = BrokerConfigDef.INSTANCE.importance("zookeeper.connect");
+        Importance importance = BrokerConfigDef.INSTANCE.importance(NODE_ID_CONFIG);
         Validate.notNull(importance);
     }
 
     @Test
     public void testTypeIsResolved() {
-        Type type = BrokerConfigDef.INSTANCE.type("zookeeper.connect");
+        Type type = BrokerConfigDef.INSTANCE.type(NODE_ID_CONFIG);
         Validate.notNull(type);
     }
 

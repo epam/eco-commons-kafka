@@ -1,5 +1,7 @@
 package com.epam.eco.commons.kafka.consumer.bootstrap;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.epam.eco.commons.kafka.config.AdminClientConfigBuilder;
 import com.epam.eco.commons.kafka.config.ConsumerConfigBuilder;
@@ -28,6 +32,7 @@ class BootstrapConsumerTest {
 
     private static final String BOOTSTRAP_SERVERS = "kafka.sandbox.datahub.epam.com:9092";
     private static final String TOPIC_NAME = "bootstrap-consumer-test-topic";
+    private static final Logger log = LoggerFactory.getLogger(BootstrapConsumerTest.class);
 
     private final KafkaTestHelper helper = new KafkaTestHelper(
             AdminClient.create(
@@ -122,7 +127,8 @@ class BootstrapConsumerTest {
                 producer.send(record("key-3", "value-3-1"));
                 producer.flush();
 
-                List<ConsumerRecord<String, String>> additionalRecords = consumer.fetch();
+                List<ConsumerRecord<String, String>> additionalRecords = consumerFetch(consumer);
+
                 assertEquals(2, additionalRecords.size());
                 Map<String, List<String>> additionalValues = allValues(additionalRecords);
 
@@ -130,6 +136,15 @@ class BootstrapConsumerTest {
                 assertEquals(List.of("value-3-1"), additionalValues.get("key-3"));
             }
         }
+    }
+
+    private List<ConsumerRecord<String, String>> consumerFetch(BootstrapConsumer<String, String,
+            List<ConsumerRecord<String, String>>> consumer) {
+        List<ConsumerRecord<String, String>> result = new ArrayList<>();
+        while (result.addAll(consumer.fetch())) {
+            log.info("fetch result {}", result.size());
+        }
+            return result;
     }
 
     @Test
@@ -152,7 +167,7 @@ class BootstrapConsumerTest {
                 producer.send(record("key-3", "value-3-1"));
                 producer.flush();
 
-                List<ConsumerRecord<String, String>> additionalRecords = consumer.fetch();
+                List<ConsumerRecord<String, String>> additionalRecords = consumerFetch(consumer);
                 assertEquals(2, additionalRecords.size());
 
                 Map<String, String> additionalValues = latestValues(additionalRecords);
@@ -185,6 +200,7 @@ class BootstrapConsumerTest {
                                 .maxPollRecords(100000)
                                 .build()
                 )
+                .fetchPollTimeout(Duration.ofSeconds(5))
                 .bootstrapTimeoutInMs(3600_000L)
                 .recordCollector(new ToListRecordCollector<>())
                 .build();
