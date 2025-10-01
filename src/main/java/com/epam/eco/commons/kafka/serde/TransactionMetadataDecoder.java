@@ -19,17 +19,17 @@ import java.nio.ByteBuffer;
 
 import org.apache.commons.lang3.Validate;
 
+import kafka.coordinator.transaction.BaseKey;
 import kafka.coordinator.transaction.TransactionLog;
 import kafka.coordinator.transaction.TransactionMetadata;
-import kafka.coordinator.transaction.TxnKey;
 
 /**
  * @author Andrei_Tytsik
  */
-public class TransactionMetadataDecoder implements KeyValueDecoder<TxnKey, TransactionMetadata> {
+public class TransactionMetadataDecoder implements KeyValueDecoder<BaseKey, TransactionMetadata> {
 
     @Override
-    public TxnKey decodeKey(byte[] keyBytes) {
+    public BaseKey decodeKey(byte[] keyBytes) {
         Validate.notNull(keyBytes, "Key bytes array can't be null");
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(keyBytes);
@@ -37,11 +37,11 @@ public class TransactionMetadataDecoder implements KeyValueDecoder<TxnKey, Trans
     }
 
     @Override
-    public TransactionMetadata decodeValue(TxnKey key, byte[] valueBytes) {
-        Validate.notNull(key, "Key can't be null");
+    public TransactionMetadata decodeValue(BaseKey baseKey, byte[] valueBytes) {
+        Validate.notNull(baseKey, "Key can't be null");
 
         ByteBuffer byteBuffer = valueBytes != null ? ByteBuffer.wrap(valueBytes) : null;
-        return TransactionLog.readTxnRecordValue(key.transactionalId(), byteBuffer).getOrElse(() -> null);
+        return TransactionLog.readTxnRecordValue(baseKey.transactionalId(), byteBuffer).getOrElse(() -> null);
     }
 
 }

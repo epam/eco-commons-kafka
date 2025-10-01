@@ -34,6 +34,8 @@ import kafka.server.KafkaConfig;
 class CacheTopic {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CacheTopic.class);
+    // Define the constant for default replication factor directly
+    private static final String DEFAULT_REPLICATION_FACTOR_PROP = "default.replication.factor";
 
     private final String name;
     private final int partitionCount;
@@ -74,7 +76,7 @@ class CacheTopic {
                 Short.parseShort(
                         AdminClientUtils.describeAnyBrokerConfigEntry(
                                 clientConfig,
-                                KafkaConfig.DefaultReplicationFactorProp()).value());
+                                DEFAULT_REPLICATION_FACTOR_PROP).value());
         Map<String, String> config = TopicConfigBuilder.with(this.config).
                 cleanupPolicyCompact().
                 buildStringified();

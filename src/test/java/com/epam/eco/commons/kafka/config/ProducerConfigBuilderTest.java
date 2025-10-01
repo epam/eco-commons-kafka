@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
+import org.apache.kafka.clients.producer.RoundRobinPartitioner;
 import org.apache.kafka.common.metrics.JmxReporter;
 import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
@@ -52,7 +52,7 @@ public class ProducerConfigBuilderTest {
                 maxInflightRequestsPerConnection(5).
                 keySerializer(StringSerializer.class).
                 valueSerializer(StringSerializer.class).
-                partitionerClass(DefaultPartitioner.class).
+                partitionerClass(RoundRobinPartitioner.class).
                 interceptorClasses(
                         Arrays.asList(
                                 TestProducerInterceptor1.class,

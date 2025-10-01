@@ -38,13 +38,14 @@ public class AdminClientUtilsTest {
     @Test
     public void testDescribeAllConsumerGroups() {
         AdminClient adminClient = mock(AdminClient.class);
-        ListConsumerGroupsResult listConsumerGroupsResult = mock(ListConsumerGroupsResult.class);
+        ListConsumerGroupsResult listGroupsResult = mock(ListConsumerGroupsResult.class);
         KafkaFutureImpl<Collection<ConsumerGroupListing>> resultFuture = new KafkaFutureImpl<>();
         resultFuture.complete(Collections.emptyList());
-        when(adminClient.listConsumerGroups()).thenReturn(listConsumerGroupsResult);
-        when(listConsumerGroupsResult.all()).thenReturn(resultFuture);
+        when(adminClient.listConsumerGroups()).thenReturn(listGroupsResult);
+        when(listGroupsResult.all()).thenReturn(resultFuture);
 
-        Map<String, ConsumerGroupDescription> result = AdminClientUtils.describeAllConsumerGroups(adminClient);
+        Map<String, ConsumerGroupDescription> result =
+                AdminClientUtils.describeAllConsumerGroups(adminClient);
         Assertions.assertTrue(result.isEmpty());
     }
 

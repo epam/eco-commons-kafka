@@ -16,6 +16,7 @@
 package com.epam.eco.commons.kafka.config;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -97,6 +98,10 @@ public abstract class AbstractConfigDef {
         } else {
             return defaultValueStr;
         }
+    }
+
+    public void validate(Map<String, String> props) {
+        def.parse(props);
     }
 
 }

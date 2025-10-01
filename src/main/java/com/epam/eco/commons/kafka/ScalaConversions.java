@@ -24,10 +24,9 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.kafka.common.ConsumerGroupState;
+import org.apache.kafka.common.GroupState;
 import org.apache.kafka.common.TopicPartition;
 
-import kafka.coordinator.group.GroupState;
 import kafka.coordinator.group.GroupTopicPartition;
 import kafka.utils.VerifiableProperties;
 import scala.Option;
@@ -96,10 +95,10 @@ public abstract class ScalaConversions {
         return new VerifiableProperties(propertiesTmp);
     }
 
-    public static ConsumerGroupState asJavaGroupState(GroupState groupState) {
+    public static GroupState asJavaGroupState(kafka.coordinator.group.GroupState groupState) {
         Validate.notNull(groupState, "Group state is null");
 
-        return ConsumerGroupState.parse(groupState.toString());
+        return GroupState.parse(groupState.toString());
     }
 
 }
