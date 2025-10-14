@@ -16,7 +16,6 @@
 package com.epam.eco.commons.kafka;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,7 +39,7 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
-import org.apache.kafka.clients.admin.GroupListing;
+import org.apache.kafka.clients.admin.FeatureMetadata;
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsOptions;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewPartitions;
@@ -807,6 +806,11 @@ public abstract class AdminClientUtils {
         }
     }
 
+    public static FeatureMetadata describeFeatures(AdminClient client) {
+        return completeAndGet(
+                client.describeFeatures().featureMetadata());
+    }
+
     public static Map<TopicPartition, OffsetAndMetadata> listConsumerGroupOffsets(
             AdminClient client,
             String groupName) {
@@ -1167,6 +1171,7 @@ public abstract class AdminClientUtils {
         LOGGER.info("Initiating parallel description of {} {}s using {} clients", resourceNames.size(), label, numClients);
 
         List<AdminClient> clients = new ArrayList<>(numClients);
+        String resourceName = null;
         try {
             for (int i = 0; i < numClients; i++) {
                 clients.add(initClient(clientConfig));
@@ -1185,6 +1190,7 @@ public abstract class AdminClientUtils {
 
             Map<String, D> descriptions = new HashMap<>((int) (resourceNames.size() / 0.75));
             for (Entry<String, KafkaFuture<D>> entry : futures.entrySet()) {
+                resourceName = entry.getKey();
                 descriptions.put(entry.getKey(), entry.getValue().get());
 
                 describedCount++;
@@ -1200,7 +1206,10 @@ public abstract class AdminClientUtils {
 
             return descriptions;
         } catch (InterruptedException | ExecutionException ex) {
-            throw new RuntimeException("Failed to describe " + label + "s in parallel", ex);
+            throw new RuntimeException(
+                    String.format("Failed to describe %s resource name: %s in parallel",
+                            label, resourceName),
+                    ex);
         } finally {
             for (AdminClient client : clients) {
                 client.close();
