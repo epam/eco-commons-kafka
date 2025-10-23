@@ -32,7 +32,7 @@ public class SimpleTransactionMetadataDecoder implements KeyValueDecoder<String,
         Validate.notNull(keyBytes, "Key bytes array can't be null");
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(keyBytes);
-        return TransactionLog.readTxnRecordKey(byteBuffer).transactionalId();
+        return TransactionLog.readTxnRecordKey(byteBuffer).toOption().getOrElse(() -> null);
     }
 
     @Override

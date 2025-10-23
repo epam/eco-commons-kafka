@@ -24,10 +24,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.kafka.common.GroupState;
-import org.apache.kafka.common.TopicPartition;
 
-import kafka.coordinator.group.GroupTopicPartition;
 import kafka.utils.VerifiableProperties;
 import scala.Option;
 import scala.collection.JavaConverters;
@@ -66,14 +63,6 @@ public abstract class ScalaConversions {
         return JavaConverters.mapAsJavaMapConverter(scalaMap).asJava();
     }
 
-    public static TopicPartition asTopicPartition(GroupTopicPartition groupTopicPartition) {
-        Validate.notNull(groupTopicPartition, "GroupTopicPartition is null");
-
-        return new TopicPartition(
-                groupTopicPartition.topicPartition().topic(),
-                groupTopicPartition.topicPartition().partition());
-    }
-
     public static <T> Optional<T> asOptional(Option<T> option) {
         Validate.notNull(option, "Option is null");
 
@@ -93,12 +82,6 @@ public abstract class ScalaConversions {
         propertiesTmp.putAll(properties);
 
         return new VerifiableProperties(propertiesTmp);
-    }
-
-    public static GroupState asJavaGroupState(kafka.coordinator.group.GroupState groupState) {
-        Validate.notNull(groupState, "Group state is null");
-
-        return GroupState.parse(groupState.toString());
     }
 
 }
