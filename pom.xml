@@ -93,8 +93,8 @@
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <spotbugs-maven-plugin.version>4.7.3.0</spotbugs-maven-plugin.version>
-        <findsecbugs-plugin.version>1.13.0</findsecbugs-plugin.version>
-        <fb-contrib.version>7.6.5</fb-contrib.version>
+        <findsecbugs-plugin.version>1.11.0</findsecbugs-plugin.version>
+        <fb-contrib.version>7.4.3.sb</fb-contrib.version>
         <surefire.version>3.0.0-M9</surefire.version>
 
         <junit5.version>6.0.3</junit5.version>
