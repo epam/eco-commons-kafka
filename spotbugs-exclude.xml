@@ -41,6 +41,10 @@
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
     </Match>
     <Match>
+        <Class name="com.epam.eco.commons.kafka.StatsLogger" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
         <Class name="com.epam.eco.commons.kafka.helpers.TopicOffsetFetcher" />
         <Or>
             <Method name="fetchForPartitions" />
@@ -138,6 +142,14 @@
         <Class name="com.epam.eco.commons.kafka.serde.jackson.ConsumerRecordJsonSerializer" />
         <Method name="createContextual" />
         <Bug pattern="NP_NULL_ON_SOME_PATH" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.serde.jackson.RecordHeadersJsonSerializer" />
+        <Bug pattern="IMC_IMMATURE_CLASS_BAD_SERIALVERSIONUID" />
+    </Match>
+    <Match>
+        <Class name="com.epam.eco.commons.kafka.serde.jackson.KafkaPrincipalJsonSerializer" />
+        <Bug pattern="IMC_IMMATURE_CLASS_BAD_SERIALVERSIONUID" />
     </Match>
     <Match>
         <Class name="com.epam.eco.commons.kafka.helpers.PartitionRecordFetchResult" />
