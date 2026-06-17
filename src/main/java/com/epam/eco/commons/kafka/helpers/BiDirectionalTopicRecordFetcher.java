@@ -309,7 +309,7 @@ public class BiDirectionalTopicRecordFetcher<K,V> extends TopicRecordFetcher<K,V
         return true;
     }
 
-    private List<ConsumerRecord<K, V>> reversedMessages(List<ConsumerRecord<K, V>> messages) {
+    private List<ConsumerRecord<K, V>> reversedMessages(Collection<ConsumerRecord<K, V>> messages) {
         return messages.stream()
                 .sorted(Comparator.comparing(ConsumerRecord::offset, Comparator.reverseOrder()))
                 .collect(Collectors.toList());

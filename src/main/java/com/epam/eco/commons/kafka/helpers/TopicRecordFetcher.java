@@ -445,7 +445,7 @@ public class TopicRecordFetcher<K, V> implements RecordFetcher<K,V> {
         return collectors;
     }
 
-    private Map<TopicPartition, Long> toOffsets(List<TopicPartition> partitions, long offset) {
+    private Map<TopicPartition, Long> toOffsets(Collection<TopicPartition> partitions, long offset) {
         return partitions.stream().
                 collect(Collectors.toMap(
                         Function.identity(),

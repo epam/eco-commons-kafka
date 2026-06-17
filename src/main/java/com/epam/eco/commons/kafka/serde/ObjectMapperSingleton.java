@@ -25,6 +25,9 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
  */
 abstract class ObjectMapperSingleton {
 
+    private ObjectMapperSingleton() { }
+
+
     public static final ObjectMapper INSTANCE = new ObjectMapper();
     static {
         INSTANCE.registerModule(new ParameterNamesModule());
