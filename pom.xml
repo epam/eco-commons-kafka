@@ -61,10 +61,6 @@
     </repositories>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>central</id>
-            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-        </snapshotRepository>
         <repository>
             <id>central</id>
             <url>https://central.sonatype.com</url>
@@ -75,7 +71,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
 
-        <eco-commons.version>1.1.0</eco-commons.version>
+        <eco-commons.version>1.1.1</eco-commons.version>
         <kafka.version>4.1.2</kafka.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-codec.version>1.22.0</commons-codec.version>
