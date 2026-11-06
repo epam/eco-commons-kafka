@@ -57,6 +57,7 @@ import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigDef.ConfigKey;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.ConfigResource.Type;
+import org.apache.kafka.common.errors.GroupIdNotFoundException;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -670,7 +671,12 @@ public abstract class AdminClientUtils {
     }
 
     public static boolean consumerGroupExists(AdminClient client, String groupName) {
-        return describeConsumerGroup(client, groupName) != null;
+        try {
+            return describeConsumerGroup(client, groupName) != null;
+        } catch (GroupIdNotFoundException ex) {
+            LOGGER.info("Consumer group '{}' does not exist. It is not possible to describe some consumer groups", groupName);
+            return false;
+        }
     }
 
     public static ConsumerGroupDescription describeConsumerGroup(Map<String, Object> clientConfig, String groupName) {
