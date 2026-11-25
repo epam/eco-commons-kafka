@@ -139,19 +139,16 @@ public class ConsumerGroupOffsetThresholdProvider implements OffsetThresholdProv
         }
     }
 
+    /**
+     * Converts committed offset (the next offset to be consumed) into the threshold expected by
+     * {@link BootstrapConsumer}: the offset of the last record that has to be consumed.
+     * Returns -1 when there is nothing to consume. Range must not be empty.
+     */
     private long fixOffsetBoundaries(OffsetAndMetadata meta, OffsetRange range) {
-        if (meta.offset() < range.getSmallest()) {
+        if (meta.offset() <= range.getSmallest()) {
             return -1;
         }
-
-        long largestConsumerOffset = range.isLargestInclusive() ?
-                        range.getLargest() + 1 :
-                        range.getLargest();
-        if (meta.offset() > largestConsumerOffset) {
-            return largestConsumerOffset;
-        }
-
-        return meta.offset();
+        return Math.min(meta.offset() - 1, range.getLargest());
     }
 
 }
